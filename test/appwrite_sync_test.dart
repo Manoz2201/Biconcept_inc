@@ -117,6 +117,23 @@ void main() {
     expect(areas.firstWhere((item) => item['id'] == 'a1')['name'], 'Local');
   });
 
+  test('company prefs round-trip through the Appwrite company row', () {
+    final prefs = AppPrefsCache(
+      brand: 'BiConcept',
+      companyAddress: 'Noida',
+      companyPhone: '+91 8178869148',
+      gstPercent: 18,
+      hvacGstPercent: 28,
+      savedAt: DateTime.utc(2026, 8, 21, 2),
+    );
+    final restored = companyFromAppwriteRow(companyToAppwriteRow(prefs));
+    expect(restored.brand, 'BiConcept');
+    expect(restored.companyAddress, 'Noida');
+    expect(restored.companyPhone, '+91 8178869148');
+    expect(restored.gstPercent, 18);
+    expect(restored.hvacGstPercent, 28);
+  });
+
   test('mergeCompanyPrefs keeps the newer savedAt', () {
     final older = AppPrefsCache(brand: 'Old', savedAt: DateTime.utc(2026, 1, 1));
     final newer = AppPrefsCache(brand: 'New', savedAt: DateTime.utc(2026, 8, 20));

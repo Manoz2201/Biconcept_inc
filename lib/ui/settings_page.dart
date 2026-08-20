@@ -30,9 +30,6 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final _store = SettingsStore();
   final _updates = AppUpdateService();
-  final _baseUrl = TextEditingController();
-  final _model = TextEditingController();
-  final _apiKey = TextEditingController();
   final _cfAccount = TextEditingController();
   final _cfToken = TextEditingController();
   final _ghToken = TextEditingController();
@@ -44,7 +41,6 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _loading = true;
   bool _obscure = true;
   bool _syncBusy = false;
-  bool _customModel = false;
   DateTime? _lastSyncedAt;
   String _cachePath = '';
   DateTime? _cacheSavedAt;
@@ -54,6 +50,12 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _updateChecking = false;
   bool _updateBusy = false;
   double? _downloadProgress;
+  bool _hydrating = true;
+  Timer? _companySaveTimer;
+  Timer? _agentSaveTimer;
+  Timer? _githubSaveTimer;
+  bool _companySaving = false;
+  bool _agentSaving = false;
 
   @override
   void initState() {
@@ -67,18 +69,53 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _syncBusy = AppwriteAutoSync.instance.busy;
       _lastSyncedAt = AppwriteAutoSync.instance.lastSyncedAt ?? _lastSyncedAt;
+      if (!AppwriteAutoSync.instance.busy) {
+        _companySaving = false;
+      }
+    });
+  }
+
+  void _listenForAutoSave() {
+    _brand.addListener(_scheduleCompanySave);
+    _address.addListener(_scheduleCompanySave);
+    _phone.addListener(_scheduleCompanySave);
+    _gst.addListener(_scheduleCompanySave);
+    _hvacGst.addListener(_scheduleCompanySave);
+    _cfAccount.addListener(_scheduleAgentSave);
+    _cfToken.addListener(_scheduleAgentSave);
+    _ghToken.addListener(_scheduleGithubSave);
+  }
+
+  void _scheduleCompanySave() {
+    if (_hydrating) return;
+    _companySaveTimer?.cancel();
+    _companySaveTimer = Timer(const Duration(milliseconds: 700), () {
+      unawaited(_saveCompany(silent: true));
+    });
+    if (mounted && !_companySaving) setState(() => _companySaving = true);
+  }
+
+  void _scheduleAgentSave() {
+    if (_hydrating) return;
+    _agentSaveTimer?.cancel();
+    _agentSaveTimer = Timer(const Duration(milliseconds: 700), () {
+      unawaited(_saveAgent(silent: true));
+    });
+    if (mounted && !_agentSaving) setState(() => _agentSaving = true);
+  }
+
+  void _scheduleGithubSave() {
+    if (_hydrating) return;
+    _githubSaveTimer?.cancel();
+    _githubSaveTimer = Timer(const Duration(milliseconds: 700), () {
+      unawaited(_persistGithubToken());
     });
   }
 
   Future<void> _load() async {
-    final settings = await _store.load();
     final prefs = await LocalCache.instance.loadPrefs();
     await CatalogRepository.instance.load();
     if (!mounted) return;
-    _baseUrl.text = settings.baseUrl;
-    _model.text = settings.model;
-    _customModel = settings.model.trim().isNotEmpty && settings.model.trim() != SettingsStore.defaultModel;
-    _apiKey.text = settings.apiKey;
     final cloudflare = await _store.loadCloudflare();
     _cfAccount.text = cloudflare.accountId;
     _cfToken.text = cloudflare.apiToken;
@@ -98,13 +135,28 @@ class _SettingsPageState extends State<SettingsPage> {
       _buildInfo = buildInfo;
       _loading = false;
     });
+    _listenForAutoSave();
+    _hydrating = false;
   }
 
   @override
   void dispose() {
-    _baseUrl.dispose();
-    _model.dispose();
-    _apiKey.dispose();
+    _companySaveTimer?.cancel();
+    _agentSaveTimer?.cancel();
+    _githubSaveTimer?.cancel();
+    _brand.removeListener(_scheduleCompanySave);
+    _address.removeListener(_scheduleCompanySave);
+    _phone.removeListener(_scheduleCompanySave);
+    _gst.removeListener(_scheduleCompanySave);
+    _hvacGst.removeListener(_scheduleCompanySave);
+    _cfAccount.removeListener(_scheduleAgentSave);
+    _cfToken.removeListener(_scheduleAgentSave);
+    _ghToken.removeListener(_scheduleGithubSave);
+    if (!_hydrating) {
+      unawaited(_saveCompany(silent: true));
+      unawaited(_saveAgent(silent: true));
+      unawaited(_persistGithubToken());
+    }
     _cfAccount.dispose();
     _cfToken.dispose();
     _ghToken.dispose();
@@ -138,7 +190,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 16),
                   _backupCard(),
                   const SizedBox(height: 16),
-                  _agentCard(compact: compact),
+                  _agentCard(),
                   const SizedBox(height: 16),
                   _companyCard(compact: compact),
                 ] else
@@ -160,7 +212,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         flex: 8,
                         child: Column(
                           children: [
-                            _agentCard(compact: compact),
+                            _agentCard(),
                             const SizedBox(height: 16),
                             _companyCard(compact: compact),
                           ],
@@ -198,7 +250,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 640),
                 child: Text(
-                  'Manage local caching, data redundancy, organizational defaults, and agent parameters. Ensure secure storage for API keys.',
+                  'Manage local caching, data redundancy, organizational defaults, and Cloudflare agent parameters.',
                   style: TextStyle(color: AppColors.muted, fontSize: compact ? 14 : 16, height: 1.4),
                 ),
               ),
@@ -217,9 +269,18 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _statusPill() {
     final busy = _syncBusy;
-    final synced = _lastSyncedAt != null;
-    final color = busy ? AppColors.primary : (synced ? AppColors.completed : AppColors.muted);
-    final label = busy ? 'SYNCING' : (synced ? 'CLOUD SYNCED' : 'LOCAL ONLY');
+    final error = AppwriteAutoSync.instance.lastError;
+    final synced = _lastSyncedAt != null && (error == null || error.isEmpty);
+    final color = busy
+        ? AppColors.primary
+        : (error != null && error.isNotEmpty)
+            ? AppColors.down
+            : (synced ? AppColors.completed : AppColors.muted);
+    final label = busy
+        ? 'SYNCING'
+        : (error != null && error.isNotEmpty)
+            ? 'CLOUD ERROR'
+            : (synced ? 'CLOUD SYNCED' : 'LOCAL ONLY');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
@@ -414,11 +475,12 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _persistGithubToken() async {
+    final token = _ghToken.text.trim();
     final current = await _store.loadGitHub();
     await _store.saveGitHub(
       current.copyWith(
         repo: current.repo.trim().isEmpty ? defaultUpdateRepo : current.repo,
-        token: _ghToken.text.trim(),
+        token: token,
       ),
     );
   }
@@ -638,9 +700,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _agentCard({required bool compact}) {
-    final model = _model.text.trim().isEmpty ? SettingsStore.defaultModel : _model.text.trim();
-    final chatSelected = !_customModel;
+  Widget _agentCard() {
     return _SettingsCard(
       color: AppColors.cardHover,
       child: Column(
@@ -660,7 +720,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Manoj Singharya can search the web, query Appwrite, and act across the app. Account ID and API token stay on this machine.',
+            'Manoj Singharya can search the web, query Appwrite, and act across the app. Cloudflare credentials stay on this device.',
             style: TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 20),
@@ -695,107 +755,12 @@ class _SettingsPageState extends State<SettingsPage> {
               style: TextStyle(color: AppColors.muted, fontSize: 12),
             ),
           ),
-          const SizedBox(height: 20),
-          _LabeledField(
-            label: 'DeepSeek API Key (fallback)',
-            child: TextField(
-              controller: _apiKey,
-              obscureText: _obscure,
-              style: const TextStyle(fontFamily: 'Consolas', fontSize: 14),
-              decoration: _fieldDecoration(
-                hint: 'sk-…',
-              ),
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.only(left: 8, top: 6),
-            child: Text(
-              'Stored locally on this machine. Used only for agent requests from this app.',
-              style: TextStyle(color: AppColors.muted, fontSize: 12),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _LabeledField(
-            label: 'Base URL',
-            child: TextField(
-              controller: _baseUrl,
-              decoration: _fieldDecoration(hint: SettingsStore.defaultBaseUrl),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text('MODEL SELECTION', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.4)),
-          const SizedBox(height: 10),
-          if (compact) ...[
-            _ModelOption(
-              title: SettingsStore.defaultModel,
-              subtitle: 'Default for catalog search, quotations, and estimate edits.',
-              selected: chatSelected,
-              onTap: () => setState(() {
-                _customModel = false;
-                _model.text = SettingsStore.defaultModel;
-              }),
-            ),
-            const SizedBox(height: 10),
-            _ModelOption(
-              title: chatSelected ? 'custom model' : model,
-              subtitle: 'Use another DeepSeek-compatible model id.',
-              selected: !chatSelected,
-              onTap: () => setState(() => _customModel = true),
-            ),
-          ] else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _ModelOption(
-                    title: SettingsStore.defaultModel,
-                    subtitle: 'Default for catalog search, quotations, and estimate edits.',
-                    selected: chatSelected,
-                    onTap: () => setState(() {
-                      _customModel = false;
-                      _model.text = SettingsStore.defaultModel;
-                    }),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ModelOption(
-                    title: chatSelected ? 'custom model' : model,
-                    subtitle: 'Use another DeepSeek-compatible model id.',
-                    selected: !chatSelected,
-                    onTap: () => setState(() => _customModel = true),
-                  ),
-                ),
-              ],
-            ),
-          if (!chatSelected) ...[
-            const SizedBox(height: 12),
-            TextField(
-              controller: _model,
-              onChanged: (_) => setState(() {}),
-              decoration: _fieldDecoration(hint: 'model id'),
-            ),
-          ],
           const SizedBox(height: 12),
           Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(
-              onPressed: () {
-                setState(() {
-                  _baseUrl.text = SettingsStore.defaultBaseUrl;
-                  _model.text = SettingsStore.defaultModel;
-                  _customModel = false;
-                });
-              },
-              child: const Text('Use DeepSeek defaults'),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Align(
             alignment: Alignment.centerRight,
-            child: FilledButton(
-              onPressed: _saveAgent,
-              child: const Text('save agent config'),
+            child: Text(
+              _agentSaving ? 'Saving on this device…' : 'Saved automatically on this device.',
+              style: const TextStyle(color: AppColors.muted, fontSize: 12),
             ),
           ),
         ],
@@ -811,7 +776,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const Text('organizational defaults', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
           const Text(
-            'Base values applied to all new estimates and generated documents.',
+            'Base values applied to all new estimates and generated documents. Saved to Appwrite automatically.',
             style: TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 20),
@@ -895,9 +860,13 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 20),
           Align(
             alignment: Alignment.centerRight,
-            child: OutlinedButton(
-              onPressed: _saveCompany,
-              child: const Text('update defaults'),
+            child: Text(
+              _companyCloudStatus(),
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: AppwriteAutoSync.instance.lastError == null ? AppColors.muted : AppColors.down,
+                fontSize: 12,
+              ),
             ),
           ),
         ],
@@ -921,23 +890,26 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _saveAgent() async {
+  Future<void> _saveAgent({bool silent = false}) async {
+    final accountId = _cfAccount.text;
+    final apiToken = _cfToken.text;
     await _store.saveCloudflare(
-      CloudflareAiSettings(accountId: _cfAccount.text, apiToken: _cfToken.text),
-    );
-    await _store.save(
-      LlmSettings(
-        baseUrl: _baseUrl.text,
-        model: _customModel
-            ? (_model.text.trim().isEmpty ? SettingsStore.defaultModel : _model.text)
-            : SettingsStore.defaultModel,
-        apiKey: _apiKey.text,
-      ),
+      CloudflareAiSettings(accountId: accountId, apiToken: apiToken),
     );
     if (!mounted) return;
+    setState(() => _agentSaving = false);
+    if (silent) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Manoj Singharya agent settings saved on this machine')),
     );
+  }
+
+  String _companyCloudStatus() {
+    final error = AppwriteAutoSync.instance.lastError;
+    if (error != null && error.isNotEmpty) return error;
+    if (_companySaving || _syncBusy) return 'Saving to Appwrite…';
+    if (_lastSyncedAt != null) return 'Saved to Appwrite · ${_ago(_lastSyncedAt!)}';
+    return 'Saves to the Appwrite company table automatically';
   }
 
   String _cacheSizeLabel() {
@@ -1022,17 +994,24 @@ class _SettingsPageState extends State<SettingsPage> {
     return '$d/$m/${value.year} $h:$min';
   }
 
-  Future<void> _saveCompany() async {
+  Future<void> _saveCompany({bool silent = false}) async {
+    final brand = _brand.text.trim();
+    final address = _address.text.trim();
+    final phone = _phone.text.trim();
+    final gst = parseNumber(_gst.text);
+    final hvacGst = parseNumber(_hvacGst.text);
     await LocalCache.instance.updatePrefs((prefs) {
-      prefs.brand = _brand.text.trim().isEmpty ? defaultCompanyBrand : _brand.text.trim();
-      prefs.companyAddress = _address.text.trim().isEmpty ? defaultCompanyAddress : _address.text.trim();
-      prefs.companyPhone = _phone.text.trim().isEmpty ? defaultCompanyPhone : _phone.text.trim();
-      prefs.gstPercent = parseNumber(_gst.text) ?? 18;
-      prefs.hvacGstPercent = parseNumber(_hvacGst.text) ?? 28;
+      if (brand.isNotEmpty) prefs.brand = brand;
+      if (address.isNotEmpty) prefs.companyAddress = address;
+      if (phone.isNotEmpty) prefs.companyPhone = phone;
+      if (gst != null) prefs.gstPercent = gst;
+      if (hvacGst != null) prefs.hvacGstPercent = hvacGst;
     });
     if (!mounted) return;
+    setState(() => _companySaving = false);
+    if (silent) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Company defaults saved on this PC')),
+      const SnackBar(content: Text('Company defaults saved to Appwrite')),
     );
   }
 
@@ -1289,55 +1268,6 @@ class _LabeledField extends StatelessWidget {
         ),
         child,
       ],
-    );
-  }
-}
-
-class _ModelOption extends StatelessWidget {
-  const _ModelOption({
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.primary.withValues(alpha: 0.08) : AppColors.card,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: selected ? AppColors.primary : AppColors.outline.withValues(alpha: 0.5), width: selected ? 2 : 1),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  ),
-                  Icon(Icons.check_circle, size: 18, color: selected ? AppColors.primary : Colors.transparent),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(subtitle, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

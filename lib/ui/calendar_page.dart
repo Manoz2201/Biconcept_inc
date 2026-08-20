@@ -79,7 +79,7 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
             ),
             SliverPadding(
-              padding: EdgeInsets.fromLTRB(pad, 0, pad, 96),
+              padding: EdgeInsets.fromLTRB(pad, 0, pad, widget.compact ? AppBreakpoints.navClearance : 32),
               sliver: SliverToBoxAdapter(
                 child: _panel == 0 ? _calendarPanel() : _accountsPanel(),
               ),

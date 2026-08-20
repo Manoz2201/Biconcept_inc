@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/estimate_document.dart';
 import '../../theme/app_theme.dart';
+import 'app_nav.dart';
 
 class AppCard extends StatelessWidget {
   const AppCard({
@@ -200,31 +201,31 @@ class AppSidebar extends StatelessWidget {
                 child: Column(
                   children: [
                     _NavItem(
-                      icon: Icons.dashboard_rounded,
+                      svg: AppNavIcons.dashboard,
                       label: 'dashboard',
                       selected: index == 0,
                       onTap: () => onSelect(0),
                     ),
                     _NavItem(
-                      icon: Icons.request_quote_rounded,
+                      svg: AppNavIcons.estimates,
                       label: 'estimates',
                       selected: index == 1,
                       onTap: () => onSelect(1),
                     ),
                     _NavItem(
-                      icon: Icons.people_alt_rounded,
+                      svg: AppNavIcons.clients,
                       label: 'clients',
                       selected: index == 2,
                       onTap: () => onSelect(2),
                     ),
                     _NavItem(
-                      icon: Icons.calendar_month_rounded,
+                      svg: AppNavIcons.calendar,
                       label: 'calendar',
                       selected: index == 3,
                       onTap: () => onSelect(3),
                     ),
                     _NavItem(
-                      icon: Icons.menu_book_rounded,
+                      svg: AppNavIcons.rates,
                       label: 'rate card',
                       selected: index == 4,
                       onTap: () => onSelect(4),
@@ -234,9 +235,10 @@ class AppSidebar extends StatelessWidget {
               ),
             ),
             _NavItem(
-              icon: Icons.settings_rounded,
+              svg: AppNavIcons.settings,
               label: 'settings',
               selected: index == 5,
+              spinWhenSelected: true,
               onTap: () => onSelect(5),
             ),
             Padding(
@@ -271,16 +273,18 @@ class AppSidebar extends StatelessWidget {
 
 class _NavItem extends StatelessWidget {
   const _NavItem({
-    required this.icon,
+    required this.svg,
     required this.label,
     required this.selected,
     required this.onTap,
+    this.spinWhenSelected = false,
   });
 
-  final IconData icon;
+  final String svg;
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool spinWhenSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -294,14 +298,31 @@ class _NavItem extends StatelessWidget {
           child: Column(
             children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+                duration: navActiveDuration,
+                curve: navActiveCurve,
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
                   color: selected ? AppColors.primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(icon, color: selected ? const Color(0xFF1A1010) : AppColors.muted),
+                child: AnimatedSlide(
+                  offset: selected ? const Offset(0, -0.04) : Offset.zero,
+                  duration: navActiveDuration,
+                  curve: navActiveCurve,
+                  child: AnimatedRotation(
+                    turns: spinWhenSelected && selected ? 0.12 : 0,
+                    duration: const Duration(milliseconds: 400),
+                    curve: navActiveCurve,
+                    child: Center(
+                      child: NavSvgIcon(
+                        svg: svg,
+                        color: selected ? const Color(0xFF1A1010) : AppColors.muted,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 6),
               Text(

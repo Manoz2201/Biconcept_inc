@@ -658,7 +658,7 @@ class _AgentChatView extends StatelessWidget {
 
     final settings = await store.load();
     if (!settings.isConfigured) {
-      return 'Add your Cloudflare Account ID and API token in Settings so Manoj Singharya can run. A DeepSeek key still works as fallback.';
+      return 'Add your Cloudflare Account ID and API token in Settings so Manoj Singharya can run.';
     }
     final agent = EstimateAgent(
       catalog: catalog,

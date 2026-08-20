@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class AppBreakpoints {
   static const compact = 800.0;
   static const wide = 1100.0;
-  static const navClearance = 96.0;
+  static const navClearance = 108.0;
 }
 
 class AppScrollBehavior extends MaterialScrollBehavior {

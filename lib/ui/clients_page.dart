@@ -410,7 +410,7 @@ class ClientsPageState extends State<ClientsPage> {
           )
         else
           SliverPadding(
-            padding: EdgeInsets.fromLTRB(pad, 0, pad, 96),
+            padding: EdgeInsets.fromLTRB(pad, 0, pad, widget.compact ? AppBreakpoints.navClearance : 32),
             sliver: SliverLayoutBuilder(
               builder: (context, constraints) {
                 final width = constraints.crossAxisExtent;

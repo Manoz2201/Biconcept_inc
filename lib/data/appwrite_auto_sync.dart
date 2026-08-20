@@ -67,6 +67,9 @@ class AppwriteAutoSync extends ChangeNotifier {
           final settings = await _configured();
           if (settings == null) return;
           await _sync.upsertCompany(settings, AppPrefsCache.fromJson(prefs));
+          lastSyncedAt = DateTime.now();
+          await _store.saveAppwrite(settings.copyWith(lastSyncedAt: lastSyncedAt));
+          notifyListeners();
         });
   }
 
@@ -146,7 +149,14 @@ class AppwriteAutoSync extends ChangeNotifier {
     return _enqueue(() async {
       try {
         await job();
-      } catch (_) {}
+        if (lastError != null) {
+          lastError = null;
+          notifyListeners();
+        }
+      } catch (error) {
+        lastError = error.toString().replaceFirst('FormatException: ', '');
+        notifyListeners();
+      }
     });
   }
 

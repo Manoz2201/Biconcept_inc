@@ -18,6 +18,7 @@ import 'calendar_page.dart';
 import 'quotation_editor.dart';
 import 'rate_card_page.dart';
 import 'settings_page.dart';
+import 'widgets/app_nav.dart';
 import 'widgets/ui_kit.dart';
 
 class EstimateHomePage extends StatefulWidget {
@@ -230,45 +231,12 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
                     )
                   : null,
           bottomNavigationBar: compact
-              ? NavigationBar(
+              ? AppBottomNav(
                   selectedIndex: _tab,
-                  labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-                  onDestinationSelected: (index) => setState(() {
+                  onSelect: (index) => setState(() {
                     _tab = index;
                     _query = '';
                   }),
-                  destinations: const [
-                    NavigationDestination(
-                      icon: Icon(Icons.dashboard_outlined),
-                      selectedIcon: Icon(Icons.dashboard_rounded),
-                      label: 'Home',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.request_quote_outlined),
-                      selectedIcon: Icon(Icons.request_quote_rounded),
-                      label: 'Estimates',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.people_alt_outlined),
-                      selectedIcon: Icon(Icons.people_alt_rounded),
-                      label: 'Clients',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.calendar_month_outlined),
-                      selectedIcon: Icon(Icons.calendar_month_rounded),
-                      label: 'Calendar',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.menu_book_outlined),
-                      selectedIcon: Icon(Icons.menu_book_rounded),
-                      label: 'Rates',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.settings_outlined),
-                      selectedIcon: Icon(Icons.settings_rounded),
-                      label: 'Settings',
-                    ),
-                  ],
                 )
               : null,
         );

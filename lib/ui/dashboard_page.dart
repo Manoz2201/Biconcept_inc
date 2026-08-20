@@ -40,7 +40,7 @@ class DashboardPage extends StatelessWidget {
           return !day.isAfter(today);
         }).length;
         return ListView(
-          padding: EdgeInsets.fromLTRB(pad, compact ? 4 : 8, pad, compact ? 96 : 32),
+          padding: EdgeInsets.fromLTRB(pad, compact ? 4 : 8, pad, compact ? AppBreakpoints.navClearance : 32),
           children: [
             _DashboardHero(compact: compact),
             const SizedBox(height: 20),
