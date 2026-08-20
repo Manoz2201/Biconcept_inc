@@ -290,19 +290,26 @@ class QuotationPdf {
     if (terms.isEmpty) return const [];
     return [
       pw.SizedBox(height: 50),
-      pw.Text(
-        'OTHER TERMS AND CONDITIONS-',
-        style: pw.TextStyle(color: _teal, fontSize: 10, fontWeight: pw.FontWeight.bold),
-      ),
-      pw.SizedBox(height: 8),
-      for (var i = 0; i < terms.length; i++)
-        pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 6),
-          child: pw.Text(
-            '${i + 1}. ${pdfSafe(terms[i])}',
-            style: const pw.TextStyle(color: _ink, fontSize: 8, lineSpacing: 1.25),
-          ),
+      pw.Inseparable(
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              'OTHER TERMS AND CONDITIONS-',
+              style: pw.TextStyle(color: _teal, fontSize: 10, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 8),
+            for (var i = 0; i < terms.length; i++)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 6),
+                child: pw.Text(
+                  '${i + 1}. ${pdfSafe(terms[i])}',
+                  style: const pw.TextStyle(color: _ink, fontSize: 8, lineSpacing: 1.25),
+                ),
+              ),
+          ],
         ),
+      ),
     ];
   }
 
