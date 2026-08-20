@@ -1,9 +1,9 @@
 {
   "schema": "biconcept-release-v1",
-  "version": "1.1.0",
-  "build": 2,
-  "tag": "v1.1.0",
+  "version": "1.1.3",
+  "build": 5,
+  "tag": "v1.1.3",
   "channel": "release",
-  "gitSha": "71f74145c055be35299f3f49d740c4b6af43a79a",
-  "notes": "BiConcept 1.1.0. Settings → Updates downloads the Android APK or Windows zip."
+  "gitSha": "cd412680a4c61fb2fc629ec75bd3a96962af50c6",
+  "notes": "BiConcept 1.1.3. Rounded mobile nav, Appwrite company auto-save, Cloudflare-only agent settings."
 }
