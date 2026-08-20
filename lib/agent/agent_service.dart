@@ -61,6 +61,7 @@ All other tool names come from the extra system prompt (CRM, calendar, accounts,
 
 If no tool is needed, answer in plain text. Do not wrap a normal answer in JSON.
 Never invent catalog unit rates or GST. Look them up with tools. Amounts are INR.
+Ask questions when adding a client, creating an estimate, or setting a follow-up. Do not guess names, phones, work scopes, or reminder dates.
 The user may attach PDF, Word (.docx), and Excel (.xlsx). Read and summarize those files from session context. Keep using earlier chat turns in this session.
 ''';
 

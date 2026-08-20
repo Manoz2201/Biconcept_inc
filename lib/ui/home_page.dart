@@ -116,6 +116,7 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
         final compact = constraints.maxWidth < AppBreakpoints.compact;
         return Scaffold(
           extendBody: compact,
+          resizeToAvoidBottomInset: true,
           body: SafeArea(
             bottom: false,
             child: Row(

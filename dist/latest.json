@@ -1,9 +1,9 @@
 {
   "schema": "biconcept-release-v1",
-  "version": "1.1.5",
-  "build": 7,
-  "tag": "v1.1.5",
+  "version": "1.1.6",
+  "build": 8,
+  "tag": "v1.1.6",
   "channel": "release",
-  "gitSha": "b1d951a9f3a06321510e880b43e5e8be562e74af",
-  "notes": "BiConcept 1.1.5. Download and install the APK or Windows zip in the app. GitHub Release pages are not opened."
+  "gitSha": "9716fc0dce1c82a3af4f0880fb437569cae95d83",
+  "notes": "BiConcept 1.1.6. Agent keyboard stays above the chat field. Agent can add clients, create estimates from work scope, and set client follow-up reminders."
 }

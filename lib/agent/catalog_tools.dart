@@ -140,7 +140,8 @@ class CatalogTools {
       'type': 'function',
       'function': {
         'name': 'create_estimate',
-        'description': 'Create a new quotation from catalog work types and optional scopes, then save it.',
+        'description':
+            'Create a quotation for a client. Ask the user which client and which work scope first. Pass workTypes and/or workScope/scopes from the catalog.',
         'parameters': {
           'type': 'object',
           'properties': {
@@ -152,17 +153,21 @@ class CatalogTools {
               'items': {'type': 'string'},
               'description': 'Work type names or ids',
             },
+            'workScope': {
+              'type': 'string',
+              'description': 'Free-text work the user asked to quote, e.g. gypsum partition, painting, HVAC',
+            },
             'scopes': {
               'type': 'array',
               'items': {'type': 'string'},
-              'description': 'Optional scope names. If empty, typical priced scopes are used.',
+              'description': 'Scope names from the catalog',
             },
             'estimateType': {
               'type': 'string',
               'description': 'Interior Estimate, Design, Construction TurnKey Estimate, or a custom label',
             },
           },
-          'required': ['client', 'workTypes'],
+          'required': ['client'],
         },
       },
     },
@@ -321,7 +326,7 @@ class CatalogTools {
     return '''
 Quotation / rate-card tools: $names.
 Never invent unit rates. Stay within minRate and maxRate when those exist. Do not compute GST yourself.
-Open or create an estimate before editing lines. After edits, mention totals from tools.
+Ask which client and which work scope before create_estimate. Open or create an estimate before editing lines. After edits, mention totals from tools.
 ''';
   }
 
@@ -505,36 +510,62 @@ Open or create an estimate before editing lines. After edits, mention totals fro
 
   Future<String> _createEstimate(Map<String, dynamic> args) async {
     final client = args['client']?.toString().trim() ?? '';
-    if (client.isEmpty) return jsonEncode({'error': 'Enter a client name'});
+    if (client.isEmpty) {
+      return jsonEncode({
+        'error': 'Ask the user which client this estimate is for',
+        'need': 'client',
+      });
+    }
     final project = args['project']?.toString().trim() ?? '';
     final carpet = (args['carpetArea'] as num?)?.toDouble();
     final typeNames = [
       for (final item in args['workTypes'] as List? ?? const []) item.toString(),
     ];
-    final scopeNames = [
-      for (final item in args['scopes'] as List? ?? const []) item.toString().toLowerCase(),
-    ];
+    final scopeQueries = _scopeQueries(args);
     final types = <WorkTypeSummary>[];
     for (final name in typeNames) {
       final type = _findType(name);
       if (type != null) types.add(type);
     }
-    if (types.isEmpty) return jsonEncode({'error': 'No matching work types'});
+
+    final matchedScopes = <WorkScope>[];
+    final seen = <String>{};
+    for (final query in scopeQueries) {
+      for (final scope in _repo.searchScopes(catalog, query: query, limit: 8)) {
+        if (seen.add(scope.id)) matchedScopes.add(scope);
+      }
+    }
+
+    if (types.isEmpty && matchedScopes.isEmpty) {
+      return jsonEncode({
+        'error': 'Ask the user which work scope to quote (gypsum, painting, HVAC, electrical, …)',
+        'need': 'workScope',
+      });
+    }
 
     final lines = <EstimateLine>[];
-    for (final type in types) {
-      var scopes = type.scopes;
-      if (scopeNames.isNotEmpty) {
-        scopes = scopes.where((scope) => scopeNames.any((name) => scope.name.toLowerCase().contains(name))).toList();
-      } else {
-        scopes = catalog.typicalScopes(type: type);
-      }
-      for (final scope in scopes) {
+    if (matchedScopes.isNotEmpty) {
+      for (final scope in matchedScopes) {
+        final type = catalog.workTypeById(scope.workTypeId) ?? _findType(scope.workType);
+        if (type == null) continue;
         final qty = suggestQuantity(scope: scope, carpetArea: carpet) ?? 1;
         lines.add(EstimateLine.fromScope(type: type, scope: scope, quantity: qty));
       }
+    } else {
+      for (final type in types) {
+        final scopes = catalog.typicalScopes(type: type);
+        for (final scope in scopes) {
+          final qty = suggestQuantity(scope: scope, carpetArea: carpet) ?? 1;
+          lines.add(EstimateLine.fromScope(type: type, scope: scope, quantity: qty));
+        }
+      }
     }
-    if (lines.isEmpty) return jsonEncode({'error': 'No matching scopes'});
+    if (lines.isEmpty) {
+      return jsonEncode({
+        'error': 'No matching catalog scopes. Ask the user to name the work more specifically.',
+        'need': 'workScope',
+      });
+    }
 
     final prefs = await LocalCache.instance.loadPrefs();
     final created = EstimateDraft(
@@ -777,6 +808,22 @@ Open or create an estimate before editing lines. After edits, mention totals fro
       if (type.name.toLowerCase().contains(needle)) return type;
     }
     return null;
+  }
+
+  List<String> _scopeQueries(Map<String, dynamic> args) {
+    final raw = <String>[
+      for (final item in args['scopes'] as List? ?? const []) item.toString(),
+      if ((args['workScope'] ?? args['scope'])?.toString().trim().isNotEmpty ?? false)
+        (args['workScope'] ?? args['scope']).toString(),
+    ];
+    final queries = <String>[];
+    for (final value in raw) {
+      for (final part in value.split(RegExp(r',|/|&|\band\b', caseSensitive: false))) {
+        final bit = part.trim();
+        if (bit.isNotEmpty) queries.add(bit);
+      }
+    }
+    return queries;
   }
 
   Map<String, dynamic> appSnapshot() {

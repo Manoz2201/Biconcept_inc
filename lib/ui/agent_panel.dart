@@ -26,7 +26,6 @@ Future<void> showAgentSheet({
   required BuildContext context,
   required Widget panel,
 }) {
-  final height = MediaQuery.sizeOf(context).height;
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -36,22 +35,32 @@ Future<void> showAgentSheet({
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
     builder: (context) {
-      return SizedBox(
-        height: height * 0.92,
-        child: Column(
-          children: [
-            const SizedBox(height: 10),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.outline.withValues(alpha: 0.8),
-                borderRadius: BorderRadius.circular(99),
-              ),
+      final media = MediaQuery.of(context);
+      final keyboard = media.viewInsets.bottom;
+      final available = (media.size.height - keyboard).clamp(240.0, media.size.height);
+      return Padding(
+        padding: EdgeInsets.only(bottom: keyboard),
+        child: MediaQuery.removeViewInsets(
+          context: context,
+          removeBottom: true,
+          child: SizedBox(
+            height: available * 0.92,
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.outline.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(child: panel),
+              ],
             ),
-            const SizedBox(height: 8),
-            Expanded(child: panel),
-          ],
+          ),
         ),
       );
     },
@@ -264,13 +273,13 @@ class _AgentChatView extends StatelessWidget {
 
   List<String> get _prompts => draft == null
       ? const [
-          'list clients',
-          'what is on the calendar',
-          'summarize the attached file',
+          'add a new client',
+          'create an estimate for a client',
+          'remind me to follow up',
         ]
       : const [
-          'use max rate for gypsum partition',
           'who is this client in CRM',
+          'schedule a follow-up for this client',
         ];
 
   @override
@@ -497,8 +506,9 @@ class _AgentChatView extends StatelessWidget {
   }
 
   Widget _composer(BuildContext context) {
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
+      padding: EdgeInsets.fromLTRB(12, 4, 12, 12 + safeBottom),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -533,6 +543,7 @@ class _AgentChatView extends StatelessWidget {
                   enabled: !busy,
                   minLines: 1,
                   maxLines: 4,
+                  scrollPadding: const EdgeInsets.fromLTRB(20, 20, 20, 96),
                   style: const TextStyle(fontSize: 13),
                   decoration: InputDecoration(
                     hintText: 'Ask $kAgentName',

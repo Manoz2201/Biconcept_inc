@@ -13,6 +13,7 @@ import '../data/schedule.dart';
 import '../data/settings_store.dart';
 import '../models/client_record.dart';
 import '../models/office_models.dart';
+import '../util/when.dart';
 import 'agent_service.dart';
 import 'catalog_tools.dart';
 
@@ -105,7 +106,8 @@ class AppTools {
       'type': 'function',
       'function': {
         'name': 'save_client',
-        'description': 'Create or update a CRM client. Pass id to update; otherwise match by name or create.',
+        'description':
+            'Create or update a CRM client after asking the user for details. Ask name first, then phone and project. Pass id to update; otherwise match by name or create.',
         'parameters': {
           'type': 'object',
           'properties': {
@@ -143,6 +145,31 @@ class AppTools {
     {
       'type': 'function',
       'function': {
+        'name': 'add_client_follow_up',
+        'description':
+            'Add a follow-up reminder on a CRM client and the calendar, with a notification. Ask which client and when (tomorrow, in 3 days, next Friday, or a date).',
+        'parameters': {
+          'type': 'object',
+          'properties': {
+            'id': {'type': 'string'},
+            'name': {'type': 'string'},
+            'when': {
+              'type': 'string',
+              'description': 'ISO datetime, or tomorrow, in 3 days, next Friday, 25/08/2026',
+            },
+            'kind': {
+              'type': 'string',
+              'description': 'Call, WhatsApp, Visit, Email, or Other',
+            },
+            'note': {'type': 'string'},
+          },
+          'required': ['when'],
+        },
+      },
+    },
+    {
+      'type': 'function',
+      'function': {
         'name': 'list_calendar',
         'description': 'List calendar events. Optional ISO day, or upcoming undoned items.',
         'parameters': {
@@ -164,7 +191,10 @@ class AppTools {
           'type': 'object',
           'properties': {
             'title': {'type': 'string'},
-            'start': {'type': 'string', 'description': 'ISO datetime'},
+            'start': {
+              'type': 'string',
+              'description': 'ISO datetime, or tomorrow, in 3 days, next Friday',
+            },
             'kind': {'type': 'string'},
             'client': {'type': 'string'},
             'project': {'type': 'string'},
@@ -329,6 +359,10 @@ class AppTools {
     return '''
 You operate the full BiConcept app: dashboard, estimates, clients/CRM, calendar, accounts, rate card, settings, and quotations.
 Use tools for any in-app action the user asks for. Do not say you are only an estimator.
+Interview the user. Ask short questions; do not invent missing details.
+New client: ask name, then phone and project/site (email/address optional). Then save_client.
+New estimate: ask which client, then which work scope (gypsum, painting, HVAC…). search_rate_card if needed, then create_estimate with client and workScope. If the client is not in CRM, save_client first.
+Follow-up reminder: ask which client, when to remind, and Call/WhatsApp/Visit. Then add_client_follow_up so it is stored on the client and on the calendar with a notification.
 Internet: web_search and web_fetch (built in). Prefer tools over guessing.
 Database: query_database for Appwrite tables clients, estimates, company, catalog. Use sync_cloud to pull/push.
 Attached files: list_session_files, read_session_file, save_file_summary. PDF/Word/Excel text is also in session context — summarize when asked and save the summary.
@@ -397,10 +431,14 @@ Amounts are INR. ${CatalogTools.workersAiToolPrompt()}
           return await _saveClient(args);
         case 'delete_client':
           return await _deleteClient(args);
+        case 'add_client_follow_up':
+          return await _addClientFollowUp(args);
         case 'list_calendar':
           return await _listCalendar(args);
         case 'add_calendar_event':
           return await _addCalendarEvent(args);
+        case 'create_estimate':
+          return await _createEstimateForClient(args);
         case 'complete_calendar_event':
           return await _completeCalendarEvent(args);
         case 'delete_calendar_event':
@@ -514,7 +552,10 @@ Amounts are INR. ${CatalogTools.workersAiToolPrompt()}
     final created = client == null;
     client ??= ClientRecord(name: args['name']?.toString().trim() ?? '');
     if (client.name.trim().isEmpty && (args['name']?.toString().trim().isEmpty ?? true)) {
-      return jsonEncode({'error': 'Client name is required'});
+      return jsonEncode({
+        'error': 'Ask the user for the client name before saving',
+        'need': 'name',
+      });
     }
     if (args['name'] != null) client.name = args['name'].toString().trim();
     if (args['phone'] != null) client.phone = args['phone'].toString().trim();
@@ -526,7 +567,10 @@ Amounts are INR. ${CatalogTools.workersAiToolPrompt()}
     if (args['notes'] != null) client.notes = args['notes'].toString();
     if (args['stage'] != null) client.stage = CrmStage.fromName(args['stage'].toString());
     if (client.name.trim().isEmpty) {
-      return jsonEncode({'error': 'Client name is required'});
+      return jsonEncode({
+        'error': 'Ask the user for the client name before saving',
+        'need': 'name',
+      });
     }
     await _clients.save(client);
     await _changed();
@@ -543,6 +587,57 @@ Amounts are INR. ${CatalogTools.workersAiToolPrompt()}
     await _clients.delete(client.id);
     await _changed();
     return jsonEncode({'ok': true, 'deleted': client.id, 'name': client.name});
+  }
+
+  Future<String> _createEstimateForClient(Map<String, dynamic> args) async {
+    final name = args['client']?.toString().trim() ?? '';
+    if (name.isEmpty) {
+      return jsonEncode({
+        'error': 'Ask the user which client this estimate is for',
+        'need': 'client',
+      });
+    }
+    final found = await _findClient(name: name);
+    if (found != null) {
+      args['client'] = found.name;
+      if ((args['project']?.toString().trim().isEmpty ?? true) && found.project.trim().isNotEmpty) {
+        args['project'] = found.project;
+      }
+    }
+    return catalogTools.execute('create_estimate', jsonEncode(args));
+  }
+
+  Future<String> _addClientFollowUp(Map<String, dynamic> args) async {
+    final client = await _findClient(
+      id: args['id']?.toString(),
+      name: args['name']?.toString() ?? args['client']?.toString(),
+    );
+    if (client == null) {
+      return jsonEncode({
+        'error': 'Ask which client to remind, or add the client first',
+        'need': 'client',
+      });
+    }
+    final when = parseWhen(args['when']?.toString() ?? args['start']?.toString() ?? '');
+    if (when == null) {
+      return jsonEncode({
+        'error': 'Ask when to follow up (tomorrow, in 3 days, next Friday, or a date)',
+        'need': 'when',
+      });
+    }
+    final kind = _followKind(args['kind']?.toString());
+    final note = args['note']?.toString().trim() ?? args['notes']?.toString().trim() ?? '';
+    final item = ClientFollowUp(nextFollow: when, kind: kind, note: note);
+    client.followUps.insert(0, item);
+    await _clients.save(client);
+    await ScheduleService.instance.fromFollowUp(client, item);
+    await _changed();
+    return jsonEncode({
+      'ok': true,
+      'client': _clientSummary(client),
+      'followUp': item.toJson(),
+      'nextFollow': when.toIso8601String(),
+    });
   }
 
   Future<String> _listCalendar(Map<String, dynamic> args) async {
@@ -568,10 +663,22 @@ Amounts are INR. ${CatalogTools.workersAiToolPrompt()}
   }
 
   Future<String> _addCalendarEvent(Map<String, dynamic> args) async {
+    final kind = _calendarKind(args['kind']?.toString());
+    final clientName = args['client']?.toString().trim() ?? '';
+    if (kind == CalendarKind.followUp && clientName.isNotEmpty) {
+      return _addClientFollowUp({
+        ...args,
+        'name': clientName,
+        'when': args['when'] ?? args['start'],
+        'note': args['notes'] ?? args['note'] ?? args['title'],
+      });
+    }
     final title = args['title']?.toString().trim() ?? '';
-    final start = DateTime.tryParse(args['start']?.toString() ?? '');
+    final start = parseWhen(args['start']?.toString() ?? args['when']?.toString() ?? '');
     if (title.isEmpty) return jsonEncode({'error': 'Title is required'});
-    if (start == null) return jsonEncode({'error': 'Provide an ISO start datetime'});
+    if (start == null) {
+      return jsonEncode({'error': 'Ask when (tomorrow, in 3 days, next Friday, or an ISO datetime)'});
+    }
     final event = await ScheduleService.instance.saveEvent(
       CalendarEvent(
         kind: _calendarKind(args['kind']?.toString()),
@@ -810,7 +917,21 @@ Amounts are INR. ${CatalogTools.workersAiToolPrompt()}
         'company': client.company,
         'project': client.project,
         'stage': client.stage.name,
+        'followUps': client.followUps.length,
+        'nextFollow': client.nextFollow?.toIso8601String(),
       };
+
+  String _followKind(String? raw) {
+    final needle = (raw ?? 'Call').trim().toLowerCase();
+    const kinds = ['Call', 'WhatsApp', 'Visit', 'Email', 'Other'];
+    for (final kind in kinds) {
+      if (kind.toLowerCase() == needle) return kind;
+    }
+    if (needle.contains('whats')) return 'WhatsApp';
+    if (needle.contains('visit') || needle.contains('site')) return 'Visit';
+    if (needle.contains('mail')) return 'Email';
+    return 'Call';
+  }
 
   Map<String, dynamic> _eventSummary(CalendarEvent event) => {
         'id': event.id,
