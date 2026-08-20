@@ -1,17 +1,23 @@
 # biconcept
 
-A new Flutter project.
+Interior estimate app for Windows and Android. Estimates, CRM, calendar, and project accounts sync to Appwrite.
 
-## Getting Started
+## CI/CD
 
-This project is a starting point for a Flutter application.
+GitHub Actions:
 
-A few resources to get you started if this is your first Flutter project:
+- **CI** — `flutter analyze` and `flutter test` on pull requests and `main`
+- **Appwrite** — pushes table schema from `appwrite.config.json` when that file changes on `main`, or when you run the workflow by hand
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Add a repository secret named `APPWRITE_API_KEY` (server key with tables read/write). Project ID and endpoint stay in `appwrite.config.json`; never commit the key.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+gh secret set APPWRITE_API_KEY
+```
+
+Local schema deploy:
+
+```bash
+appwrite client --key "$APPWRITE_API_KEY"
+appwrite push tables --all --force
+```
