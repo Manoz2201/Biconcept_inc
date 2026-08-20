@@ -5,6 +5,7 @@ import '../data/local_cache.dart';
 import '../models/company_profile.dart';
 import '../models/estimate_document.dart';
 import '../models/estimate_models.dart';
+import '../theme/app_theme.dart';
 import '../util/format.dart';
 import 'catalog_forms.dart';
 import 'estimate_type_picker.dart';
@@ -94,20 +95,11 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
       appBar: AppBar(title: const Text('New estimate')),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Stepper(
-              currentStep: _step,
-              physics: const NeverScrollableScrollPhysics(),
-              controlsBuilder: (context, details) => const SizedBox.shrink(),
-              steps: [
-                Step(title: const Text('Project'), content: const SizedBox.shrink(), isActive: _step >= 0),
-                Step(title: const Text('Areas'), content: const SizedBox.shrink(), isActive: _step >= 1),
-                Step(title: const Text('Work types'), content: const SizedBox.shrink(), isActive: _step >= 2),
-                Step(title: const Text('Scopes'), content: const SizedBox.shrink(), isActive: _step >= 3),
-                Step(title: const Text('Terms'), content: const SizedBox.shrink(), isActive: _step >= 4),
-              ],
-            ),
+          _EstimateFlowHeader(
+            current: _step,
+            onSelect: (index) {
+              if (index <= _step) setState(() => _step = index);
+            },
           ),
           const Divider(height: 1),
           Expanded(child: _stepBody()),
@@ -640,5 +632,90 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
     );
     draft.replaceLines(List<EstimateLine>.from(lines));
     return draft;
+  }
+}
+
+class _EstimateFlowHeader extends StatelessWidget {
+  const _EstimateFlowHeader({required this.current, required this.onSelect});
+
+  final int current;
+  final ValueChanged<int> onSelect;
+
+  static const _labels = ['Project', 'Areas', 'Types', 'Scopes', 'Terms'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 12, 8, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var i = 0; i < _labels.length; i++)
+            Expanded(
+              child: InkWell(
+                onTap: i <= current ? () => onSelect(i) : null,
+                borderRadius: BorderRadius.circular(12),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 28,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: i == 0
+                                ? const SizedBox.shrink()
+                                : Container(
+                                    height: 2,
+                                    color: i <= current ? AppColors.primary : AppColors.outline,
+                                  ),
+                          ),
+                          CircleAvatar(
+                            radius: 14,
+                            backgroundColor: i == current
+                                ? AppColors.primary
+                                : i < current
+                                    ? AppColors.primaryDim
+                                    : AppColors.cardHover,
+                            child: i < current
+                                ? const Icon(Icons.check, size: 14, color: AppColors.primary)
+                                : Text(
+                                    '${i + 1}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: i == current ? const Color(0xFF1A1010) : AppColors.muted,
+                                    ),
+                                  ),
+                          ),
+                          Expanded(
+                            child: i == _labels.length - 1
+                                ? const SizedBox.shrink()
+                                : Container(
+                                    height: 2,
+                                    color: i < current ? AppColors.primary : AppColors.outline,
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _labels[i],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: i == current ? FontWeight.w700 : FontWeight.w500,
+                        color: i == current ? AppColors.text : AppColors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

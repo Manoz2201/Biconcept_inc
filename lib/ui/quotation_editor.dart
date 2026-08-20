@@ -8,6 +8,7 @@ import '../agent/estimate_agent.dart';
 import '../data/catalog_repository.dart';
 import '../data/draft_store.dart';
 import '../data/local_cache.dart';
+import '../data/schedule_service.dart';
 import '../export/excel_exporter.dart';
 import '../export/quotation_layout.dart';
 import '../export/quotation_pdf.dart';
@@ -199,6 +200,8 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                       _exportExcel();
                     case 'terms':
                       _editTerms();
+                    case 'schedule':
+                      _createPaymentSchedule();
                     case 'type':
                       _editEstimateType();
                     case 'delete':
@@ -214,6 +217,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                     const PopupMenuItem(value: 'pdf', child: Text('Export PDF quotation')),
                     const PopupMenuItem(value: 'excel', child: Text('Export Excel')),
                     const PopupMenuItem(value: 'terms', child: Text('Terms and conditions')),
+                    const PopupMenuItem(value: 'schedule', child: Text('Payment schedule from T&C')),
                     const PopupMenuItem(value: 'type', child: Text('Change estimate type')),
                     const PopupMenuItem(value: 'delete', child: Text('Delete estimate')),
                 ],
@@ -283,14 +287,24 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                     ] else
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: TextButton.icon(
-                          onPressed: _editTerms,
-                          icon: const Icon(Icons.gavel_outlined, size: 18),
-                          label: Text(
-                            draft.effectiveTerms.isEmpty
-                                ? 'Add terms and conditions'
-                                : '${draft.effectiveTerms.length} terms and conditions',
-                          ),
+                        child: Wrap(
+                          spacing: 8,
+                          children: [
+                            TextButton.icon(
+                              onPressed: _editTerms,
+                              icon: const Icon(Icons.gavel_outlined, size: 18),
+                              label: Text(
+                                draft.effectiveTerms.isEmpty
+                                    ? 'Add terms and conditions'
+                                    : '${draft.effectiveTerms.length} terms and conditions',
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: _createPaymentSchedule,
+                              icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                              label: const Text('Payment schedule'),
+                            ),
+                          ],
                         ),
                       ),
                   ],
@@ -719,17 +733,14 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     final type = catalog.workTypeById(result.typeId);
     if (type == null || result.name.isEmpty) return;
 
-    WorkScope? scope;
-    if (result.saveToRateCard) {
-      scope = await CatalogRepository.instance.addScope(
-        workTypeId: type.id,
-        name: result.name,
-        description: result.details,
-        unit: result.unit,
-        suggestedRate: result.rate,
-        code: result.code.isEmpty ? null : result.code,
-      );
-    }
+    final scope = await CatalogRepository.instance.addScope(
+      workTypeId: type.id,
+      name: result.name,
+      description: result.details,
+      unit: result.unit,
+      suggestedRate: result.rate,
+      code: result.code.isEmpty ? null : result.code,
+    );
 
     draft.addLine(
       EstimateLine(
@@ -737,17 +748,17 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
         workTypeId: type.id,
         workType: type.name,
         serialNo: type.serialNo,
-        scopeId: scope?.id ?? 'custom_${DateTime.now().microsecondsSinceEpoch}',
-        workScopeCode: result.code.isEmpty ? scope?.code : result.code,
+        scopeId: scope.id,
+        workScopeCode: result.code.isEmpty ? scope.code : result.code,
         name: result.name,
         description: result.details,
         unit: result.unit,
         quantity: result.quantity,
         suggestedQuantity: result.quantity,
         quantityConfirmed: true,
-        unitRate: result.rate ?? scope?.suggestedRate,
+        unitRate: result.rate ?? scope.suggestedRate,
         source: LineSource.user,
-        custom: scope?.userAdded ?? true,
+        custom: scope.userAdded,
       ),
     );
   }
@@ -760,6 +771,22 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     );
     if (result == null || !mounted) return;
     draft.setTermsAndConditions(result);
+  }
+
+  Future<void> _createPaymentSchedule() async {
+    await _save();
+    if (!mounted) return;
+    final plans = await ScheduleService.instance.createPaymentPlan(draft);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          plans.isEmpty
+              ? 'No payment percentages found in T&C'
+              : 'Scheduled ${plans.length} collections totalling ${inr(draft.totals.grandTotal)}',
+        ),
+      ),
+    );
   }
 
   Future<void> _editEstimateType() async {
@@ -868,7 +895,6 @@ class _AddScopeDraft {
     required this.unit,
     required this.quantity,
     required this.rate,
-    required this.saveToRateCard,
   });
 
   final String typeId;
@@ -878,7 +904,6 @@ class _AddScopeDraft {
   final String unit;
   final double quantity;
   final double? rate;
-  final bool saveToRateCard;
 }
 
 class _AddScopeDialog extends StatefulWidget {
@@ -900,7 +925,6 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
   late final TextEditingController _quantity;
   late String _typeId;
   late String _unit;
-  var _saveToRateCard = true;
 
   @override
   void initState() {
@@ -936,7 +960,6 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
         unit: _unit,
         quantity: parseNumber(_quantity.text) ?? 1,
         rate: parseNumber(_unitRate.text),
-        saveToRateCard: _saveToRateCard,
       ),
     );
   }
@@ -1065,13 +1088,6 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
                       ),
                     ),
                   ],
-                ),
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: _saveToRateCard,
-                  onChanged: (value) => setState(() => _saveToRateCard = value ?? true),
-                  title: const Text('Also save to rate card'),
-                  controlAffinity: ListTileControlAffinity.leading,
                 ),
               ],
             ),

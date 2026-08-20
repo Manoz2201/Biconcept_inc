@@ -218,10 +218,16 @@ class AppSidebar extends StatelessWidget {
                       onTap: () => onSelect(2),
                     ),
                     _NavItem(
-                      icon: Icons.menu_book_rounded,
-                      label: 'rate card',
+                      icon: Icons.calendar_month_rounded,
+                      label: 'calendar',
                       selected: index == 3,
                       onTap: () => onSelect(3),
+                    ),
+                    _NavItem(
+                      icon: Icons.menu_book_rounded,
+                      label: 'rate card',
+                      selected: index == 4,
+                      onTap: () => onSelect(4),
                     ),
                   ],
                 ),
@@ -230,8 +236,8 @@ class AppSidebar extends StatelessWidget {
             _NavItem(
               icon: Icons.settings_rounded,
               label: 'settings',
-              selected: index == 4,
-              onTap: () => onSelect(4),
+              selected: index == 5,
+              onTap: () => onSelect(5),
             ),
             Padding(
               padding: const EdgeInsets.only(bottom: 20),

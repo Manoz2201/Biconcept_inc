@@ -575,7 +575,13 @@ class EstimateCatalog {
       if (item is! Map) continue;
       final type = WorkTypeSummary.fromJson({...Map<String, dynamic>.from(item), 'userAdded': true});
       if (type.name.trim().isEmpty) continue;
-      if (workTypeById(type.id) != null) continue;
+      final existing = workTypeById(type.id);
+      if (existing != null) {
+        for (final scope in type.scopes) {
+          _upsertScopeOnType(existing, scope);
+        }
+        continue;
+      }
       workTypes.add(type);
     }
     workTypes.sort((a, b) => a.serialNo.compareTo(b.serialNo));
@@ -589,26 +595,32 @@ class EstimateCatalog {
       });
       final type = workTypeById(scope.workTypeId) ?? workTypeById(scope.workType);
       if (type == null) continue;
-      final index = type.scopes.indexWhere((existing) => existing.id == scope.id || existing.name.toLowerCase() == scope.name.toLowerCase());
-      if (index >= 0) {
-        final current = type.scopes[index];
-        type.scopes[index] = current.copyWith(
-          unit: scope.unit.isEmpty ? current.unit : scope.unit,
-          description: scope.description.isEmpty ? current.description : scope.description,
-          suggestedRate: scope.suggestedRate ?? current.suggestedRate,
-          minRate: scope.minRate ?? current.minRate,
-          maxRate: scope.maxRate ?? current.maxRate,
-          userAdded: current.userAdded || scope.userAdded,
-          userEdited: true,
-        );
-      } else {
-        type.scopes.add(scope);
-      }
-      for (final area in scope.typicalAreas) {
-        if (!type.areas.contains(area)) type.areas.add(area);
-      }
+      _upsertScopeOnType(type, scope);
     }
     rebuildRateCard();
+  }
+
+  void _upsertScopeOnType(WorkTypeSummary type, WorkScope scope) {
+    final index = type.scopes.indexWhere(
+      (existing) => existing.id == scope.id || existing.name.toLowerCase() == scope.name.toLowerCase(),
+    );
+    if (index >= 0) {
+      final current = type.scopes[index];
+      type.scopes[index] = current.copyWith(
+        unit: scope.unit.isEmpty ? current.unit : scope.unit,
+        description: scope.description.isEmpty ? current.description : scope.description,
+        suggestedRate: scope.suggestedRate ?? current.suggestedRate,
+        minRate: scope.minRate ?? current.minRate,
+        maxRate: scope.maxRate ?? current.maxRate,
+        userAdded: current.userAdded || scope.userAdded,
+        userEdited: current.userEdited || scope.userEdited || scope.userAdded,
+      );
+    } else {
+      type.scopes.add(scope);
+    }
+    for (final area in scope.typicalAreas) {
+      if (!type.areas.contains(area)) type.areas.add(area);
+    }
   }
 
   Map<String, dynamic> overlayJson() => {
@@ -622,9 +634,8 @@ class EstimateCatalog {
         ],
         'scopes': [
           for (final type in workTypes)
-            if (!type.userAdded)
-              for (final scope in type.scopes)
-                if (scope.persistInCache) scope.toJson(),
+            for (final scope in type.scopes)
+              if (scope.persistInCache) scope.toJson(),
         ],
       };
 

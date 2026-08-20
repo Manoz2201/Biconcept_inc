@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../agent/catalog_tools.dart';
+import '../data/appwrite_auto_sync.dart';
 import '../data/catalog_repository.dart';
 import '../data/draft_store.dart';
 import '../models/estimate_document.dart';
@@ -12,6 +15,7 @@ import 'clients_page.dart';
 import 'dashboard_page.dart';
 import 'estimate_type_picker.dart';
 import 'new_estimate_flow.dart';
+import 'calendar_page.dart';
 import 'quotation_editor.dart';
 import 'rate_card_page.dart';
 import 'settings_page.dart';
@@ -24,7 +28,7 @@ class EstimateHomePage extends StatefulWidget {
   State<EstimateHomePage> createState() => _EstimateHomePageState();
 }
 
-class _EstimateHomePageState extends State<EstimateHomePage> {
+class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBindingObserver {
   late Future<EstimateCatalog> _catalogFuture;
   int _tab = 0;
   String _query = '';
@@ -33,12 +37,43 @@ class _EstimateHomePageState extends State<EstimateHomePage> {
   bool _showAgent = true;
   final _agentKey = GlobalKey<CollapsibleAgentPanelState>();
   final _clientsKey = GlobalKey<ClientsPageState>();
+  int _appliedSync = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    AppwriteAutoSync.instance.addListener(_onAutoSync);
     _catalogFuture = CatalogRepository.instance.load();
     _reloadDrafts();
+    unawaited(AppwriteAutoSync.instance.ensureStarted());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    AppwriteAutoSync.instance.removeListener(_onAutoSync);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(AppwriteAutoSync.instance.syncOnResume());
+    }
+  }
+
+  void _onAutoSync() {
+    final generation = AppwriteAutoSync.instance.applyGeneration;
+    if (generation == _appliedSync || !mounted) return;
+    _appliedSync = generation;
+    unawaited(_reloadAfterSync());
+  }
+
+  Future<void> _reloadAfterSync() async {
+    await _reloadDrafts();
+    await _clientsKey.currentState?.reload();
+    await CatalogRepository.instance.reload();
   }
 
   Future<void> _reloadDrafts() async {
@@ -94,7 +129,7 @@ class _EstimateHomePageState extends State<EstimateHomePage> {
                       title: _title,
                       compact: compact,
                       searchHint: _searchHint,
-                      onSearch: (_tab == 1 || _tab == 2 || _tab == 3)
+                      onSearch: (_tab == 1 || _tab == 2 || _tab == 4)
                           ? (value) => setState(() => _query = value.trim())
                           : null,
                       trailing: Row(
@@ -152,12 +187,14 @@ class _EstimateHomePageState extends State<EstimateHomePage> {
                             onEstimatesChanged: _reloadDrafts,
                             onOpenQuotation: (draft) => _openQuotation(catalog, draft),
                           ),
+                          CalendarPage(drafts: _drafts, compact: compact),
                           RateCardPage(catalog: catalog, query: _query),
                           SettingsPage(
                             embedded: true,
                             onAppDataChanged: () async {
                               await _reloadDrafts();
                               await _clientsKey.currentState?.reload();
+                              await CatalogRepository.instance.reload();
                             },
                           ),
                         ],
@@ -235,6 +272,11 @@ class _EstimateHomePageState extends State<EstimateHomePage> {
                       label: 'Clients',
                     ),
                     NavigationDestination(
+                      icon: Icon(Icons.calendar_month_outlined),
+                      selectedIcon: Icon(Icons.calendar_month_rounded),
+                      label: 'Calendar',
+                    ),
+                    NavigationDestination(
                       icon: Icon(Icons.menu_book_outlined),
                       selectedIcon: Icon(Icons.menu_book_rounded),
                       label: 'Rate card',
@@ -263,11 +305,15 @@ class _EstimateHomePageState extends State<EstimateHomePage> {
         case 'client':
         case 'crm':
           _tab = 2;
+        case 'calendar':
+        case 'accounts':
+        case 'payments':
+          _tab = 3;
         case 'rate_card':
         case 'rate card':
-          _tab = 3;
-        case 'settings':
           _tab = 4;
+        case 'settings':
+          _tab = 5;
       }
     });
   }
@@ -313,14 +359,15 @@ class _EstimateHomePageState extends State<EstimateHomePage> {
         0 => 'dashboard',
         1 => 'estimates',
         2 => 'clients',
-        3 => 'rate card',
+        3 => 'calendar',
+        4 => 'rate card',
         _ => 'settings',
       };
 
   String get _searchHint => switch (_tab) {
         1 => 'Search client or project',
         2 => 'Search client, phone or project',
-        3 => 'Search work type, scope or area',
+        4 => 'Search work type, scope or area',
         _ => 'Search',
       };
 

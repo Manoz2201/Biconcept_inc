@@ -1,5 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'appwrite_backend.dart';
+import 'appwrite_sync.dart';
 import 'github_sync.dart';
 
 class LlmSettings {
@@ -27,6 +32,8 @@ class SettingsStore {
   static const _githubBranchKey = 'github_branch';
   static const _githubTokenKey = 'github_token';
   static const _githubSyncedAtKey = 'github_synced_at';
+  static const _appwriteKeyKey = 'appwrite_api_key';
+  static const _appwriteSyncedAtKey = 'appwrite_synced_at';
 
   static const defaultBaseUrl = 'https://api.deepseek.com/v1';
   static const defaultModel = 'deepseek-chat';
@@ -72,5 +79,55 @@ class SettingsStore {
     } else {
       await _storage.write(key: _githubSyncedAtKey, value: settings.lastSyncedAt!.toIso8601String());
     }
+  }
+
+  Future<AppwriteCloudSettings> loadAppwrite() async {
+    final synced = await _storage.read(key: _appwriteSyncedAtKey);
+    var apiKey = AppwriteBackend.compiledApiKey.trim();
+    if (apiKey.isEmpty) {
+      apiKey = (await _storage.read(key: _appwriteKeyKey))?.trim() ?? '';
+    }
+    if (apiKey.isEmpty) {
+      apiKey = await _cliApiKeyFor(AppwriteBackend.endpoint);
+      if (apiKey.isNotEmpty) {
+        await _storage.write(key: _appwriteKeyKey, value: apiKey);
+      }
+    }
+    return AppwriteBackend.settings(
+      apiKey: apiKey,
+      lastSyncedAt: DateTime.tryParse(synced ?? ''),
+    );
+  }
+
+  Future<void> saveAppwrite(AppwriteCloudSettings settings) async {
+    if (settings.apiKey.trim().isNotEmpty) {
+      await _storage.write(key: _appwriteKeyKey, value: settings.apiKey.trim());
+    }
+    if (settings.lastSyncedAt == null) {
+      await _storage.delete(key: _appwriteSyncedAtKey);
+    } else {
+      await _storage.write(key: _appwriteSyncedAtKey, value: settings.lastSyncedAt!.toIso8601String());
+    }
+  }
+
+  Future<String> _cliApiKeyFor(String endpoint) async {
+    if (Platform.environment['FLUTTER_TEST'] == 'true') return '';
+    try {
+      final home = Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'];
+      if (home == null || home.isEmpty) return '';
+      final file = File('$home/.appwrite/prefs.json');
+      if (!await file.exists()) return '';
+      final decoded = jsonDecode(await file.readAsString());
+      if (decoded is! Map) return '';
+      final want = normalizeAppwriteEndpoint(endpoint);
+      for (final value in decoded.values) {
+        if (value is! Map) continue;
+        final item = Map<String, dynamic>.from(value);
+        if (normalizeAppwriteEndpoint(item['endpoint']?.toString() ?? '') != want) continue;
+        final key = item['key']?.toString().trim() ?? '';
+        if (key.isNotEmpty) return key;
+      }
+    } catch (_) {}
+    return '';
   }
 }

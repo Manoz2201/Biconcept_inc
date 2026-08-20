@@ -124,7 +124,7 @@ class ClientRecord {
 
   factory ClientRecord.fromJson(Map<String, dynamic> json) {
     return ClientRecord(
-      id: json['id']?.toString(),
+      id: clientIdFromJson(json),
       name: json['name']?.toString() ?? '',
       phone: json['phone']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
@@ -142,4 +142,12 @@ class ClientRecord {
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? ''),
     );
   }
+}
+
+String? clientIdFromJson(Map<dynamic, dynamic> json) {
+  for (final key in ['id', r'$id']) {
+    final value = json[key]?.toString().trim() ?? '';
+    if (value.isNotEmpty) return value;
+  }
+  return null;
 }

@@ -248,7 +248,7 @@ class CatalogTools {
       'type': 'function',
       'function': {
         'name': 'add_quotation_line',
-        'description': 'Add a scope line to the current quotation.',
+        'description': 'Add a scope line to the current quotation and keep it on that work type in the catalog.',
         'parameters': {
           'type': 'object',
           'properties': {
@@ -259,7 +259,6 @@ class CatalogTools {
             'unitRate': {'type': 'number'},
             'quantity': {'type': 'number'},
             'code': {'type': 'string'},
-            'saveToRateCard': {'type': 'boolean'},
           },
           'required': ['workType', 'name'],
         },
@@ -299,7 +298,7 @@ class CatalogTools {
       'type': 'function',
       'function': {
         'name': 'navigate',
-        'description': 'Open an app screen: dashboard, estimates, clients, rate_card, settings, or quotation.',
+        'description': 'Open an app screen: dashboard, estimates, clients, calendar, rate_card, settings, or quotation.',
         'parameters': {
           'type': 'object',
           'properties': {
@@ -662,25 +661,22 @@ class CatalogTools {
     final rate = (args['unitRate'] as num?)?.toDouble();
     final qty = (args['quantity'] as num?)?.toDouble() ?? 1;
     final code = args['code']?.toString().trim();
-    WorkScope? scope;
-    if (args['saveToRateCard'] == true) {
-      scope = await _repo.addScope(
-        workTypeId: type.id,
-        name: name,
-        description: args['description']?.toString() ?? name,
-        unit: unit,
-        suggestedRate: rate,
-        code: code,
-      );
-    }
+    final scope = await _repo.addScope(
+      workTypeId: type.id,
+      name: name,
+      description: args['description']?.toString() ?? name,
+      unit: unit,
+      suggestedRate: rate,
+      code: code,
+    );
     draft!.addLine(
       EstimateLine(
         id: 'line_${DateTime.now().microsecondsSinceEpoch}',
         workTypeId: type.id,
         workType: type.name,
         serialNo: type.serialNo,
-        scopeId: scope?.id ?? 'custom_${DateTime.now().microsecondsSinceEpoch}',
-        workScopeCode: (code == null || code.isEmpty) ? scope?.code : code,
+        scopeId: scope.id,
+        workScopeCode: (code == null || code.isEmpty) ? scope.code : code,
         name: name,
         description: args['description']?.toString().trim().isNotEmpty == true
             ? args['description'].toString().trim()
@@ -689,9 +685,9 @@ class CatalogTools {
         quantity: qty,
         suggestedQuantity: qty,
         quantityConfirmed: true,
-        unitRate: rate ?? scope?.suggestedRate,
+        unitRate: rate ?? scope.suggestedRate,
         source: LineSource.user,
-        custom: scope?.userAdded ?? true,
+        custom: scope.userAdded,
       ),
     );
     return jsonEncode({'ok': true, 'estimate': appSnapshot()});

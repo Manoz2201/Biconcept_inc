@@ -126,4 +126,89 @@ void main() {
     expect(restored.scopeById('ws_tile')!.unit, 'pcs');
     expect(restored.scopeById('ws_tile')!.suggestedRate, 210);
   });
+
+  test('new scope on a work type is kept on that type in the catalog overlay', () {
+    final catalog = EstimateCatalog(
+      defaults: EstimateDefaults.fromJson(<String, dynamic>{}),
+      workTypes: [
+        WorkTypeSummary(
+          id: 'wt_flooring',
+          serialNo: 3,
+          name: 'Flooring',
+          areas: [],
+          scopes: [
+            WorkScope(
+              id: 'ws_tile',
+              workTypeId: 'wt_flooring',
+              workType: 'Flooring',
+              name: 'Vitrified tiles',
+              description: 'vitrified',
+              unit: 'sqft',
+              suggestedRate: 150,
+              minRate: 120,
+              maxRate: 180,
+              sampleCount: 2,
+              typicalAreas: [],
+              aliases: [],
+              makes: [],
+              samples: [],
+            ),
+          ],
+        ),
+      ],
+      areas: [],
+      rateCard: [],
+      quotations: [],
+    )..rebuildRateCard();
+
+    final added = catalog.addScope(
+      workTypeId: 'wt_flooring',
+      name: 'Stone cladding',
+      unit: 'sqft',
+      suggestedRate: 420,
+    );
+    expect(added.userAdded, isTrue);
+    expect(catalog.workTypeById('wt_flooring')!.scopes.map((scope) => scope.name), contains('Stone cladding'));
+    expect(catalog.rateCard.map((item) => item.workScope), contains('Stone cladding'));
+    expect(
+      (catalog.overlayJson()['scopes'] as List).map((item) => (item as Map)['name']),
+      contains('Stone cladding'),
+    );
+
+    final restored = EstimateCatalog(
+      defaults: EstimateDefaults.fromJson(<String, dynamic>{}),
+      workTypes: [
+        WorkTypeSummary(
+          id: 'wt_flooring',
+          serialNo: 3,
+          name: 'Flooring',
+          areas: [],
+          scopes: [
+            WorkScope(
+              id: 'ws_tile',
+              workTypeId: 'wt_flooring',
+              workType: 'Flooring',
+              name: 'Vitrified tiles',
+              description: 'vitrified',
+              unit: 'sqft',
+              suggestedRate: 150,
+              minRate: 120,
+              maxRate: 180,
+              sampleCount: 2,
+              typicalAreas: [],
+              aliases: [],
+              makes: [],
+              samples: [],
+            ),
+          ],
+        ),
+      ],
+      areas: [],
+      rateCard: [],
+      quotations: [],
+    )..applyOverlay(catalog.overlayJson());
+
+    expect(restored.workTypeById('wt_flooring')!.scopes.map((scope) => scope.name), contains('Stone cladding'));
+    expect(restored.rateCard.map((item) => item.workScope), contains('Stone cladding'));
+  });
 }

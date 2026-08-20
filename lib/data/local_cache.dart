@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
 import '../models/company_profile.dart';
+import 'cloud_hooks.dart';
 
 class AppPrefsCache {
   AppPrefsCache({
@@ -155,7 +157,7 @@ class LocalCache {
     return {'areas': [], 'workTypes': [], 'scopes': []};
   }
 
-  Future<void> saveCatalogOverlay(Map<String, dynamic> overlay) async {
+  Future<void> saveCatalogOverlay(Map<String, dynamic> overlay, {bool syncToCloud = true}) async {
     final payload = {
       ...overlay,
       'savedAt': DateTime.now().toIso8601String(),
@@ -168,6 +170,9 @@ class LocalCache {
     try {
       await _writeJson(await _legacyOverlayFile(), payload);
     } catch (_) {}
+    if (syncToCloud) {
+      unawaited(CloudHooks.afterCatalogSave?.call(payload) ?? Future<void>.value());
+    }
   }
 
   Future<AppPrefsCache> loadPrefs() async {
@@ -181,10 +186,13 @@ class LocalCache {
     return _prefs!;
   }
 
-  Future<void> savePrefs(AppPrefsCache prefs) async {
+  Future<void> savePrefs(AppPrefsCache prefs, {bool syncToCloud = true}) async {
     prefs.savedAt = DateTime.now();
     _prefs = prefs;
     await _writeJson(await prefsFile(), prefs.toJson());
+    if (syncToCloud) {
+      unawaited(CloudHooks.afterPrefsSave?.call(prefs.toJson()) ?? Future<void>.value());
+    }
   }
 
   Future<AppPrefsCache> updatePrefs(void Function(AppPrefsCache prefs) update) async {

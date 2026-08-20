@@ -1,13 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../data/appwrite_auto_sync.dart';
 import '../data/cache_backup.dart';
 import '../data/catalog_repository.dart';
-import '../data/client_store.dart';
-import '../data/draft_store.dart';
-import '../data/github_sync.dart';
 import '../data/local_cache.dart';
 import '../data/settings_store.dart';
 import '../models/company_profile.dart';
@@ -35,21 +34,26 @@ class _SettingsPageState extends State<SettingsPage> {
   final _phone = TextEditingController();
   final _gst = TextEditingController();
   final _hvacGst = TextEditingController();
-  final _githubRepo = TextEditingController();
-  final _githubBranch = TextEditingController(text: 'main');
-  final _githubToken = TextEditingController();
   bool _loading = true;
   bool _obscure = true;
-  bool _obscureGithub = true;
-  bool _githubBusy = false;
-  DateTime? _githubSyncedAt;
+  bool _syncBusy = false;
+  DateTime? _lastSyncedAt;
   String _cachePath = '';
   DateTime? _cacheSavedAt;
 
   @override
   void initState() {
     super.initState();
+    AppwriteAutoSync.instance.addListener(_onAutoSync);
     _load();
+  }
+
+  void _onAutoSync() {
+    if (!mounted) return;
+    setState(() {
+      _syncBusy = AppwriteAutoSync.instance.busy;
+      _lastSyncedAt = AppwriteAutoSync.instance.lastSyncedAt ?? _lastSyncedAt;
+    });
   }
 
   Future<void> _load() async {
@@ -67,12 +71,8 @@ class _SettingsPageState extends State<SettingsPage> {
     _hvacGst.text = prefs.hvacGstPercent.toStringAsFixed(0);
     _cachePath = CatalogRepository.instance.lastCachePath ?? await LocalCache.instance.catalogPath();
     _cacheSavedAt = CatalogRepository.instance.lastCatalogSave ?? prefs.savedAt;
-    final github = await _store.loadGitHub();
+    _lastSyncedAt = AppwriteAutoSync.instance.lastSyncedAt ?? (await _store.loadAppwrite()).lastSyncedAt;
     if (!mounted) return;
-    _githubRepo.text = github.repo;
-    _githubBranch.text = github.branch;
-    _githubToken.text = github.token;
-    _githubSyncedAt = github.lastSyncedAt;
     setState(() => _loading = false);
   }
 
@@ -86,9 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _phone.dispose();
     _gst.dispose();
     _hvacGst.dispose();
-    _githubRepo.dispose();
-    _githubBranch.dispose();
-    _githubToken.dispose();
+    AppwriteAutoSync.instance.removeListener(_onAutoSync);
     super.dispose();
   }
 
@@ -114,7 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 _sectionTitle('Backup & restore'),
                 const SizedBox(height: 8),
                 const Text(
-                  'Save LocalCache (company defaults, recent jobs, and custom catalog) as a CSV file, or restore it on this device.',
+                  'Save LocalCache (company defaults, recent jobs, and custom catalog) as a CSV file, or restore it on this device. Cloud sync runs in the background. Use Sync only if you need to pull or push now.',
                   style: TextStyle(color: AppColors.muted),
                 ),
                 const SizedBox(height: 12),
@@ -132,80 +130,25 @@ class _SettingsPageState extends State<SettingsPage> {
                       icon: const Icon(Icons.restore_outlined),
                       label: const Text('Restore Backup'),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 28),
-                _sectionTitle('GitHub sync'),
-                const SizedBox(height: 8),
-                const Text(
-                  'Store clients and estimates in a private GitHub repo so another PC or phone can fetch the same jobs. Use a fine-grained token with Contents read and write. Do not use a public repo.',
-                  style: TextStyle(color: AppColors.muted),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _githubRepo,
-                  decoration: const InputDecoration(
-                    labelText: 'Repository',
-                    hintText: 'owner/repo or https://github.com/owner/repo',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _githubBranch,
-                  decoration: const InputDecoration(
-                    labelText: 'Branch',
-                    hintText: 'main',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _githubToken,
-                  obscureText: _obscureGithub,
-                  decoration: InputDecoration(
-                    labelText: 'Personal access token',
-                    hintText: 'github_pat_…',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      onPressed: () => setState(() => _obscureGithub = !_obscureGithub),
-                      icon: Icon(_obscureGithub ? Icons.visibility : Icons.visibility_off),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _githubSyncedAt == null
-                      ? 'Not synced yet'
-                      : 'Last synced ${_stamp(_githubSyncedAt!)}',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    OutlinedButton(
-                      onPressed: _githubBusy ? null : _saveGitHubSettings,
-                      child: const Text('Save GitHub settings'),
-                    ),
                     FilledButton.icon(
-                      onPressed: _githubBusy ? null : () => _runGitHubSync(push: true),
-                      icon: _githubBusy
+                      onPressed: _syncBusy ? null : _manualSync,
+                      icon: _syncBusy
                           ? const SizedBox(
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.cloud_sync_outlined),
-                      label: const Text('Sync now'),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: _githubBusy ? null : () => _runGitHubSync(push: false),
-                      icon: const Icon(Icons.cloud_download_outlined),
-                      label: const Text('Fetch from GitHub'),
+                          : const Icon(Icons.sync),
+                      label: const Text('Sync'),
                     ),
                   ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _lastSyncedAt == null
+                      ? 'Waiting for automatic sync'
+                      : 'Last synced ${_stamp(_lastSyncedAt!)}',
+                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
                 const SizedBox(height: 28),
                 _sectionTitle('Company defaults'),
@@ -568,6 +511,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('LocalCache restored from backup CSV')),
       );
+      unawaited(AppwriteAutoSync.instance.syncNow(silent: true));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -576,58 +520,23 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  GitHubCloudSettings _githubFromFields() {
-    return GitHubCloudSettings(
-      repo: _githubRepo.text,
-      branch: _githubBranch.text.trim().isEmpty ? 'main' : _githubBranch.text.trim(),
-      token: _githubToken.text,
-      lastSyncedAt: _githubSyncedAt,
-    );
-  }
-
-  Future<void> _saveGitHubSettings() async {
-    await _store.saveGitHub(_githubFromFields());
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('GitHub settings saved on this device')),
-    );
-  }
-
-  Future<void> _runGitHubSync({required bool push}) async {
-    final settings = _githubFromFields();
-    if (!settings.isConfigured) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Save a private repo (owner/name) and a GitHub token first')),
-      );
-      return;
-    }
-    setState(() => _githubBusy = true);
+  Future<void> _manualSync() async {
+    setState(() => _syncBusy = true);
     try {
-      await _store.saveGitHub(settings);
-      final result = push
-          ? await GitHubSync().sync(
-              settings: settings,
-              localClients: await ClientStore().list(),
-              localEstimates: await DraftStore().list(),
-              applyLocally: writeCloudSnapshotLocally,
-            )
-          : await GitHubSync().fetch(
-              settings: settings,
-              localClients: await ClientStore().list(),
-              localEstimates: await DraftStore().list(),
-              applyLocally: writeCloudSnapshotLocally,
-            );
-      final synced = DateTime.now();
-      await _store.saveGitHub(settings.copyWith(lastSyncedAt: synced));
+      final result = await AppwriteAutoSync.instance.syncNow(silent: false);
       await widget.onAppDataChanged?.call();
       if (!mounted) return;
-      setState(() => _githubSyncedAt = synced);
+      if (result == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cloud sync is not available on this device')),
+        );
+        return;
+      }
+      setState(() => _lastSyncedAt = AppwriteAutoSync.instance.lastSyncedAt);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            push
-                ? 'Synced ${result.clients} clients and ${result.estimates} estimates to GitHub'
-                : 'Fetched ${result.clients} clients and ${result.estimates} estimates from GitHub',
+            'Synced ${result.clients} clients, ${result.estimates} estimates and ${result.catalogItems} catalog items',
           ),
         ),
       );
@@ -637,7 +546,7 @@ class _SettingsPageState extends State<SettingsPage> {
         SnackBar(content: Text(error.toString().replaceFirst('FormatException: ', ''))),
       );
     } finally {
-      if (mounted) setState(() => _githubBusy = false);
+      if (mounted) setState(() => _syncBusy = AppwriteAutoSync.instance.busy);
     }
   }
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/client_store.dart';
+import '../data/draft_store.dart';
+import '../data/schedule_service.dart';
 import '../export/quotation_layout.dart';
 import '../models/client_record.dart';
 import '../models/estimate_document.dart';
@@ -127,19 +129,21 @@ class ClientsPageState extends State<ClientsPage> {
   @override
   void initState() {
     super.initState();
-    _reload();
+    _reload(importFromEstimates: true);
   }
 
   @override
   void didUpdateWidget(covariant ClientsPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.drafts.length != widget.drafts.length) {
-      _reload();
+      _reload(importFromEstimates: true);
     }
   }
 
-  Future<void> _reload() async {
-    await _store.syncFromEstimates(widget.drafts);
+  Future<void> _reload({bool importFromEstimates = false}) async {
+    if (importFromEstimates) {
+      await _store.syncFromEstimates(widget.drafts);
+    }
     final clients = await _store.list();
     if (!mounted) return;
     setState(() {
@@ -148,7 +152,7 @@ class ClientsPageState extends State<ClientsPage> {
     });
   }
 
-  Future<void> reload() => _reload();
+  Future<void> reload() => _reload(importFromEstimates: true);
 
   List<ClientRecord> get _filtered {
     final q = widget.query.toLowerCase();
@@ -176,13 +180,46 @@ class ClientsPageState extends State<ClientsPage> {
   Future<void> addClient() async {
     final created = await _editClient();
     if (created == null) return;
+    final existing = await _store.findByName(created.name);
+    if (existing != null) {
+      _copyDetails(from: created, onto: existing);
+      await _saveClient(existing);
+      return;
+    }
     await _store.save(created);
     await _reload();
   }
 
-  Future<void> _saveClient(ClientRecord client) async {
+  Future<void> _saveClient(ClientRecord client, {String? previousName}) async {
     await _store.save(client);
+    await _relinkEstimates(previousName ?? client.name, client.name);
     await _reload();
+  }
+
+  void _copyDetails({required ClientRecord from, required ClientRecord onto}) {
+    if (from.phone.trim().isNotEmpty) onto.phone = from.phone.trim();
+    if (from.email.trim().isNotEmpty) onto.email = from.email.trim();
+    if (from.company.trim().isNotEmpty) onto.company = from.company.trim();
+    if (from.project.trim().isNotEmpty) onto.project = from.project.trim();
+    if (from.address.trim().isNotEmpty) onto.address = from.address.trim();
+    if (from.source.trim().isNotEmpty) onto.source = from.source.trim();
+    if (from.notes.trim().isNotEmpty) onto.notes = from.notes.trim();
+  }
+
+  Future<void> _relinkEstimates(String previousName, String newName) async {
+    final from = previousName.trim().toLowerCase();
+    final to = newName.trim();
+    if (from.isEmpty || to.isEmpty || from == to.toLowerCase()) return;
+    final store = DraftStore();
+    final drafts = await store.list();
+    var changed = false;
+    for (final draft in drafts) {
+      if (draft.client.trim().toLowerCase() != from) continue;
+      draft.client = to;
+      await store.save(draft);
+      changed = true;
+    }
+    if (changed) await widget.onEstimatesChanged?.call();
   }
 
   Future<void> _deleteClient(ClientRecord client) async {
@@ -221,6 +258,7 @@ class ClientsPageState extends State<ClientsPage> {
     if (item == null) return;
     client.followUps.insert(0, item);
     await _saveClient(client);
+    await ScheduleService.instance.fromFollowUp(client, item);
   }
 
   Future<void> _createEstimate(ClientRecord client) async {
@@ -666,7 +704,7 @@ class ClientWorkspacePage extends StatefulWidget {
 
   final ClientRecord client;
   final int estimateCount;
-  final Future<void> Function(ClientRecord client) onSave;
+  final Future<void> Function(ClientRecord client, {String? previousName}) onSave;
   final Future<void> Function() onDelete;
 
   @override
@@ -715,6 +753,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> with SingleTi
   }
 
   Future<void> _persist() async {
+    final previousName = client.name;
     client.name = _name.text.trim();
     client.phone = _phone.text.trim();
     client.email = _email.text.trim();
@@ -723,7 +762,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> with SingleTi
     client.address = _address.text.trim();
     client.source = _source.text.trim();
     client.notes = _notes.text.trim();
-    await widget.onSave(client);
+    await widget.onSave(client, previousName: previousName);
     if (!mounted) return;
     setState(() {});
   }
@@ -733,6 +772,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> with SingleTi
     if (item == null) return;
     client.followUps.insert(0, item);
     await _persist();
+    await ScheduleService.instance.fromFollowUp(client, item);
   }
 
   Future<void> _confirmDelete() async {

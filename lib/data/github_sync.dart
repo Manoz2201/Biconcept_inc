@@ -86,10 +86,12 @@ class CloudSyncResult {
   const CloudSyncResult({
     required this.clients,
     required this.estimates,
+    this.catalogItems = 0,
   });
 
   final int clients;
   final int estimates;
+  final int catalogItems;
 }
 
 GitHubRepoRef? parseGitHubRepo(String raw) {
@@ -288,9 +290,9 @@ Future<void> writeCloudSnapshotLocally(CloudSnapshot snapshot) async {
   final clients = ClientStore();
   final drafts = DraftStore();
   for (final client in snapshot.clients) {
-    await clients.save(client, touch: false);
+    await clients.save(client, touch: false, syncToCloud: false);
   }
   for (final draft in snapshot.estimates) {
-    await drafts.save(draft);
+    await drafts.save(draft, syncToCloud: false);
   }
 }

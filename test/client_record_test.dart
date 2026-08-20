@@ -19,11 +19,19 @@ void main() {
     );
 
     final restored = ClientRecord.fromJson(client.toJson());
+    expect(restored.id, client.id);
     expect(restored.name, 'OM CRE');
     expect(restored.phone, '+91 8178869148');
     expect(restored.stage, CrmStage.quotation);
     expect(restored.followUps, hasLength(1));
     expect(restored.followUps.single.kind, 'Visit');
     expect(restored.nextFollow, DateTime(2026, 8, 25));
+  });
+
+  test('fromJson keeps an existing id and accepts \$id as fallback', () {
+    final fromId = ClientRecord.fromJson({'id': 'keep-me', 'name': 'Asha'});
+    expect(fromId.id, 'keep-me');
+    final fromDollar = ClientRecord.fromJson({r'$id': 'row-1', 'name': 'Asha'});
+    expect(fromDollar.id, 'row-1');
   });
 }
