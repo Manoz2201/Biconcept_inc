@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../models/office_models.dart';
+import 'app_notifications.dart';
 
 class OfficeStore extends ChangeNotifier {
   OfficeStore._();
@@ -93,6 +94,13 @@ class OfficeStore extends ChangeNotifier {
 
   Future<void> replaceInstallments(String estimateId, List<PaymentInstallment> next) async {
     await load();
+    final stale = [
+      for (final event in events)
+        if (event.estimateId == estimateId && event.kind == CalendarKind.collect) event.id,
+    ];
+    for (final id in stale) {
+      await AppNotifications.instance.cancel(id);
+    }
     installments.removeWhere((item) => item.estimateId == estimateId);
     installments.addAll(next);
     events.removeWhere(
@@ -122,6 +130,7 @@ class OfficeStore extends ChangeNotifier {
         if (installments[index].isPaid) {
           for (final event in events.where((item) => item.installmentId == entry.installmentId)) {
             event.done = true;
+            await AppNotifications.instance.cancel(event.id);
           }
         }
       }

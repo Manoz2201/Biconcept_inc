@@ -15,6 +15,9 @@ class AppNotifications {
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _ready = false;
 
+  @visibleForTesting
+  final cancelledIds = <String>[];
+
   static const _androidChannel = AndroidNotificationDetails(
     'biconcept_schedule',
     'Schedule',
@@ -51,6 +54,7 @@ class AppNotifications {
   }
 
   Future<void> cancel(String eventId) async {
+    cancelledIds.add(eventId);
     if (!_ready) return;
     try {
       await _plugin.cancel(id: _id(eventId));

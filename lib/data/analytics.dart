@@ -28,6 +28,10 @@ class EstimateAnalytics {
     required this.lastMonthValue,
     required this.thisMonthCount,
     required this.lastMonthCount,
+    required this.thisWeekCount,
+    required this.ytdWon,
+    required this.thisQuarterWon,
+    required this.lastQuarterWon,
     required this.byWorkType,
     required this.monthly,
   });
@@ -43,6 +47,10 @@ class EstimateAnalytics {
   final double lastMonthValue;
   final int thisMonthCount;
   final int lastMonthCount;
+  final int thisWeekCount;
+  final int ytdWon;
+  final int thisQuarterWon;
+  final int lastQuarterWon;
   final List<WorkTypeShare> byWorkType;
   final List<MonthPoint> monthly;
 
@@ -57,6 +65,8 @@ class EstimateAnalytics {
     if (lastMonthCount == 0) return thisMonthCount == 0 ? 0 : 100;
     return ((thisMonthCount - lastMonthCount) / lastMonthCount) * 100;
   }
+
+  int quarterWonDelta() => thisQuarterWon - lastQuarterWon;
 
   factory EstimateAnalytics.from(List<EstimateDraft> drafts) {
     var drafted = 0;
@@ -74,6 +84,14 @@ class EstimateAnalytics {
     var lastMonthValue = 0.0;
     var thisMonthCount = 0;
     var lastMonthCount = 0;
+    var thisWeekCount = 0;
+    var ytdWon = 0;
+    var thisQuarterWon = 0;
+    var lastQuarterWon = 0;
+    final weekStart = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 7));
+    final thisQuarter = ((now.month - 1) ~/ 3) + 1;
+    final lastQuarter = thisQuarter == 1 ? 4 : thisQuarter - 1;
+    final lastQuarterYear = thisQuarter == 1 ? now.year - 1 : now.year;
 
     final months = <DateTime>[
       for (var i = 11; i >= 0; i--) DateTime(now.year, now.month - i),
@@ -109,6 +127,13 @@ class EstimateAnalytics {
       } else if (!stamp.isBefore(lastMonthStart)) {
         lastMonthValue += total;
         lastMonthCount += 1;
+      }
+      if (!stamp.isBefore(weekStart)) thisWeekCount += 1;
+      if (draft.status == EstimateStatus.finalized && stamp.year == now.year) ytdWon += 1;
+      final stampQuarter = ((stamp.month - 1) ~/ 3) + 1;
+      if (draft.status == EstimateStatus.finalized) {
+        if (stamp.year == now.year && stampQuarter == thisQuarter) thisQuarterWon += 1;
+        if (stamp.year == lastQuarterYear && stampQuarter == lastQuarter) lastQuarterWon += 1;
       }
 
       final idx = monthIndex(stamp);
@@ -148,6 +173,10 @@ class EstimateAnalytics {
       lastMonthValue: lastMonthValue,
       thisMonthCount: thisMonthCount,
       lastMonthCount: lastMonthCount,
+      thisWeekCount: thisWeekCount,
+      ytdWon: ytdWon,
+      thisQuarterWon: thisQuarterWon,
+      lastQuarterWon: lastQuarterWon,
       byWorkType: shares.take(8).toList(),
       monthly: monthly,
     );

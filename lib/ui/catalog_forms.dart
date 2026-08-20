@@ -22,7 +22,8 @@ Future<CatalogArea?> showAddAreaDialog(
             title: const Text('Add area type'),
             content: SizedBox(
               width: 420,
-              child: Column(
+              child: SingleChildScrollView(
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -63,6 +64,7 @@ Future<CatalogArea?> showAddAreaDialog(
                     ),
                   ],
                 ],
+              ),
               ),
             ),
             actions: [
@@ -110,6 +112,7 @@ Future<WorkTypeSummary?> showAddWorkTypeDialog(
           width: 420,
           child: Form(
             key: formKey,
+            child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -136,6 +139,7 @@ Future<WorkTypeSummary?> showAddWorkTypeDialog(
                   ),
                 ),
               ],
+            ),
             ),
           ),
         ),
@@ -400,6 +404,7 @@ Future<WorkScope?> showEditScopePricingDialog(
               width: 440,
               child: Form(
                 key: formKey,
+                child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,6 +472,7 @@ Future<WorkScope?> showEditScopePricingDialog(
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
+                ),
                 ),
               ),
             ),

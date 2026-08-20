@@ -2,6 +2,8 @@ package com.example.biconcept
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -57,6 +59,31 @@ class MainActivity : FlutterActivity() {
                         saveBackupCsv(path, fileName, result)
                     }
                     "pickBackupCsv" -> pickBackupCsv(result)
+                    "openUrl" -> {
+                        val url = call.argument<String>("url")
+                        if (url.isNullOrBlank()) {
+                            result.error("bad_args", "Missing url", null)
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            openUrl(url)
+                            result.success(true)
+                        } catch (error: Exception) {
+                            result.error("open_failed", error.message, null)
+                        }
+                    }
+                    "installApk" -> {
+                        val path = call.argument<String>("path")
+                        if (path.isNullOrBlank()) {
+                            result.error("bad_args", "Missing path", null)
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            installApk(path, result)
+                        } catch (error: Exception) {
+                            result.error("install_failed", error.message, null)
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }
@@ -141,6 +168,42 @@ class MainActivity : FlutterActivity() {
             pendingResult = null
             result.error("picker_failed", error.message, null)
         }
+    }
+
+    private fun openUrl(url: String) {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
+
+    private fun installApk(path: String, result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
+            startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:$packageName"),
+                ),
+            )
+            result.error(
+                "need_install_permission",
+                "Allow BiConcept to install updates, then tap Update app again.",
+                null,
+            )
+            return
+        }
+        val source = File(path)
+        if (!source.exists()) {
+            result.error("missing_file", "Update file was not found", null)
+            return
+        }
+        val shared = File(cacheDir, source.name)
+        source.copyTo(shared, overwrite = true)
+        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", shared)
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/vnd.android.package-archive")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
+        result.success(true)
     }
 
     private fun dialPhone(number: String) {

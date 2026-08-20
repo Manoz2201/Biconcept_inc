@@ -1,8 +1,9 @@
 import 'dart:io';
 
+import 'package:biconcept/data/app_notifications.dart';
 import 'package:biconcept/data/office_store.dart';
 import 'package:biconcept/data/payment_schedule.dart';
-import 'package:biconcept/data/schedule_service.dart';
+import 'package:biconcept/data/schedule.dart';
 import 'package:biconcept/models/office_models.dart';
 import 'package:biconcept/models/terms_and_conditions.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -101,5 +102,101 @@ void main() {
     expect(account.outstanding, 70000);
     expect(account.balance, 22000);
     expect(store.installments.firstWhere((item) => item.id == plans.first.id).isPaid, isTrue);
+  });
+
+  test('paying an installment cancels its collection reminder', () async {
+    final dir = await Directory.systemTemp.createTemp('biconcept_office');
+    addTearDown(() => dir.delete(recursive: true));
+    final store = OfficeStore.instance;
+    await store.bindTo(dir);
+    AppNotifications.instance.cancelledIds.clear();
+
+    const installmentId = 'pay_e1_1';
+    await store.upsertEvent(
+      CalendarEvent(
+        id: 'collect_$installmentId',
+        kind: CalendarKind.collect,
+        start: DateTime(2026, 9, 1, 9),
+        estimateId: 'e1',
+        installmentId: installmentId,
+        title: 'Advance 30%',
+      ),
+    );
+    await store.saveInstallment(
+      PaymentInstallment(
+        id: installmentId,
+        estimateId: 'e1',
+        client: 'Asha',
+        project: 'Villa',
+        index: 1,
+        percent: 30,
+        label: 'Advance',
+        dueOffsetDays: 0,
+        amount: 30000,
+        dueAt: DateTime(2026, 9, 1),
+      ),
+    );
+
+    await ScheduleService.instance.recordPayment(
+      PaymentEntry(
+        flow: MoneyFlow.receive,
+        amount: 30000,
+        date: DateTime(2026, 8, 20),
+        client: 'Asha',
+        project: 'Villa',
+        estimateId: 'e1',
+        installmentId: installmentId,
+      ),
+    );
+
+    expect(store.events.single.done, isTrue);
+    expect(AppNotifications.instance.cancelledIds, contains('collect_$installmentId'));
+  });
+
+  test('replacing a payment plan cancels the old collection reminders', () async {
+    final dir = await Directory.systemTemp.createTemp('biconcept_office');
+    addTearDown(() => dir.delete(recursive: true));
+    final store = OfficeStore.instance;
+    await store.bindTo(dir);
+    AppNotifications.instance.cancelledIds.clear();
+
+    await store.upsertEvent(
+      CalendarEvent(
+        id: 'collect_pay_e1_6',
+        kind: CalendarKind.collect,
+        start: DateTime(2026, 10, 1, 9),
+        estimateId: 'e1',
+        installmentId: 'pay_e1_6',
+        title: 'Finishing 5%',
+      ),
+    );
+    await store.upsertEvent(
+      CalendarEvent(
+        id: 'meet_keep',
+        kind: CalendarKind.meeting,
+        start: DateTime(2026, 9, 2, 11),
+        estimateId: 'e1',
+        title: 'Site visit',
+      ),
+    );
+
+    await store.replaceInstallments('e1', [
+      PaymentInstallment(
+        id: 'pay_e1_1',
+        estimateId: 'e1',
+        client: 'Asha',
+        project: 'Villa',
+        index: 1,
+        percent: 100,
+        label: 'Full payment',
+        dueOffsetDays: 0,
+        amount: 100000,
+        dueAt: DateTime(2026, 9, 1),
+      ),
+    ]);
+
+    expect(store.events.single.id, 'meet_keep');
+    expect(AppNotifications.instance.cancelledIds, contains('collect_pay_e1_6'));
+    expect(AppNotifications.instance.cancelledIds, isNot(contains('meet_keep')));
   });
 }

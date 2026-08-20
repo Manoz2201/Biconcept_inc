@@ -25,3 +25,21 @@ Future<void> openExportedFile(File file) async {
     'mime': mime,
   });
 }
+
+Future<void> openHttpUrl(String url) async {
+  if (Platform.isWindows) {
+    await Process.run('cmd', ['/c', 'start', '', url]);
+    return;
+  }
+  if (!Platform.isAndroid) {
+    throw UnsupportedError('Open URL is only set up for Android and Windows');
+  }
+  await _exportChannel.invokeMethod<void>('openUrl', {'url': url});
+}
+
+Future<void> installAndroidApk(String path) async {
+  if (!Platform.isAndroid) {
+    throw UnsupportedError('APK install is only set up for Android');
+  }
+  await _exportChannel.invokeMethod<void>('installApk', {'path': path});
+}

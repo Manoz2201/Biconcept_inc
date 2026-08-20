@@ -8,7 +8,7 @@ import '../agent/estimate_agent.dart';
 import '../data/catalog_repository.dart';
 import '../data/draft_store.dart';
 import '../data/local_cache.dart';
-import '../data/schedule_service.dart';
+import '../data/schedule.dart';
 import '../export/excel_exporter.dart';
 import '../export/quotation_layout.dart';
 import '../export/quotation_pdf.dart';
@@ -21,8 +21,6 @@ import '../util/open_export.dart';
 import 'agent_panel.dart';
 import 'estimate_type_picker.dart';
 import 'terms_editor.dart';
-import 'widgets/quotation_letterhead.dart';
-import 'widgets/ui_kit.dart';
 
 class QuotationEditorPage extends StatefulWidget {
   const QuotationEditorPage({super.key, required this.catalog, required this.draft});
@@ -113,48 +111,101 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final totals = draft.totals;
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= AppBreakpoints.wide;
         final compact = constraints.maxWidth < AppBreakpoints.compact;
         return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              draft.client.isEmpty ? 'Quotation' : draft.client,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: StatusChip(status: draft.status, compact: true),
-              ),
-              PopupMenuButton<EstimateStatus>(
-                tooltip: 'Save as',
-                enabled: !_saving,
-                onSelected: _saveAs,
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: EstimateStatus.drafted, child: Text('Save as Drafted')),
-                  const PopupMenuItem(value: EstimateStatus.completed, child: Text('Save as Completed')),
-                  const PopupMenuItem(value: EstimateStatus.finalized, child: Text('Save as Finalized')),
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _editorShell(compact: compact, wide: wide)),
+                if (wide) ...[
+                  const VerticalDivider(width: 1),
+                  CollapsibleAgentPanel(
+                    key: _agentKey,
+                    catalog: catalog,
+                    draft: draft,
+                    initiallyExpanded: _showAgent,
+                    onExpandedChanged: (value) => setState(() => _showAgent = value),
+                  ),
                 ],
-                icon: const Icon(Icons.save_outlined),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _editorShell({required bool compact, required bool wide}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _editorTopBar(compact: compact, wide: wide),
+        Expanded(child: _document(compact: compact)),
+      ],
+    );
+  }
+
+  Widget _editorTopBar({required bool compact, required bool wide}) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(compact ? 8 : 16, 8, compact ? 8 : 20, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (!compact)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
+              child: Text(
+                'biconcept digital architecture',
+                style: TextStyle(color: AppColors.muted, fontSize: compact ? 14 : 16, fontWeight: FontWeight.w600),
               ),
+            ),
+          Row(
+            children: [
               IconButton(
-                tooltip: 'Terms and conditions',
-                onPressed: _editTerms,
-                icon: const Icon(Icons.gavel_outlined),
+                tooltip: 'Back',
+                onPressed: () => Navigator.of(context).maybePop(),
+                icon: const Icon(Icons.arrow_back_rounded),
               ),
+              Expanded(
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      _quotationCode(),
+                      style: TextStyle(
+                        color: AppColors.text,
+                        fontSize: compact ? 24 : 32,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.6,
+                        height: 1.1,
+                      ),
+                    ),
+                    _StatusPulse(status: draft.status),
+                  ],
+                ),
+              ),
+              if (!compact) ...[
+                _ExportPdfButton(onPressed: _exportPdf),
+                const SizedBox(width: 8),
+                _ExportXlsxButton(onPressed: _exportExcel),
+                const SizedBox(width: 4),
+              ],
               IconButton(
-                tooltip: 'Add scope',
-                onPressed: () => _addScope(),
-                icon: const Icon(Icons.add),
+                tooltip: 'Save',
+                onPressed: _saving ? null : _save,
+                icon: const Icon(Icons.check_circle_outline),
               ),
               IconButton(
                 tooltip: (_agentKey.currentState?.expanded ?? _showAgent)
-                    ? 'Collapse agent'
-                    : 'Expand agent',
+                    ? 'Collapse $kAgentName'
+                    : 'Ask $kAgentName',
                 onPressed: () {
                   if (wide) {
                     _agentKey.currentState?.toggle();
@@ -167,23 +218,9 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                   (_agentKey.currentState?.expanded ?? _showAgent)
                       ? Icons.smart_toy
                       : Icons.smart_toy_outlined,
+                  color: AppColors.primarySoft,
                 ),
               ),
-              if (wide) ...[
-                IconButton(
-                  tooltip: 'Save',
-                  onPressed: _saving ? null : _save,
-                  icon: const Icon(Icons.check_circle_outline),
-                ),
-                TextButton(
-                  onPressed: _offlineAgent.fillFromCatalog,
-                  child: const Text('Catalog fill'),
-                ),
-                TextButton(
-                  onPressed: draft.confirmAllQuantities,
-                  child: const Text('Confirm qtys'),
-                ),
-              ],
               PopupMenuButton<String>(
                 tooltip: 'More',
                 onSelected: (value) {
@@ -206,206 +243,100 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                       _editEstimateType();
                     case 'delete':
                       _deleteEstimate();
+                    default:
+                      if (value.startsWith('status:')) {
+                        _saveAs(EstimateStatus.fromName(value.substring(7)));
+                      }
                   }
                 },
                 itemBuilder: (context) => [
-                  if (!wide) ...[
-                    const PopupMenuItem(value: 'save', child: Text('Save')),
-                    const PopupMenuItem(value: 'fill', child: Text('Catalog fill')),
-                    const PopupMenuItem(value: 'confirm', child: Text('Confirm quantities')),
-                  ],
-                    const PopupMenuItem(value: 'pdf', child: Text('Export PDF quotation')),
+                  if (compact) ...[
+                    const PopupMenuItem(value: 'pdf', child: Text('Export PDF')),
                     const PopupMenuItem(value: 'excel', child: Text('Export Excel')),
-                    const PopupMenuItem(value: 'terms', child: Text('Terms and conditions')),
-                    const PopupMenuItem(value: 'schedule', child: Text('Payment schedule from T&C')),
-                    const PopupMenuItem(value: 'type', child: Text('Change estimate type')),
-                    const PopupMenuItem(value: 'delete', child: Text('Delete estimate')),
+                  ],
+                  const PopupMenuItem(value: 'save', child: Text('Save')),
+                  const PopupMenuItem(value: 'fill', child: Text('Catalog fill')),
+                  const PopupMenuItem(value: 'confirm', child: Text('Confirm quantities')),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem(value: 'status:drafted', child: Text('Save as Drafted')),
+                  const PopupMenuItem(value: 'status:completed', child: Text('Save as Completed')),
+                  const PopupMenuItem(value: 'status:finalized', child: Text('Save as Finalized')),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem(value: 'terms', child: Text('Terms and conditions')),
+                  const PopupMenuItem(value: 'schedule', child: Text('Payment schedule from T&C')),
+                  const PopupMenuItem(value: 'type', child: Text('Change estimate type')),
+                  const PopupMenuItem(value: 'delete', child: Text('Delete estimate')),
                 ],
               ),
             ],
           ),
-          body: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: _table()),
-              if (wide) ...[
-                const VerticalDivider(width: 1),
-                CollapsibleAgentPanel(
-                  key: _agentKey,
-                  catalog: catalog,
-                  draft: draft,
-                  initiallyExpanded: _showAgent,
-                  onExpandedChanged: (value) => setState(() => _showAgent = value),
-                ),
-              ],
-            ],
-          ),
-          bottomNavigationBar: Material(
-            color: AppColors.card,
-            elevation: 8,
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 10, 16, compact ? 10 : 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _totalRow('Subtotal', totals.subtotal),
-                    _totalRow('GST ${draft.gstPercent.toStringAsFixed(0)}%', totals.gst18),
-                    if (totals.hvacTaxable > 0)
-                      _totalRow('HVAC GST ${draft.hvacGstPercent.toStringAsFixed(0)}%', totals.gst28),
-                    _totalRow('Total with GST', totals.grandTotal, emphasize: true),
-                    if (compact) ...[
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _exportPdf,
-                              icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                              label: const Text('PDF'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _exportExcel,
-                              icon: const Icon(Icons.table_chart_outlined, size: 18),
-                              label: const Text('Excel'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: _saving ? null : _save,
-                              icon: const Icon(Icons.check, size: 18),
-                              label: const Text('Save'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ] else
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Wrap(
-                          spacing: 8,
-                          children: [
-                            TextButton.icon(
-                              onPressed: _editTerms,
-                              icon: const Icon(Icons.gavel_outlined, size: 18),
-                              label: Text(
-                                draft.effectiveTerms.isEmpty
-                                    ? 'Add terms and conditions'
-                                    : '${draft.effectiveTerms.length} terms and conditions',
-                              ),
-                            ),
-                            TextButton.icon(
-                              onPressed: _createPaymentSchedule,
-                              icon: const Icon(Icons.calendar_month_outlined, size: 18),
-                              label: const Text('Payment schedule'),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _totalRow(String label, double value, {bool emphasize = false}) {
-    final style = emphasize ? Theme.of(context).textTheme.titleMedium : Theme.of(context).textTheme.bodyMedium;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(label, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-          const SizedBox(width: 12),
-          Text(inr(value), style: style),
         ],
       ),
     );
   }
 
-  Widget _table() {
+  String _quotationCode() {
+    final yy = (draft.date.year % 100).toString().padLeft(2, '0');
+    final digits = draft.id.replaceAll(RegExp(r'[^0-9]'), '');
+    final tail = digits.length >= 3 ? digits.substring(digits.length - 3) : digits.padLeft(3, '0');
+    return 'qt-$yy-$tail';
+  }
+
+  Widget _document({required bool compact}) {
     final sections = groupQuotation(draft);
-    final rows = <_TableRow>[
-      for (final section in sections) ...[
-        _TableRow.header(section),
-        for (final line in section.lines) _TableRow.line(line),
-      ],
-    ];
+    final totals = draft.totals;
+    final pad = compact ? 16.0 : 24.0;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = math.max(constraints.maxWidth, 960.0);
-        return Scrollbar(
-          controller: _hScroll,
-          thumbVisibility: width > constraints.maxWidth,
-          child: SingleChildScrollView(
-            controller: _hScroll,
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: width,
-              height: constraints.maxHeight,
+        final tableWidth = compact ? constraints.maxWidth - pad * 2 : math.max(constraints.maxWidth - pad * 2, 800.0);
+        return SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(pad, 8, pad, 24),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.22), blurRadius: 20, offset: const Offset(0, 10)),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  QuotationLetterhead(
-                    client: draft.client,
-                    project: draft.project,
-                    date: draft.date,
-                    companyAddress: _companyAddress.isEmpty ? draft.companyAddress : _companyAddress,
-                    companyPhone: _companyPhone.isEmpty ? draft.companyPhone : _companyPhone,
-                    estimateType: draft.estimateType,
-                    onEstimateTypeTap: _editEstimateType,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                    child: Row(
-                      children: [
-                        FilledButton.icon(
-                          onPressed: () => _addScope(),
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Add scope'),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Work type is a heading. Amount = Quantity × unitRate.',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.muted),
+                  _documentLetterhead(compact: compact),
+                  Scrollbar(
+                    controller: _hScroll,
+                    thumbVisibility: tableWidth > constraints.maxWidth - pad * 2,
+                    child: SingleChildScrollView(
+                      controller: _hScroll,
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: tableWidth,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(compact ? 16 : 36, 20, compact ? 16 : 36, 12),
+                          child: Column(
+                            children: [
+                              if (!compact) _headerRow(),
+                              if (sections.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 40),
+                                  child: Text(
+                                    'Add a scope to this quotation',
+                                    style: TextStyle(color: AppColors.muted.withValues(alpha: 0.8)),
+                                  ),
+                                )
+                              else
+                                for (var i = 0; i < sections.length; i++) _sectionBlock(sections[i], i, compact: compact),
+                              const SizedBox(height: 20),
+                              _addLineButton(),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                  _headerRow(),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: rows.isEmpty
-                        ? Center(
-                            child: TextButton.icon(
-                              onPressed: () => _addScope(),
-                              icon: const Icon(Icons.add),
-                              label: const Text('Add a scope to this quotation'),
-                            ),
-                          )
-                        : ListView.builder(
-                            primary: false,
-                            itemCount: rows.length,
-                            itemBuilder: (context, index) {
-                              final row = rows[index];
-                              if (row.section != null) return _workTypeHeading(row.section!);
-                              return _scopeRow(row.line!);
-                            },
-                          ),
-                  ),
+                  _documentFooter(totals, sections),
                 ],
               ),
             ),
@@ -415,77 +346,422 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     );
   }
 
+  Widget _documentLetterhead({required bool compact}) {
+    final address = resolveCompanyAddress(
+      prefsAddress: _companyAddress,
+      draftAddress: draft.companyAddress,
+    );
+    final phone = resolveCompanyPhone(
+      prefsPhone: _companyPhone,
+      draftPhone: draft.companyPhone,
+    );
+    final brand = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Image.asset(companyLogoAsset, height: 32, fit: BoxFit.contain, filterQuality: FilterQuality.high),
+            const SizedBox(width: 10),
+            const Text(
+              'biconcept hq',
+              style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -0.2),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          [address, if (phone.isNotEmpty) phone].join('\n'),
+          style: TextStyle(color: AppColors.muted.withValues(alpha: 0.9), fontSize: 15, height: 1.45),
+        ),
+      ],
+    );
+    final clientCard = Material(
+      color: AppColors.background,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 2,
+      child: InkWell(
+        onTap: _editEstimateType,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SizedBox(
+            width: compact ? double.infinity : 300,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'CLIENT DETAILS',
+                  style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: AppColors.cardHover,
+                      child: Text(
+                        _initials(draft.client),
+                        style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            draft.client.isEmpty ? 'Untitled client' : draft.client,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            'attn: ${draft.estimateType.isEmpty ? 'quotation' : draft.estimateType.toLowerCase()}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Divider(height: 1, color: AppColors.outline.withValues(alpha: 0.45)),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Text('Project:', style: TextStyle(color: AppColors.muted, fontSize: 13)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        draft.project.isEmpty ? '—' : draft.project,
+                        textAlign: TextAlign.right,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: AppColors.text, fontSize: 15),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    return Container(
+      color: const Color(0xFF3C3331),
+      padding: EdgeInsets.fromLTRB(compact ? 20 : 40, 28, compact ? 20 : 40, 28),
+      child: compact
+          ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [brand, const SizedBox(height: 20), clientCard])
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: brand),
+                const SizedBox(width: 24),
+                clientCard,
+              ],
+            ),
+    );
+  }
+
+  Widget _documentFooter(EstimateTotals totals, List<QuotationSection> sections) {
+    final sum = sections.fold<double>(0, (value, section) => value + section.total);
+    return Container(
+      color: const Color(0xFF3C3331),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final stack = constraints.maxWidth < 720;
+          final budget = _budgetBar(sections, sum);
+          final calc = _totalsBlock(totals);
+          if (stack) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [budget, const SizedBox(height: 24), calc],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              SizedBox(width: 240, child: budget),
+              const Spacer(),
+              SizedBox(width: 340, child: calc),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _budgetBar(List<QuotationSection> sections, double sum) {
+    final top = sections.take(3).toList();
+    if (top.isEmpty || sum <= 0) {
+      return const SizedBox.shrink();
+    }
+    const palette = [AppColors.completed, Color(0xFF5ADACE), AppColors.primary];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'BUDGET ALLOCATION',
+          style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(99),
+          child: SizedBox(
+            height: 8,
+            child: Row(
+              children: [
+                for (var i = 0; i < top.length; i++)
+                  Expanded(
+                    flex: math.max(1, ((top[i].total / sum) * 100).round()),
+                    child: ColoredBox(color: palette[i % palette.length]),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            for (var i = 0; i < top.length; i++)
+              Flexible(
+                child: Text(
+                  '${((top[i].total / sum) * 100).toStringAsFixed(1)}% ${_shortWorkType(top[i].workType)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: palette[i % palette.length], fontSize: 10, fontFamily: 'Consolas'),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _totalsBlock(EstimateTotals totals) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _moneyRow('Subtotal', inr(totals.subtotal)),
+        const SizedBox(height: 8),
+        _moneyRow(
+          'Taxes (GST)',
+          inr(totals.gst18),
+          badge: '${draft.gstPercent.toStringAsFixed(0)}%',
+        ),
+        if (totals.hvacTaxable > 0) ...[
+          const SizedBox(height: 8),
+          _moneyRow(
+            'HVAC GST',
+            inr(totals.gst28),
+            badge: '${draft.hvacGstPercent.toStringAsFixed(0)}%',
+          ),
+        ],
+        const SizedBox(height: 10),
+        Divider(height: 1, color: AppColors.outline.withValues(alpha: 0.35)),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: BoxDecoration(
+            color: AppColors.sidebar,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'GRAND TOTAL',
+                      style: TextStyle(color: AppColors.primarySoft, fontSize: 11, letterSpacing: 1.5, fontWeight: FontWeight.w600),
+                    ),
+                    SizedBox(height: 4),
+                    Text('INR · incl. GST', style: TextStyle(color: AppColors.muted, fontSize: 10)),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: Text(
+                  inr(totals.grandTotal),
+                  textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.6,
+                    fontFamily: 'Consolas',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: _editTerms,
+            child: Text(
+              draft.effectiveTerms.isEmpty
+                  ? 'Add terms and conditions'
+                  : '${draft.effectiveTerms.length} terms and conditions',
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _moneyRow(String label, String value, {String? badge}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 15)),
+          if (badge != null) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(6)),
+              child: Text(badge, style: const TextStyle(color: AppColors.muted, fontSize: 10, fontFamily: 'Consolas')),
+            ),
+          ],
+          const Spacer(),
+          Text(value, style: const TextStyle(color: AppColors.text, fontSize: 15, fontFamily: 'Consolas')),
+        ],
+      ),
+    );
+  }
+
+  Widget _addLineButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _addScope(),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 48,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.outline.withValues(alpha: 0.45), width: 2),
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add_circle_outline, size: 20, color: AppColors.muted),
+              SizedBox(width: 8),
+              Text(
+                'ADD LINE ITEM',
+                style: TextStyle(color: AppColors.muted, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.1),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionBlock(QuotationSection section, int index, {required bool compact}) {
+    final style = _sectionStyle(section.workType, index);
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(color: style.$2, borderRadius: BorderRadius.circular(8)),
+                child: Icon(style.$1, size: 18, color: style.$3),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  section.workType,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Add scope to ${section.workType}',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _addScope(workTypeId: section.lines.isEmpty ? null : section.lines.first.workTypeId),
+                icon: const Icon(Icons.add, size: 18, color: AppColors.muted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          for (var i = 0; i < section.lines.length; i++) _scopeRow(section, section.lines[i], i, compact: compact),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${section.workType} subtotal:'.toUpperCase(),
+                    textAlign: TextAlign.right,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  inr(section.total),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(color: AppColors.text, fontSize: 15, fontFamily: 'Consolas', fontWeight: FontWeight.w600),
+                ),
+                if (!compact) const SizedBox(width: 40),
+              ],
+            ),
+          ),
+          Divider(height: 16, color: AppColors.outline.withValues(alpha: 0.35)),
+        ],
+      ),
+    );
+  }
+
   Widget _headerRow() {
-    final style = Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: AppColors.muted,
-          fontWeight: FontWeight.w600,
-        );
-    return ColoredBox(
-      color: AppColors.card,
+    const style = TextStyle(color: AppColors.muted, fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 1.1);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: _columns(
         children: [
-          Text('S.No.', style: style),
-          Text('Scope / Description', style: style),
-          Text('Unit', style: style),
-          Text('unitRate', style: style, textAlign: TextAlign.right),
-          Text('Quantity', style: style, textAlign: TextAlign.right),
-          Text('Amount', style: style, textAlign: TextAlign.right),
+          const Text('S.NO', style: style),
+          const Text('SCOPE / DESCRIPTION', style: style),
+          const Text('UNIT', style: style, textAlign: TextAlign.center),
+          const Text('UNIT RATE', style: style, textAlign: TextAlign.right),
+          const Text('QTY', style: style, textAlign: TextAlign.center),
+          const Text('AMOUNT', style: style, textAlign: TextAlign.right),
           const SizedBox.shrink(),
         ],
       ),
     );
   }
 
-  Widget _workTypeHeading(QuotationSection section) {
-    final typeId = section.lines.isEmpty ? null : section.lines.first.workTypeId;
-    return ColoredBox(
-      color: AppColors.cardHover,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 36,
-              child: Text(
-                '${section.serialNo}',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ),
-            Expanded(
-              child: Text(
-                section.workType,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-            ),
-            Text(
-              inr(section.total),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.muted),
-            ),
-            const SizedBox(width: 4),
-            IconButton(
-              tooltip: 'Add scope to ${section.workType}',
-              visualDensity: VisualDensity.compact,
-              onPressed: () => _addScope(workTypeId: typeId),
-              icon: const Icon(Icons.add, size: 18),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _scopeRow(EstimateLine line) {
+  Widget _scopeRow(QuotationSection section, EstimateLine line, int index, {required bool compact}) {
+    if (compact) return _compactScopeRow(section, line, index);
     final editor = _editorFor(line);
     final pending = !line.quantityConfirmed && line.effectiveQuantity != null;
-    return ColoredBox(
-      color: pending ? AppColors.primaryDim : Colors.transparent,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: _columns(
         children: [
           _cellField(
             controller: editor.sno,
             focusNode: editor.snoFocus,
+            hintText: _lineCode(section, index),
+            style: TextStyle(color: AppColors.muted.withValues(alpha: 0.7), fontSize: 14),
             onChanged: (value) => _patch(line.id, (item) {
               item.workScopeCode = value.trim().isEmpty ? null : value.trim();
             }),
@@ -498,6 +774,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                 controller: editor.name,
                 focusNode: editor.nameFocus,
                 hintText: 'Scope name',
+                style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w500),
                 onChanged: (value) => _patch(line.id, (item) {
                   if (item.description.trim() == item.name.trim()) {
                     item.description = '';
@@ -505,12 +782,12 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                   item.name = value;
                 }),
               ),
-              const SizedBox(height: 6),
               _cellField(
                 controller: editor.details,
                 focusNode: editor.detailsFocus,
                 hintText: 'Description',
                 maxLines: 2,
+                style: const TextStyle(color: AppColors.muted, fontSize: 13),
                 onChanged: (value) => _patch(line.id, (item) {
                   item.description = value;
                 }),
@@ -523,6 +800,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
             focusNode: editor.unitRateFocus,
             textAlign: TextAlign.right,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(color: AppColors.muted, fontSize: 14, fontFamily: 'Consolas'),
             onChanged: (value) {
               _patch(line.id, (item) {
                 item.unitRate = parseNumber(value);
@@ -531,25 +809,18 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
               editor.syncAmount(line);
             },
           ),
-          _cellField(
-            controller: editor.quantity,
-            focusNode: editor.quantityFocus,
-            textAlign: TextAlign.right,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            onChanged: (value) {
-              _patch(line.id, (item) {
-                item.quantity = parseNumber(value);
-                item.quantityConfirmed = item.quantity != null;
-                item.source = LineSource.user;
-              });
-              editor.syncAmount(line);
-            },
-          ),
+          _qtyField(line, editor, pending),
           _cellField(
             controller: editor.amount,
             focusNode: editor.amountFocus,
             textAlign: TextAlign.right,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: TextStyle(
+              color: pending ? AppColors.down : AppColors.text,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Consolas',
+            ),
             onChanged: (value) => _onAmountEdited(line, editor, value),
           ),
           IconButton(
@@ -557,7 +828,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
             visualDensity: VisualDensity.compact,
             constraints: const BoxConstraints.tightFor(width: 36, height: 36),
             padding: EdgeInsets.zero,
-            icon: const Icon(Icons.delete_outline, size: 18),
+            icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.muted),
             onPressed: () => _deleteScope(line),
           ),
         ],
@@ -565,26 +836,195 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     );
   }
 
-  Widget _columns({required List<Widget> children}) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 6, 8, 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _compactScopeRow(QuotationSection section, EstimateLine line, int index) {
+    final editor = _editorFor(line);
+    final pending = !line.quantityConfirmed && line.effectiveQuantity != null;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(10, 8, 4, 12),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outline.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(width: 72, child: children[0]),
-          const SizedBox(width: 8),
-          Expanded(child: children[1]),
-          const SizedBox(width: 8),
-          SizedBox(width: 108, child: children[2]),
-          const SizedBox(width: 8),
-          SizedBox(width: 110, child: children[3]),
-          const SizedBox(width: 8),
-          SizedBox(width: 96, child: children[4]),
-          const SizedBox(width: 8),
-          SizedBox(width: 110, child: children[5]),
-          SizedBox(width: 40, child: children[6]),
+          Row(
+            children: [
+              SizedBox(
+                width: 56,
+                child: _cellField(
+                  controller: editor.sno,
+                  focusNode: editor.snoFocus,
+                  hintText: _lineCode(section, index),
+                  style: TextStyle(color: AppColors.muted.withValues(alpha: 0.7), fontSize: 13),
+                  onChanged: (value) => _patch(line.id, (item) {
+                    item.workScopeCode = value.trim().isEmpty ? null : value.trim();
+                  }),
+                ),
+              ),
+              Expanded(
+                child: _cellField(
+                  controller: editor.name,
+                  focusNode: editor.nameFocus,
+                  hintText: 'Scope name',
+                  style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w500),
+                  onChanged: (value) => _patch(line.id, (item) {
+                    if (item.description.trim() == item.name.trim()) {
+                      item.description = '';
+                    }
+                    item.name = value;
+                  }),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Delete scope',
+                onPressed: () => _deleteScope(line),
+                icon: const Icon(Icons.delete_outline, color: AppColors.muted),
+              ),
+            ],
+          ),
+          _cellField(
+            controller: editor.details,
+            focusNode: editor.detailsFocus,
+            hintText: 'Description',
+            maxLines: 2,
+            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+            onChanged: (value) => _patch(line.id, (item) {
+              item.description = value;
+            }),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(child: _unitDropdown(line)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _cellField(
+                  controller: editor.unitRate,
+                  focusNode: editor.unitRateFocus,
+                  textAlign: TextAlign.right,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  hintText: 'Rate',
+                  style: const TextStyle(color: AppColors.muted, fontSize: 14, fontFamily: 'Consolas'),
+                  onChanged: (value) {
+                    _patch(line.id, (item) {
+                      item.unitRate = parseNumber(value);
+                      item.source = LineSource.user;
+                    });
+                    editor.syncAmount(line);
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(width: 84, child: _qtyField(line, editor, pending)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Text('AMOUNT', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _cellField(
+                  controller: editor.amount,
+                  focusNode: editor.amountFocus,
+                  textAlign: TextAlign.right,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  style: TextStyle(
+                    color: pending ? AppColors.down : AppColors.text,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Consolas',
+                  ),
+                  onChanged: (value) => _onAmountEdited(line, editor, value),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _qtyField(EstimateLine line, _LineEditors editor, bool pending) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        TextField(
+          controller: editor.quantity,
+          focusNode: editor.quantityFocus,
+          textAlign: TextAlign.center,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+          style: TextStyle(
+            color: pending ? AppColors.down : AppColors.text,
+            fontSize: 14,
+            fontFamily: 'Consolas',
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: pending ? AppColors.down.withValues(alpha: 0.12) : AppColors.background,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: pending ? AppColors.down.withValues(alpha: 0.55) : AppColors.outline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: pending ? AppColors.down.withValues(alpha: 0.55) : AppColors.outline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: pending ? AppColors.down : AppColors.up, width: 1.4),
+            ),
+          ),
+          onChanged: (value) {
+            _patch(line.id, (item) {
+              item.quantity = parseNumber(value);
+              item.quantityConfirmed = item.quantity != null;
+              item.source = LineSource.user;
+            });
+            editor.syncAmount(line);
+          },
+        ),
+        if (pending)
+          Positioned(
+            top: -4,
+            right: -4,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: AppColors.down,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.card, width: 2),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _columns({required List<Widget> children}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(width: 56, child: children[0]),
+        const SizedBox(width: 12),
+        Expanded(child: children[1]),
+        const SizedBox(width: 8),
+        SizedBox(width: 80, child: children[2]),
+        const SizedBox(width: 8),
+        SizedBox(width: 110, child: children[3]),
+        const SizedBox(width: 8),
+        SizedBox(width: 92, child: children[4]),
+        const SizedBox(width: 8),
+        SizedBox(width: 130, child: children[5]),
+        SizedBox(width: 40, child: children[6]),
+      ],
     );
   }
 
@@ -596,6 +1036,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     TextInputType? keyboardType,
     String? hintText,
     int maxLines = 1,
+    TextStyle? style,
   }) {
     return TextField(
       controller: controller,
@@ -604,21 +1045,16 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
       keyboardType: keyboardType,
       maxLines: maxLines,
       inputFormatters: keyboardType == null ? null : [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-      style: Theme.of(context).textTheme.bodySmall,
+      style: style ?? Theme.of(context).textTheme.bodySmall,
       decoration: InputDecoration(
         isDense: true,
+        filled: false,
         hintText: hintText,
-        hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.muted),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-        enabledBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: AppColors.outline),
-        ),
-        focusedBorder: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: AppColors.primary, width: 1.4),
-        ),
+        hintStyle: (style ?? Theme.of(context).textTheme.bodySmall)?.copyWith(color: AppColors.muted.withValues(alpha: 0.6)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.up, width: 1)),
       ),
       onChanged: onChanged,
     );
@@ -633,7 +1069,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     return _compactDropdown<String>(
       value: units.contains(current) ? current : units.first,
       items: [
-        for (final unit in units) DropdownMenuItem(value: unit, child: Text(unit)),
+        for (final unit in units) DropdownMenuItem(value: unit, child: Text(unit, textAlign: TextAlign.center)),
       ],
       onChanged: (value) {
         if (value == null) return;
@@ -649,26 +1085,57 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     required List<DropdownMenuItem<T>> items,
     required ValueChanged<T?> onChanged,
   }) {
-    return InputDecorator(
-      decoration: const InputDecoration(
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<T>(
         isDense: true,
-        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: AppColors.outline),
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          isDense: true,
-          isExpanded: true,
-          value: value,
-          items: items,
-          onChanged: onChanged,
-        ),
+        isExpanded: true,
+        value: value,
+        items: items,
+        onChanged: onChanged,
+        style: const TextStyle(color: AppColors.muted, fontSize: 13),
+        dropdownColor: AppColors.cardHover,
       ),
     );
+  }
+
+  (IconData, Color, Color) _sectionStyle(String workType, int index) {
+    final name = workType.toLowerCase();
+    final icon = name.contains('electr') || name.contains('hvac') || name.contains('ac')
+        ? Icons.bolt_rounded
+        : name.contains('plumb') || name.contains('water')
+            ? Icons.water_drop_outlined
+            : name.contains('paint') || name.contains('finish')
+                ? Icons.format_paint_outlined
+                : name.contains('wood') || name.contains('carpent')
+                    ? Icons.carpenter_outlined
+                    : Icons.architecture_outlined;
+    final palettes = [
+      (const Color(0xFF4EB397), const Color(0xFF00382B)),
+      (const Color(0xFF01A89D), const Color(0xFF003531)),
+      (AppColors.primary, const Color(0xFF5B1A13)),
+    ];
+    final colors = palettes[index % palettes.length];
+    return (icon, colors.$1, colors.$2);
+  }
+
+  String _lineCode(QuotationSection section, int index) {
+    return '${section.serialNo.toString().padLeft(2, '0')}.${index + 1}';
+  }
+
+  String _shortWorkType(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return name;
+    return parts.first;
+  }
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) {
+      final value = parts.first;
+      return (value.length >= 2 ? value.substring(0, 2) : value).toUpperCase();
+    }
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
   void _patch(String lineId, void Function(EstimateLine line) update) {
@@ -868,20 +1335,93 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
   }
 
   Future<void> _openAgentSheet() async {
-    await showDialog<void>(
+    await showAgentSheet(
       context: context,
-      builder: (context) => Dialog(
-        insetPadding: const EdgeInsets.all(16),
-        child: SizedBox(
-          width: 380,
-          height: 560,
-          child: AgentPanel(
-            catalog: catalog,
-            draft: draft,
-            onCollapse: () => Navigator.pop(context),
-          ),
-        ),
+      panel: AgentPanel(
+        catalog: catalog,
+        draft: draft,
+        onCollapse: () => Navigator.pop(context),
       ),
+    );
+  }
+}
+
+class _StatusPulse extends StatelessWidget {
+  const _StatusPulse({required this.status});
+
+  final EstimateStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (status) {
+      EstimateStatus.drafted => ('drafting', AppColors.primarySoft),
+      EstimateStatus.completed => ('completed', AppColors.completed),
+      EstimateStatus.finalized => ('finalized', AppColors.primary),
+    };
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 6, 12, 6),
+      decoration: BoxDecoration(
+        color: AppColors.cardHover,
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: AppColors.outline.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.8, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExportPdfButton extends StatelessWidget {
+  const _ExportPdfButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.up,
+        side: BorderSide(color: AppColors.up.withValues(alpha: 0.5)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      ),
+      icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+      label: const Text('export pdf', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
+    );
+  }
+}
+
+class _ExportXlsxButton extends StatelessWidget {
+  const _ExportXlsxButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.primarySoft,
+        foregroundColor: const Color(0xFF5B1A13),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      ),
+      icon: const Icon(Icons.table_view_outlined, size: 18),
+      label: const Text('export xlsx', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.6)),
     );
   }
 }
@@ -1100,14 +1640,6 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
       ],
     );
   }
-}
-
-class _TableRow {
-  const _TableRow.header(this.section) : line = null;
-  const _TableRow.line(this.line) : section = null;
-
-  final QuotationSection? section;
-  final EstimateLine? line;
 }
 
 class _LineEditors {

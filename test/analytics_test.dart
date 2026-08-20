@@ -48,5 +48,7 @@ void main() {
     expect(analytics.finalizedValue, 400);
     expect(analytics.byWorkType.single.name, 'Flooring');
     expect(analytics.monthly, hasLength(12));
+    expect(analytics.ytdWon, 1);
+    expect(analytics.thisWeekCount, greaterThanOrEqualTo(0));
   });
 }

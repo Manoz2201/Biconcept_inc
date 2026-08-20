@@ -1,0 +1,696 @@
+BICONCEPT APP — UI/UX INVENTORY
+================================
+App: BiConcept (Flutter, Windows + Android)
+Theme: dark Material 3 (coral primary #E8877A, navy cards)
+Layout: compact < 800px (phone/narrow), desktop sidebar, wide >= 1100px (agent rail)
+Formula: Amount = Quantity × Unit Rate. GST 18% (default) / HVAC 28% (default).
+Status values: Drafted · Completed · Finalized
+CRM stages: Lead · Contacted · Site visit · Quotation · Negotiation · Won · Lost
+Estimate types (presets): Interior Estimate · Design · Construction TurnKey Estimate · plus Custom
+Catalog units: sqft · pcs · lumpsum · seat · rft · mtr · step
+
+This file lists every screen, then every visible element, button, field, and what it does.
+
+
+================================================================================
+0. APP START / SHELL (EstimateHomePage)
+================================================================================
+Entry: lib/main.dart → MaterialApp home = EstimateHomePage
+Startup (not UI): Appwrite live sync install; ScheduleService.start() for calendar/notifications.
+
+LOADING SCREEN
+  - Full-screen CircularProgressIndicator (primary coral)
+  - Shown until the rate-card catalog JSON loads
+
+ERROR SCREEN
+  - Centered text: "Could not load catalog: {error}"
+
+SHARED CHROME (after catalog loads)
+  Left sidebar (width >= 800 only)
+    - Brand text: "biconcept"
+    - Nav item Dashboard  (index 0) — opens Dashboard tab, clears search
+    - Nav item Estimates  (index 1) — opens Estimates tab, clears search
+    - Nav item Clients    (index 2) — opens Clients tab, clears search
+    - Nav item Calendar   (index 3) — opens Calendar tab, clears search
+    - Nav item Rate card  (index 4) — opens Rate card tab, clears search
+    - Nav item Settings   (index 5, pinned at bottom)
+    - Logo image assets/data/logo.png
+    - Caption "BiConcept"
+    Selected item: coral filled 48×48 icon tile
+
+  Bottom NavigationBar (width < 800 only)
+    Same six destinations: Dashboard, Estimates, Clients, Calendar, Rate card, Settings
+    Selecting a tab clears the search query
+
+  App header (all tabs)
+    - Title (lowercase): dashboard / estimates / clients / calendar / rate card / settings
+    - Search field (Estimates, Clients, Rate card only)
+        Estimates hint: "Search client or project"
+        Clients hint:   "Search client, phone or project"
+        Rate card hint: "Search work type, scope or area"
+    - Agent IconButton (smart_toy)
+        Wide screens: expand/collapse the right DeepSeek agent rail
+        Narrow screens: open Agent dialog (380×560)
+        Tooltip: "Collapse agent" / "Expand agent"
+    - CircleAvatar with person icon (display only, not tappable)
+
+  Right agent rail (width >= 1100 only)
+    See SCREEN 12 — DeepSeek agent
+
+  FloatingActionButton (depends on tab)
+    Dashboard: +  → starts New estimate flow
+    Estimates: + / "New estimate"  → starts New estimate flow
+    Clients:   person_add / "New client"  → New client dialog
+    Other tabs: no FAB
+
+  Background: Appwrite auto-sync. On resume, syncs then reloads drafts, clients, catalog.
+
+
+================================================================================
+1. DASHBOARD
+================================================================================
+File: lib/ui/dashboard_page.dart
+Scrollable page of analytics from saved estimates.
+
+STAT CARDS (tap to jump to Estimates)
+  1. Estimates
+     - Count of all saved estimates
+     - Delta: "% vs last month"
+     - Tap → Estimates tab, no status filter
+  2. Pipeline
+     - Compact INR of all estimate grand totals
+     - Delta: "% vs last month"
+     - Tap → Estimates tab, no status filter
+  3. Finalized
+     - Compact INR of finalized estimates
+     - Tap → Estimates tab filtered to Finalized
+  4. Completed
+     - Count of completed estimates
+     - Tap → Estimates tab filtered to Completed
+  Each card also shows a north-east arrow (visual only).
+
+CHART: Value by work type
+  - Bar chart of line amounts grouped by work type
+  - Empty: "No line items yet"
+  - Hover/tap tooltip: work type name + compact INR
+
+CHART: Estimate value over time
+  - Line chart of last 12 months
+  - Hover tooltip: compact INR
+  - X-axis: every other month label
+
+CHART: Status mix
+  - Donut of Drafted / Completed / Finalized counts
+  - Legend with counts
+  - Empty: "No estimates yet"
+
+FAB (shell): + → New estimate flow
+
+
+================================================================================
+2. ESTIMATES LIST
+================================================================================
+File: lib/ui/home_page.dart (_estimatesTab)
+Header search (shell): filters by client, project, or estimate type.
+
+FILTER CHIPS
+  - All        — clear status filter
+  - Drafted    — show Drafted only
+  - Completed  — show Completed only
+  - Finalized  — show Finalized only
+
+EMPTY STATES
+  - No drafts at all: "No estimates yet. Start a new estimate from areas, work types, then scopes."
+  - Filter/search miss: "No estimates match this filter."
+
+ESTIMATE CARD (one per draft)
+  Tap whole card → Quotation editor for that draft; reloads list on return
+  Elements:
+    - Description icon
+    - Title: client name, or "Untitled"
+    - Subtitle: type · project · "{n} lines" · DD/MM/YYYY
+    - StatusChip (Drafted / Completed / Finalized)
+    - Grand total in INR
+  Overflow menu (More)
+    - Change type → Estimate type picker dialog; saves draft
+    - Mark Drafted / Mark Completed / Mark Finalized → setStatus + save
+    - Delete estimate → confirm dialog then DraftStore.delete
+
+DELETE ESTIMATE DIALOG
+  Title: "Delete estimate"
+  Body: "Delete the estimate for {client}? This cannot be undone."
+  Buttons: Cancel · Delete
+
+FAB: New estimate → SCREEN 8
+
+ESTIMATE TYPE PICKER (shared dialog)
+  File: lib/ui/estimate_type_picker.dart
+  Radio rows: Interior Estimate, Design, Construction TurnKey Estimate
+  Radio: Custom + text field "Custom type" (hint: e.g. Revised Interior Estimate)
+  Buttons: Cancel · Save type
+  Empty custom falls back to Interior Estimate
+
+
+================================================================================
+3. CLIENTS LIST (CRM)
+================================================================================
+File: lib/ui/clients_page.dart
+Header search (shell): name, phone, project, email.
+On load: imports clients from estimate names if missing.
+
+STAGE FILTER CHIPS
+  - All
+  - Lead · Contacted · Site visit · Quotation · Negotiation · Won · Lost
+
+EMPTY STATES
+  - No clients: "No clients yet. Add a client or create an estimate."
+  - Filter miss: "No clients match this filter."
+
+CLIENT CARD
+  Tap header row → Client viewer
+  Elements:
+    - Person icon
+    - Name (or "Untitled")
+    - Subtitle: phone · project · "{n} estimates" · "Next: {date}" if next follow-up
+    - Stage chip (color: Won green, Lost red, Quotation/Negotiation coral, else muted)
+  Action row (_LeadActions):
+    - Viewer (filled)     → Client viewer
+    - Call (outlined)     → dialer / copy number; disabled if no phone
+                            Snackbars: "Add a phone number…", "Calling…", "Number copied…", "Could not start a call…"
+    - Follow-up           → Add follow-up dialog; saves + creates calendar event
+    - New estimate / Estimate → New estimate flow prefilled with client name + project
+    - Edit                → Client workspace (edit screen)
+
+FAB: New client → New client dialog
+
+NEW / QUICK EDIT CLIENT DIALOG
+  Title: "New client" or "Edit client"
+  Fields:
+    - Client name (required; autofocus)
+    - Phone
+    - Project / site
+    - Source (hint: Referral, Instagram, walk-in…)
+  Buttons: Cancel · Save
+  If name already exists: merges non-empty details onto the existing record.
+
+ADD FOLLOW-UP DIALOG (shared)
+  Title: "Add follow-up"
+  Fields:
+    - Type dropdown: Call · WhatsApp · Visit · Email · Other
+    - Followed on {date}  — date picker 2020–2040
+    - Next follow-up {date} or "No next follow-up" — date picker
+    - Notes (2–4 lines)
+  Buttons: Cancel · Save
+  Save also schedules a Calendar follow-up event via ScheduleService.fromFollowUp
+
+
+================================================================================
+4. CLIENT VIEWER
+================================================================================
+File: lib/ui/clients_page.dart → ClientViewerPage
+Pushed full-screen from list / Viewer button.
+
+APP BAR
+  - Back
+  - Title: client name or "Client viewer"
+  - Call icon → same as Call action
+  - Edit icon → Client workspace; if client was deleted, pops viewer
+
+BODY
+  - Stage chip
+  - Chip "Next follow-up {date}" if set
+  - Lead actions: Call, Follow-up, New estimate, Edit (no Viewer button here)
+
+  Section "Client details" (read-only card)
+    Rows: Name, Phone (+ Call icon if number present), Email, Company,
+          Project / site, Address, Source, Stage, Notes, Created, Updated
+    Empty values show "—"
+
+  Section "Follow-up (n)"
+    Empty: "No follow-ups yet."
+    Else cards: kind, date, optional Next date, optional note
+
+  Section "Estimates (n)"
+    Empty: "No estimates for this lead yet."
+    Else tappable cards: project or type, status · date → opens Quotation editor
+
+
+================================================================================
+5. CLIENT WORKSPACE (EDIT)
+================================================================================
+File: lib/ui/clients_page.dart → ClientWorkspacePage
+Full-screen with 3 tabs.
+
+APP BAR
+  - Back
+  - Title: "Edit {name}" or "Edit client"
+  - Delete icon → confirm "Delete client" (Cancel / Delete); removes follow-ups; pops
+  - Check icon → Save details
+  Tabs: Details · Follow-up · CRM
+
+TAB DETAILS
+  - Caption: "{n} linked estimates"
+  Fields: Client name, Phone (digits + space), Email, Company, Project / site,
+          Address (2 lines), Lead source, Notes (4 lines)
+  Button: Save details
+  Saving a renamed client also relinks matching estimates to the new name.
+
+TAB FOLLOW-UP
+  Empty: "No follow-ups yet. Log a call, visit or WhatsApp."
+  Else list of follow-up cards (kind, date, next, note)
+  FAB (this tab only): "Follow-up" → Add follow-up dialog + calendar event
+
+TAB CRM
+  Label: "Pipeline stage"
+  ChoiceChips for all CrmStage values — tap saves immediately
+  Card "CRM snapshot": Stage, Source, Project, Follow-ups count, Next follow-up, Estimates count
+
+
+================================================================================
+6. CALENDAR
+================================================================================
+File: lib/ui/calendar_page.dart
+Two inner tabs: Calendar · Accounts
+
+--- TAB: Calendar ---
+  Month header
+    - Chevron left  → previous month
+    - "{Month} {year}"
+    - Chevron right → next month
+  Weekday labels: S M T W T F S
+  Month grid: tap a day to select it (coral highlight)
+    - Dot under days that have events
+  Buttons:
+    - Meeting (filled)           → Meeting dialog
+    - Follow-up (outlined)       → Follow-up dialog
+    - Payment schedule (outlined)→ Payment schedule from T&C dialog
+  Heading: "Schedule for D/M/YYYY"
+  Empty: "Nothing scheduled this day."
+  Event cards: icon by kind (meeting / follow-up / collect / pay), title, notes
+    - Check-circle (if not done) → Mark done and save
+
+MEETING / FOLLOW-UP DIALOG
+  Title: "Meeting" or "Follow-up"
+  Fields: Client, Project, Notes
+  Date/time row: D/M/YYYY HH:MM — date picker then time picker (default 11:00 on selected day)
+  Buttons: Cancel · Save
+  Title stored as "{kind} · {client}" if client filled
+
+PAYMENT SCHEDULE FROM T&C DIALOG (also used from Accounts)
+  If no estimates: snackbar "Save an estimate first"
+  Title: "Payment schedule from T&C"
+  Dropdown: each estimate as "{client} · {project} · {grand total}"
+  Buttons: Cancel · Create
+  Parses T&C payment % into dated collections + 9am notifications
+  Snackbar: "Scheduled {n} collections totalling {INR}"
+
+--- TAB: Accounts ---
+  Help text: tracks money received from the client and money sent out for that project
+  Buttons:
+    - Receive (filled)           → Receive payment dialog
+    - Send (outlined)            → Send payment dialog
+    - From estimate T&C          → same payment-schedule dialog as above
+  Empty: "No project accounts yet. Create a payment schedule from an estimate."
+  Account cards (tap → ledger sheet):
+    Client name, project name
+    Chips: Scheduled, Received, Sent, Outstanding, Balance (INR)
+
+PROJECT LEDGER (modal bottom sheet, 75% height)
+  Title: "{client} · {project}"
+  Subtitle: Outstanding · Balance
+  Section "Collection schedule"
+    Each installment: "{label} · {n}%" / due date · amount
+    Trailing: "Paid" or outstanding INR
+    Tap unpaid row → Receive payment prefilled with outstanding
+  Section "Ledger"
+    Each entry: Received (green) or Sent (red), amount, method · party · note
+
+RECEIVE / SEND PAYMENT DIALOG
+  Title: "Receive payment" or "Send payment"
+  If not tied to an installment/account:
+    - Client / project account
+    - Project
+  Always:
+    - Amount (numeric)
+    - From (receive) or To (send)
+    - Method: UPI · NEFT / IMPS · Cash · Cheque
+    - Note
+  Buttons: Cancel · Save
+  Amount must be > 0. Records PaymentEntry via ScheduleService.recordPayment
+  Receiving against an installment marks it paid and cancels the collect notification.
+
+
+================================================================================
+7. RATE CARD
+================================================================================
+File: lib/ui/rate_card_page.dart
+Header search (shell): work type, scope name, typical areas.
+
+TOP BUTTONS
+  - Add area      → Add area type dialog
+  - Add work type → Add work type dialog
+  - Add scope     → Add work scope dialog (needs a work type; else snackbar "Add a work type first")
+                    Preselects current work-type chip if not "All"
+
+WORK TYPE CHIPS (horizontal)
+  - "All" plus every catalog work type name
+  - Filters the list
+
+HELP: "Tap a scope to edit unit and unit price. Changes are saved to local cache for new quotations."
+
+SCOPE LIST ROW
+  Title: work scope name
+  Subtitle: work type · unit · typical areas · "cached" if user-added/edited
+  Trailing: suggested rate INR or "—" + Edit icon
+  Tap row or Edit → Edit unit and rate dialog
+  Snackbars after add/edit confirm local-cache save
+
+ADD AREA TYPE DIALOG
+  Field: Area type name (required)
+  Optional FilterChips: typical work types
+  Buttons: Cancel · Add area
+  Saves to CatalogRepository local cache
+
+ADD WORK TYPE DIALOG
+  Fields: Work type name (required), S.No. (digits; default next number)
+  Helper: "Shown as the numbered heading on the quotation"
+  Buttons: Cancel · Add work type
+
+ADD WORK SCOPE DIALOG
+  Fields:
+    - Work type dropdown (locked if opened from a type)
+    - Scope name (required)
+    - Description
+    - Unit dropdown (catalog units)
+    - Code (A, B, C…)
+    - Suggested unit rate (₹)
+    - Min rate / Max rate
+    - Typical areas FilterChips
+  Buttons: Cancel · Add scope
+
+EDIT UNIT AND RATE DIALOG
+  Shows scope name + work type
+  Fields: Unit, Unit price (₹, required), Min rate, Max rate
+  Note: "Saved to local cache and used in new estimate quotations."
+  Buttons: Cancel · Save to cache
+
+
+================================================================================
+8. SETTINGS
+================================================================================
+File: lib/ui/settings_page.dart
+Embedded in the shell (no extra AppBar). Standalone mode would show AppBar "Settings".
+
+SECTION: Local catalog cache
+  Help: new areas/types/scopes persist on this PC after restart
+  Summary card: "{n} areas · {n} work types · {n} scopes"
+    Last saved stamp, or "No custom catalog saved yet…"
+    File path of catalog cache
+  Chips lists: Cached areas, Cached work types ("{sno}. {name} ({scopeCount})"), Cached scopes ("{workType}: {name}")
+
+SECTION: Backup & restore
+  Help: CSV backup of LocalCache; cloud sync is background; Sync is manual
+  Buttons:
+    - Backup  → confirm "Backup LocalCache" (Cancel / Save CSV)
+                file picker save; then "Backup saved" dialog with path
+                Backup saved actions: Copy location · Open (reveal in Explorer) · OK
+    - Restore Backup → pick CSV; confirm "Restore LocalCache" (Cancel / Restore)
+                       replaces company defaults, recent jobs, custom catalog
+                       then silent Appwrite sync
+    - Sync    → AppwriteAutoSync.syncNow; disabled while busy (spinner)
+                Snackbar: counts of clients/estimates/catalog items, or "Cloud sync is not available…"
+  Caption: "Waiting for automatic sync" or "Last synced DD/MM/YYYY HH:MM"
+
+SECTION: Company defaults
+  Fields:
+    - Brand on quotations
+    - Company address (shown under logo on quotation headings)
+    - Contact no. (hint +91 8178869148)
+    - GST % (digits)
+    - HVAC GST % (digits)
+  Button: Save company defaults → LocalCache prefs (empty brand/address/phone fall back to defaults 18/28 GST)
+  Snackbar: "Company defaults saved on this PC"
+
+SECTION: DeepSeek agent
+  Help: API key lets the agent search rate card, list/edit quotations, add scopes, save
+  Button: Use DeepSeek defaults → fills base URL + model
+  Fields:
+    - Base URL (hint https://api.deepseek.com/v1)
+    - Model (hint deepseek-chat)
+    - DeepSeek API key (obscured; eye icon toggles visibility)
+  Button: Save API settings → SettingsStore on this machine
+  Snackbar: "DeepSeek API settings saved on this machine"
+
+
+================================================================================
+9. NEW ESTIMATE FLOW
+================================================================================
+File: lib/ui/new_estimate_flow.dart
+Pushed from Dashboard FAB, Estimates FAB, Clients "New estimate".
+Optional prefill: initialClient, initialProject.
+Restores last project, carpet area, recent areas/work types from local cache.
+
+APP BAR: "New estimate" + system Back
+HORIZONTAL STEPPER (tappable only for completed/current steps)
+  1 Project · 2 Areas · 3 Types · 4 Scopes · 5 Terms
+FOOTER
+  Back (hidden on step 0) · Next  /  on last step: "Build quotation"
+
+STEP 0 — Project
+  Fields:
+    - Client (required to continue)
+    - Project / location
+    - Carpet area (sqft, optional) — helper: scales sqft quantities from similar jobs
+  Estimate type ChoiceChips: Interior Estimate, Design, Construction TurnKey Estimate, Custom
+    Custom opens Estimate type picker
+  Date ListTile → date picker 2020–2035
+  Next blocked snackbar: "Enter a client name"
+
+STEP 1 — Areas
+  Help: "Select area types from past jobs, or type a new name."
+  Field: Area type name + Add (+) / Enter
+    Empty + Add → Add area type dialog
+    Existing name → select that area
+    New name → CatalogRepository.addArea then select
+  Suggestions: FilterChips of catalog areas (toggle select)
+  Caption: "{n} selected"
+
+STEP 2 — Types
+  Help: "Select work types for this estimate, or add a new one."
+  CheckboxListTile per work type: "{S.No}. {name}" / "{n} scopes · added"
+  ListTile "Add work type" → Add work type dialog; auto-selects new type
+  Next blocked snackbar: "Select or add at least one work type"
+
+STEP 3 — Scopes
+  Entering this step with none selected auto-selects typical + recent scopes
+  Help: "Select scopes, enter quantity to calculate amount, or add a new scope."
+  ExpansionTiles: "{Work type}" or "{Work type} · {area}" if type uses areas
+    Empty: "No scopes yet. Add one below."
+    Checkbox per scope: name / unit · rate · "typical" · "added"
+    If selected: Quantity field + read-only Amount (qty × suggested rate)
+    ListTile "Add scope" → Add work scope dialog; auto-selects with default qty
+  Next blocked snackbar: "Select or add at least one work scope"
+
+STEP 4 — Terms
+  Heading: "Terms and conditions"
+  Embedded TermsAndConditionsForm (see SCREEN 11)
+  "Build quotation" builds EstimateDraft, remembers selection in cache, replaces this route with Quotation editor
+
+
+================================================================================
+10. QUOTATION EDITOR
+================================================================================
+File: lib/ui/quotation_editor.dart
+Opened from Estimates list, Client viewer, agent "open estimate", or New estimate "Build quotation".
+
+APP BAR
+  - Back
+  - Title: client name or "Quotation"
+  - StatusChip (current status)
+  - Save-as menu (disk icon): Save as Drafted / Completed / Finalized → setStatus + save
+  - Gavel icon: Terms and conditions editor
+  - Plus icon: Add scope dialog
+  - Agent icon: toggle rail (wide) or Agent dialog (narrow)
+  Wide only:
+    - Check-circle: Save
+    - TextButton "Catalog fill" — apply catalog rates/descriptions; quantities stay unconfirmed (highlighted)
+    - TextButton "Confirm qtys" — mark all quantities confirmed
+  Overflow More:
+    Narrow extras: Save, Catalog fill, Confirm quantities
+    Always: Export PDF quotation, Export Excel, Terms and conditions,
+            Payment schedule from T&C, Change estimate type, Delete estimate
+
+LETTERHEAD (white, print-like)
+  File: lib/ui/widgets/quotation_letterhead.dart
+  - Company logo (assets)
+  - Estimate type (uppercase teal) — tap → Estimate type picker
+  - Client, Project (if set), Date
+  - Company address + contact line (from Settings / draft)
+
+TABLE TOOLBAR
+  - Add scope (filled)
+  - Hint: "Work type is a heading. Amount = Quantity × unitRate."
+  Empty table: TextButton "Add a scope to this quotation"
+
+COLUMN HEADERS
+  S.No. | Scope / Description | Unit | unitRate | Quantity | Amount | (delete)
+
+WORK TYPE HEADING ROW
+  Serial number, work type name, section total INR
+  Plus icon: Add scope to this work type
+
+SCOPE ROW (editable)
+  Unconfirmed quantity: coral-tinted background
+  Fields:
+    - S.No. / code (A, B, C…)
+    - Scope name
+    - Description
+    - Unit dropdown
+    - unitRate (numeric) — marks source=user
+    - Quantity (numeric) — confirms quantity
+    - Amount (numeric) — back-calculates unitRate = amount / qty (qty defaults to 1)
+  Delete icon → "Delete scope" confirm (Cancel / Delete) → remove line
+
+ADD SCOPE DIALOG (quotation-specific)
+  Title: "Add scope"
+  Fields: WorkType dropdown, S.No. (A, B, C…), Scope name (required), Description,
+          Unit, unitRate, Quantity (default 1), live Amount
+  Buttons: Cancel · Add
+  Also writes the scope into local catalog cache, then adds a quotation line
+
+BOTTOM BAR
+  Subtotal
+  GST {n}%
+  HVAC GST {n}% (only if HVAC taxable > 0)
+  Total with GST (emphasized)
+  Compact (phone): PDF · Excel · Save buttons
+  Desktop: "Add terms…" / "{n} terms and conditions" · "Payment schedule"
+
+ACTIONS (functions)
+  Save          — DraftStore.save; snackbar "Saved as {status}"
+  Catalog fill  — EstimateAgent.fillFromCatalog (offline, no API key needed)
+  Confirm qtys  — confirmAllQuantities
+  Export PDF    — QuotationPdf.export + open file / share
+  Export Excel  — ExcelExporter.export + open file / share
+  Payment schedule — saves first, then ScheduleService.createPaymentPlan from T&C %
+                     snackbar scheduled count or "No payment percentages found in T&C"
+  Change type   — Estimate type picker
+  Delete        — confirm then DraftStore.delete and pop editor
+
+Wide: CollapsibleAgentPanel on the right with this draft in context.
+
+
+================================================================================
+11. TERMS AND CONDITIONS EDITOR
+================================================================================
+File: lib/ui/terms_editor.dart
+Used in New estimate step 5 (inline) and Quotation editor (dialog).
+
+Help: "These print under OTHER TERMS AND CONDITIONS on the quotation."
+
+TEMPLATE CHIPS (built-in if catalog has none)
+  - Standard interior (3–4 months)
+  - Short finishing (30 days)
+  - Fast interior (30–45 days)
+  Tap replaces the clause list
+
+CLAUSE LIST
+  Numbered cards; tap → Edit term {n} dialog (5-line text, Cancel / Save)
+  Trash icon: Remove clause
+  Empty: "No terms yet. Pick a template or add a custom clause."
+
+ADD CUSTOM
+  Field: "Add a custom term"
+  Button: Add  (or Enter)
+
+DIALOG WRAPPER (quotation)
+  Title: "Terms and conditions"
+  Buttons: Cancel · Save terms
+
+
+================================================================================
+12. DEEPSEEK AGENT
+================================================================================
+File: lib/ui/agent_panel.dart
+Shown as:
+  - Right rail on Dashboard/Estimates/… when width >= 1100
+  - Dialog on compact from header robot icon
+  - Right rail / dialog on Quotation editor
+
+COLLAPSED RAIL (48px)
+  Chevron left + robot + rotated "Agent" — tap expands
+
+EXPANDED PANEL (320px)
+  Title: "DeepSeek agent"
+  Collapse chevron (right)
+  Hint:
+    Home: "Ask about estimates, the rate card, or to create/edit a quotation. Add your DeepSeek API key in Settings."
+    Quotation open: "This quotation is open. Ask to change quantities, rates, add/delete scopes, or save."
+  Empty suggestions:
+    Home: “list estimates”, “open OM CRE”, “create an estimate for ABC with civil work”
+    Quotation: “use max rate for gypsum partition”, “add a flooring scope at ₹180/sqft”
+  Chat bubbles (user right / agent left)
+  Busy: LinearProgressIndicator
+  Field: "Ask DeepSeek" + Send (filled)
+  Enter submits. Disabled while busy.
+
+Without API key: agent replies to add key in Settings; Catalog Fill still works on an open quotation.
+
+Agent can navigate: dashboard, estimates, clients/crm, calendar/accounts/payments, rate_card, settings
+Agent tools: search_rate_card, list_work_types, get_scope, similar_line_items, add_catalog_scope,
+  dashboard_summary, list_estimates, open_estimate, create_estimate, set_estimate_meta,
+  save_estimate, delete_estimate, suggest_quantities, apply_line, add_quotation_line,
+  delete_quotation_line, fill_from_catalog, recalc_totals, navigate
+
+
+================================================================================
+13. SHARED WIDGETS (appear on many screens)
+================================================================================
+AppCard          — rounded navy card; optional tap ripple
+StatusChip       — Drafted (grey) / Completed (green) / Finalized (coral)
+StatCard         — dashboard metric + optional delta + tap
+AppSidebar       — desktop nav
+AppHeader        — title + optional search + trailing
+ChoiceChip       — filters; selected = coral with dark text
+Date pickers     — Material date picker
+Time pickers     — Material time picker
+SnackBars        — floating, cardHover background
+AlertDialogs     — rounded 24, Cancel (text) + primary FilledButton
+
+
+================================================================================
+14. SCREEN MAP (how you get there)
+================================================================================
+Dashboard ──FAB──► New estimate flow ──Build quotation──► Quotation editor
+Estimates ──tap card──► Quotation editor
+Estimates ──FAB──► New estimate flow
+Estimates ──More: Change type──► Estimate type picker
+Estimates ──More: Delete──► Delete dialog
+Clients   ──FAB──► New client dialog
+Clients   ──Viewer / tap──► Client viewer ──Edit──► Client workspace
+Clients   ──Call──► Phone / clipboard
+Clients   ──Follow-up──► Follow-up dialog ──► Calendar event
+Clients   ──New estimate──► New estimate flow (prefilled)
+Client viewer ──estimate card──► Quotation editor
+Calendar  ──Meeting / Follow-up──► event dialogs
+Calendar  ──Payment schedule──► estimate picker ──► Accounts + notifications
+Accounts  ──Receive / Send──► payment dialog
+Accounts  ──tap project──► Ledger sheet ──unpaid installment──► Receive dialog
+Rate card ──Add area/type/scope──► catalog dialogs
+Rate card ──tap scope──► Edit unit and rate
+Settings  ──Backup / Restore / Sync / Save company / Save API
+Header    ──robot──► Agent panel / dialog
+Quotation ──PDF / Excel / Terms / Payment schedule / Agent / Add scope / Delete
+
+
+================================================================================
+15. NON-SCREEN BEHAVIOUR THAT AFFECTS UX
+================================================================================
+- Catalog load failure blocks the whole app (error screen).
+- Appwrite auto-sync refreshes estimates, clients, and catalog when data arrives or app resumes.
+- Follow-up save and payment schedule create local notifications (Android + Windows; Asia/Kolkata).
+- Recording a received installment cancels that installment's 9am collect notification.
+- Dual-app Android: launch config "biconcept (Android phone)" uses --device-user=0.
+- Windows launch: "biconcept (Windows)" — no Android-only flags.
+================================================================================
+END

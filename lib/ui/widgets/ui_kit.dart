@@ -328,6 +328,7 @@ class AppHeader extends StatelessWidget {
     this.onSearch,
     this.trailing,
     this.compact = false,
+    this.muted = false,
   });
 
   final String title;
@@ -335,14 +336,15 @@ class AppHeader extends StatelessWidget {
   final ValueChanged<String>? onSearch;
   final Widget? trailing;
   final bool compact;
+  final bool muted;
 
   @override
   Widget build(BuildContext context) {
     final titleStyle = TextStyle(
-      color: AppColors.text,
-      fontSize: compact ? 22 : 28,
+      color: muted ? AppColors.muted : AppColors.text,
+      fontSize: muted ? (compact ? 16 : 18) : (compact ? 22 : 28),
       fontWeight: FontWeight.w600,
-      letterSpacing: -0.6,
+      letterSpacing: muted ? 0 : -0.6,
     );
     final titleText = Text(
       title,

@@ -1,8 +1,22 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 class AppBreakpoints {
   static const compact = 800.0;
   static const wide = 1100.0;
+  static const navClearance = 96.0;
+}
+
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.trackpad,
+      };
 }
 
 class AppColors {
@@ -15,12 +29,12 @@ class AppColors {
   static const primaryDim = Color(0x33E8877A);
   static const text = Color(0xFFF5F6FA);
   static const muted = Color(0xFF9AA3B8);
-  static const up = Color(0xFF7DCEA0);
-  static const down = Color(0xFFE57373);
+  static const up = Color(0xFF75D8BB);
+  static const down = Color(0xFFFFB4AB);
   static const outline = Color(0xFF2C3348);
-  static const drafted = Color(0xFF8B93A7);
-  static const completed = Color(0xFF7DCEA0);
-  static const finalized = Color(0xFFE8877A);
+  static const drafted = Color(0xFF544340);
+  static const completed = Color(0xFF75D8BB);
+  static const finalized = Color(0xFFFFB4A9);
 }
 
 class AppTheme {
@@ -38,6 +52,8 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      visualDensity: VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       colorScheme: scheme,
       scaffoldBackgroundColor: AppColors.background,
       canvasColor: AppColors.background,
@@ -104,6 +120,7 @@ class AppTheme {
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.card,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       snackBarTheme: SnackBarThemeData(
@@ -112,9 +129,17 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),
-      navigationBarTheme: const NavigationBarThemeData(
+      navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.sidebar,
         indicatorColor: AppColors.primaryDim,
+        height: 68,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          return TextStyle(
+            fontSize: 11,
+            fontWeight: states.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
+            color: states.contains(WidgetState.selected) ? AppColors.primarySoft : AppColors.muted,
+          );
+        }),
       ),
     );
   }

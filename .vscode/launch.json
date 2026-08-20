@@ -8,10 +8,18 @@
       "program": "lib/main.dart"
     },
     {
+      "name": "biconcept (Windows)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "windows"
+    },
+    {
       "name": "biconcept (Android phone)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
+      "deviceId": "android",
       "toolArgs": [
         "--device-user=0",
         "--target-platform=android-arm64"

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'data/appwrite_live.dart';
-import 'data/schedule_service.dart';
+import 'data/schedule.dart';
 import 'ui/home_page.dart';
 import 'theme/app_theme.dart';
 
@@ -23,6 +23,20 @@ class BiconceptApp extends StatelessWidget {
       title: 'BiConcept',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark(),
+      scrollBehavior: const AppScrollBehavior(),
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        return GestureDetector(
+          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+          behavior: HitTestBehavior.deferToChild,
+          child: MediaQuery(
+            data: media.copyWith(
+              textScaler: media.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.15),
+            ),
+            child: child ?? const SizedBox.shrink(),
+          ),
+        );
+      },
       home: const EstimateHomePage(),
     );
   }

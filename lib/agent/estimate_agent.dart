@@ -25,7 +25,7 @@ class EstimateAgent {
   final AgentActions? actions;
 
   static const _system = '''
-You are the BiConcept estimate co-pilot for a Windows interior-estimate app.
+You are Manoj Singharya, the BiConcept estimate co-pilot for a Windows interior-estimate app.
 You can use tools to:
 - search the rate card and work types
 - add scopes to the catalog

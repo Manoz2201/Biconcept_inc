@@ -8,6 +8,47 @@ import '../models/estimate_document.dart';
 import '../models/estimate_models.dart';
 import '../theme/app_theme.dart';
 
+const kAgentName = 'Manoj Singharya';
+const kAgentNameLower = 'manoj singharya';
+const kAgentInitials = 'MS';
+const kAgentRole = 'estimator agent';
+
+Future<void> showAgentSheet({
+  required BuildContext context,
+  required Widget panel,
+}) {
+  final height = MediaQuery.sizeOf(context).height;
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: AppColors.background,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+    builder: (context) {
+      return SizedBox(
+        height: height * 0.92,
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.outline.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(child: panel),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 class CollapsibleAgentPanel extends StatefulWidget {
   const CollapsibleAgentPanel({
     super.key,
@@ -63,12 +104,12 @@ class CollapsibleAgentPanelState extends State<CollapsibleAgentPanel> {
   Widget build(BuildContext context) {
     if (!_expanded) {
       return SizedBox(
-        width: 48,
+        width: 56,
         child: _CollapsedAgentRail(onExpand: expand),
       );
     }
     return SizedBox(
-      width: 320,
+      width: 336,
       child: _AgentChatView(
         catalog: widget.catalog,
         draft: widget.draft,
@@ -92,25 +133,35 @@ class _CollapsedAgentRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.card,
+      color: AppColors.background,
       child: InkWell(
         onTap: onExpand,
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            children: [
-              Icon(Icons.chevron_left, size: 22),
-              SizedBox(height: 12),
-              Icon(Icons.smart_toy_outlined, color: AppColors.primarySoft, size: 20),
-              SizedBox(height: 12),
-              RotatedBox(
-                quarterTurns: 1,
-                child: Text(
-                  'Agent',
-                  style: TextStyle(color: AppColors.muted, fontSize: 11, fontWeight: FontWeight.w600),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(left: BorderSide(color: AppColors.primary.withValues(alpha: 0.35))),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              children: [
+                Icon(Icons.chevron_left, size: 20, color: AppColors.muted),
+                const SizedBox(height: 16),
+                const _AgentAvatar(size: 32),
+                const SizedBox(height: 16),
+                const RotatedBox(
+                  quarterTurns: 1,
+                  child: Text(
+                    'manoj',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.6,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -186,98 +237,70 @@ class _AgentChatView extends StatelessWidget {
   final VoidCallback onMessages;
   final VoidCallback? onCollapse;
 
+  List<String> get _prompts => draft == null
+      ? const [
+          'list estimates',
+          'open OM CRE',
+          'create an estimate for ABC with civil work',
+        ]
+      : const [
+          'use max rate for gypsum partition',
+          'add a flooring scope at ₹180/sqft',
+        ];
+
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: AppColors.card,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      color: AppColors.background,
+      child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 4, 4),
-            child: Row(
+          const Positioned(
+            right: -36,
+            top: -48,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0x22E8877A),
+                ),
+                child: SizedBox(width: 140, height: 140),
+              ),
+            ),
+          ),
+          const Positioned(
+            left: -40,
+            bottom: 88,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0x145ADACE),
+                ),
+                child: SizedBox(width: 120, height: 120),
+              ),
+            ),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(color: AppColors.outline.withValues(alpha: 0.45)),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                _header(),
                 Expanded(
-                  child: Text(
-                    'DeepSeek agent',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
+                    children: [
+                      if (messages.isEmpty) _emptyState(context),
+                      for (final turn in messages) _bubble(turn),
+                      if (busy) const _TypingBubble(),
+                    ],
                   ),
                 ),
-                if (onCollapse != null)
-                  IconButton(
-                    tooltip: 'Collapse agent',
-                    visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints.tightFor(width: 36, height: 36),
-                    padding: EdgeInsets.zero,
-                    onPressed: onCollapse,
-                    icon: const Icon(Icons.chevron_right, size: 22),
-                  ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              draft == null
-                  ? 'Ask about estimates, the rate card, or to create/edit a quotation. Add your DeepSeek API key in Settings.'
-                  : 'This quotation is open. Ask to change quantities, rates, add/delete scopes, or save.',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-          const Divider(),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                if (messages.isEmpty)
-                  Text(
-                    draft == null
-                        ? 'Try: “list estimates”, “open OM CRE”, or “create an estimate for ABC with civil work”.'
-                        : 'Try: “use max rate for gypsum partition” or “add a flooring scope at ₹180/sqft”.',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                for (final turn in messages) ...[
-                  Align(
-                    alignment: turn.user ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(10),
-                      constraints: const BoxConstraints(maxWidth: 280),
-                      decoration: BoxDecoration(
-                        color: turn.user ? AppColors.primaryDim : AppColors.cardHover,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(turn.text),
-                    ),
-                  ),
-                ],
-                if (busy) const LinearProgressIndicator(),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: input,
-                    enabled: !busy,
-                    decoration: const InputDecoration(
-                      hintText: 'Ask DeepSeek',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    onSubmitted: (_) => _send(context),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filled(
-                  onPressed: busy ? null : () => _send(context),
-                  icon: const Icon(Icons.send),
-                ),
+                _composer(context),
               ],
             ),
           ),
@@ -286,8 +309,205 @@ class _AgentChatView extends StatelessWidget {
     );
   }
 
-  Future<void> _send(BuildContext context) async {
-    final text = input.text.trim();
+  Widget _header() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 6, 10),
+      child: Row(
+        children: [
+          const _AgentAvatar(size: 40),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  kAgentNameLower,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                    height: 1.15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: AppColors.completed,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      kAgentRole.toUpperCase(),
+                      style: const TextStyle(
+                        color: AppColors.muted,
+                        fontSize: 10,
+                        letterSpacing: 1.3,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (onCollapse != null)
+            IconButton(
+              tooltip: 'Collapse $kAgentName',
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+              padding: EdgeInsets.zero,
+              onPressed: onCollapse,
+              icon: const Icon(Icons.chevron_right, size: 22, color: AppColors.muted),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyState(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          draft == null
+              ? 'Ask about estimates, the rate card, or to create a quotation. API key lives in Settings.'
+              : 'This quotation is open. Ask to change quantities, rates, add or delete scopes, or save.',
+          style: const TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'TRY',
+          style: TextStyle(color: AppColors.muted, fontSize: 10, letterSpacing: 1.6, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final prompt in _prompts)
+              _PromptChip(
+                label: prompt,
+                onTap: busy ? null : () => _send(context, prompt),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _bubble(_ChatTurn turn) {
+    final user = turn.user;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: user ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!user) ...[
+            const _AgentAvatar(size: 22),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              constraints: const BoxConstraints(maxWidth: 260),
+              decoration: BoxDecoration(
+                color: user ? AppColors.primary.withValues(alpha: 0.16) : AppColors.card,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(user ? 18 : 5),
+                  bottomRight: Radius.circular(user ? 5 : 18),
+                ),
+                border: Border.all(
+                  color: user
+                      ? AppColors.primary.withValues(alpha: 0.28)
+                      : AppColors.outline.withValues(alpha: 0.55),
+                ),
+              ),
+              child: Text(
+                turn.text,
+                style: TextStyle(
+                  color: user ? AppColors.primarySoft : AppColors.text,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _composer(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: input,
+              enabled: !busy,
+              minLines: 1,
+              maxLines: 4,
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Ask $kAgentName',
+                hintStyle: const TextStyle(color: AppColors.muted, fontSize: 13),
+                filled: true,
+                fillColor: AppColors.card,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(99),
+                  borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.7)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(99),
+                  borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.7)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(99),
+                  borderSide: const BorderSide(color: AppColors.primary, width: 1.2),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(99),
+                  borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.4)),
+                ),
+              ),
+              onSubmitted: (_) => _send(context),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton.filled(
+            onPressed: busy ? null : () => _send(context),
+            tooltip: 'Send',
+            style: IconButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: const Color(0xFF1A1010),
+              disabledBackgroundColor: AppColors.cardHover,
+              minimumSize: const Size(44, 44),
+              maximumSize: const Size(44, 44),
+              padding: EdgeInsets.zero,
+            ),
+            icon: const Icon(Icons.send_rounded, size: 18),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _send(BuildContext context, [String? preset]) async {
+    final text = (preset ?? input.text).trim();
     if (text.isEmpty) return;
     input.clear();
     messages.add(_ChatTurn(text, user: true));
@@ -309,6 +529,153 @@ class _AgentChatView extends StatelessWidget {
     messages.add(_ChatTurn(result.message, user: false));
     onBusy(false);
     onMessages();
+  }
+}
+
+class _AgentAvatar extends StatelessWidget {
+  const _AgentAvatar({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.2),
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.18),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        kAgentInitials,
+        style: TextStyle(
+          color: AppColors.primarySoft,
+          fontSize: size < 28 ? 8 : 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+        ),
+      ),
+    );
+  }
+}
+
+class _PromptChip extends StatelessWidget {
+  const _PromptChip({required this.label, this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(99),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(99),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(color: AppColors.outline.withValues(alpha: 0.55)),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(color: AppColors.primarySoft, fontSize: 11, height: 1.25),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TypingBubble extends StatelessWidget {
+  const _TypingBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _AgentAvatar(size: 22),
+          SizedBox(width: 8),
+          _TypingDots(),
+        ],
+      ),
+    );
+  }
+}
+
+class _TypingDots extends StatefulWidget {
+  const _TypingDots();
+
+  @override
+  State<_TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(18),
+              bottomLeft: Radius.circular(5),
+              bottomRight: Radius.circular(18),
+            ),
+            border: Border.all(color: AppColors.outline.withValues(alpha: 0.55)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < 3; i++) ...[
+                if (i > 0) const SizedBox(width: 4),
+                Opacity(
+                  opacity: () {
+                    final t = (_controller.value + i / 3) % 1.0;
+                    final bounce = t < 0.5 ? t * 2 : (1 - t) * 2;
+                    return 0.35 + 0.65 * bounce;
+                  }(),
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
