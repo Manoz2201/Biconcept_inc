@@ -1,0 +1,31 @@
+{
+    "gstPercent": 18,
+    "hvacGstPercent": 28,
+    "currency": "INR",
+    "amountFormula": "quantity * unitRate",
+    "termsAndConditions": [
+        "Payment needed to be done in phases - 30% Advance, 20% after delivery of material on site (within initial 20 days), Remaining 15% - 15% - 15% progressively every 20 days, 5% at the time of finishing.",
+        "Excluding items or works from our estimate and scope of works (i.e. TV, Decor items, Projector, IT Server, paintings, planters, Wall Art, Ceiling and wall Fans, Signage, Logo, Wall Graphics, Decorative lights, kitchen's Appliances, Electrical fixtures like chandelier, decorative lights, geyser, fans, curtains, WIFI internet routers).",
+        "Extra items from our estimate or scope of work will be charged separately (after approval).",
+        "Estimated project completion time 3 to 4 months.",
+        "18% GST will be extra on bill and 28% GST on AHU Unit + Split AC.",
+        "Above estimate is based on your shared layout. If design, layouts and quantity will change then the cost will be revised as per 3D or layouts."
+    ],
+    "paymentTerms": [
+        "30% Advance",
+        "20% after delivery of material on site (within initial 20 days)",
+        "Remaining 15% - 15% - 15% progressively every 20 days",
+        "5% at the time of finishing"
+    ],
+    "exclusions": [
+        "TV, Decor items, Projector, IT Server, paintings, planters, Wall Art",
+        "Ceiling and wall Fans, Signage, Logo, Wall Graphics, Decorative lights",
+        "kitchen's Appliances, chandelier, geyser, fans, curtains, WIFI internet routers"
+    ],
+    "notes": [
+        "Extra items from our estimate or scope of work will be charged separately (after approval).",
+        "Estimated project completion time 3 to 4 months.",
+        "18% GST will be extra on bill and 28% GST on AHU Unit + Split AC.",
+        "Above estimate is based on your shared layout. If design, layouts and quantity will change then the cost will be revised as per 3D or layouts."
+    ]
+}

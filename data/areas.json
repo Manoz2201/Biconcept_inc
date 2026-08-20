@@ -1,0 +1,154 @@
+[
+    {
+        "typicalScopes":  [
+                              "Side table",
+                              "Cabin / director chair",
+                              "Visitor chair",
+                              "Workstation",
+                              "Office / workstation chair"
+                          ],
+        "typicalWorkTypes":  [
+                                 "Furniture"
+                             ],
+        "name":  "Cabin",
+        "id":  "area_cabin"
+    },
+    {
+        "typicalScopes":  [
+                              "Wooden storage below counter",
+                              "Granite counter top",
+                              "Pantry wall tiles",
+                              "Sink, mixer and plumbing",
+                              "pantry\u0027s stools"
+                          ],
+        "typicalWorkTypes":  [
+                                 "Furniture"
+                             ],
+        "name":  "Cafeteria",
+        "id":  "area_cafeteria"
+    },
+    {
+        "typicalScopes":  [
+                              "Toilet floor and wall tiles",
+                              "Toilet fixtures set",
+                              "Bathroom PVC plumbing installation",
+                              "cabin\u0027s table with laminate finish top",
+                              "Low height storage",
+                              "Cabin / director chair",
+                              "Visitor chair",
+                              "Waiting / lounge sofa",
+                              "Coffee table",
+                              "Wall storage",
+                              "Director / MD table",
+                              "Trap door for AHU",
+                              "cabin\u0027s table with laminate finish top (size - 7\u0027 wide x 3\u0027 depth )",
+                              "Low height storage (size - 4\u0027 wide x 2.5\u0027 high x 18\" deep )",
+                              "Low height storage (size - 3\u0027 wide x 2.5\u0027 high x 18\" deep )"
+                          ],
+        "typicalWorkTypes":  [
+                                 "Toilet and Wet Areas",
+                                 "Furniture"
+                             ],
+        "name":  "Director Cabin",
+        "id":  "area_director_cabin"
+    },
+    {
+        "typicalScopes":  [
+                              "cabin\u0027s table with laminate finish top",
+                              "Low height storage",
+                              "Cabin / director chair",
+                              "Visitor chair",
+                              "Waiting / lounge sofa",
+                              "cabin\u0027s table with laminate finish top (size - 6\u0027 wide x 3\u0027 depth )",
+                              "Low height storage (size - 3\u0027 wide x 2.5\u0027 high x 18\" deep )"
+                          ],
+        "typicalWorkTypes":  [
+                                 "Furniture"
+                             ],
+        "name":  "Executive Director Cabin",
+        "id":  "area_executive_director_cabin"
+    },
+    {
+        "typicalScopes":  [
+                              "Waiting / lounge sofa",
+                              "Wallpaper",
+                              "Executive chair",
+                              "Boss chair",
+                              "Director / MD table",
+                              "Carpet tile",
+                              "Wooden panelling",
+                              "Window / roller blinds",
+                              "Glass film",
+                              "Electrical works for complete area",
+                              "Toughened glass partition"
+                          ],
+        "typicalWorkTypes":  [
+                                 "Furniture",
+                                 "Wall Finishes",
+                                 "Flooring",
+                                 "Window Treatments",
+                                 "Partition and Glass",
+                                 "Electrical Works"
+                             ],
+        "name":  "MD Cabin",
+        "id":  "area_md_cabin"
+    },
+    {
+        "typicalScopes":  [
+                              "Meeting table",
+                              "Meeting chair"
+                          ],
+        "typicalWorkTypes":  [
+                                 "Furniture"
+                             ],
+        "name":  "Meeting Room",
+        "id":  "area_meeting_room"
+    },
+    {
+        "typicalScopes":  [
+                              "Wooden storage below counter",
+                              "Overhead storage",
+                              "Granite counter top",
+                              "Pantry wall tiles",
+                              "Sink, mixer and plumbing",
+                              "Flush door with laminate finish",
+                              "0ver head storage above the pantry\u0027s slab"
+                          ],
+        "typicalWorkTypes":  [
+                                 "Furniture",
+                                 "Flooring",
+                                 "Partition and Glass"
+                             ],
+        "name":  "Pantry",
+        "id":  "area_pantry"
+    },
+    {
+        "typicalScopes":  [
+                              "Waiting / lounge sofa",
+                              "Reception counter / table",
+                              "Reception chair",
+                              "SOFA (FOR RECEPTION AND LOUNGE AREA)",
+                              "Coffee table"
+                          ],
+        "typicalWorkTypes":  [
+                                 "Furniture"
+                             ],
+        "name":  "Reception",
+        "id":  "area_reception"
+    },
+    {
+        "typicalScopes":  [
+                              "Workstation",
+                              "Office / workstation chair",
+                              "low height division storage",
+                              "2 sofa seat for informal area",
+                              "low height division storage (5 feet wide x 4 feet high x 1 feet deep)",
+                              "Wall Display Storage (8 feet high x 8 feet wide)"
+                          ],
+        "typicalWorkTypes":  [
+                                 "Furniture"
+                             ],
+        "name":  "Workstation Area",
+        "id":  "area_workstation_area"
+    }
+]

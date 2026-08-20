@@ -1,0 +1,2609 @@
+[
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_dismantling_partitions_lumpsum",
+        "aliases":  [
+                        "Dismantling and debris of existing partition Walls and site cleaning"
+                    ],
+        "minRate":  15000,
+        "workType":  "Dismantling and Debris",
+        "maxRate":  20000,
+        "description":  "as/Site Visit",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  17500,
+        "workScope":  "Dismantling existing partitions and site cleaning",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_dismantling_walls_lumpsum",
+        "aliases":  [
+                        "Dismantling and debris of existing Walls and site cleaning"
+                    ],
+        "minRate":  10000,
+        "workType":  "Dismantling and Debris",
+        "maxRate":  10000,
+        "description":  "as/Site Visit",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  10000,
+        "workScope":  "Dismantling existing walls and site cleaning",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_brick_work",
+        "aliases":  [
+                        "Brick Work For Toilets And Pantry and cafeteria"
+                    ],
+        "minRate":  null,
+        "workType":  "Civil Work",
+        "maxRate":  null,
+        "description":  "providing first class brick work with 4.5 and 9\" thick with rough plaster finish for Tile work. (as/drawing) also providing ledge wall for Wall Hung WC Cistern",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  null,
+        "workScope":  "Brick work for toilets, pantry and cafeteria",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_brick_work_lumpsum",
+        "aliases":  [
+                        "Brick Work For Pantry"
+                    ],
+        "minRate":  5000,
+        "workType":  "Civil Work",
+        "maxRate":  5000,
+        "description":  "as/site",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  5000,
+        "workScope":  "Brick work for toilets, pantry and cafeteria",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_granite_ledge",
+        "aliases":  [
+                        "granite Ledge for Balcony area"
+                    ],
+        "minRate":  null,
+        "workType":  "Civil Work",
+        "maxRate":  null,
+        "description":  "18- 25 mm thick granite ledge for Balcony area",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  null,
+        "workScope":  "Granite ledge",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_granite_staircase_step",
+        "aliases":  [
+                        "GRANITE STAIRCASE"
+                    ],
+        "minRate":  2500,
+        "workType":  "Civil Work",
+        "maxRate":  2500,
+        "description":  "With single round takkar granite cost up to 70 sq ft.",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  2500,
+        "workScope":  "Granite staircase",
+        "unit":  "step"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_ips_flooring",
+        "aliases":  [
+                        "IPS flooring"
+                    ],
+        "minRate":  null,
+        "workType":  "Civil Work",
+        "maxRate":  null,
+        "description":  "providing 5 to 6mm thick IPS flooring for Carpet Area.",
+        "makes":  [
+
+                  ],
+        "sampleCount":  3,
+        "suggestedRate":  null,
+        "workScope":  "IPS flooring",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_pcc_levelling_lumpsum",
+        "aliases":  [
+                        "PCC for tile levelling",
+                        "pcc for tile levelling",
+                        "Screeding work"
+                    ],
+        "minRate":  300000,
+        "workType":  "Civil Work",
+        "maxRate":  300000,
+        "description":  "providing 1:4 (cement : sand) 100mm thick mortar for existing floor leveling and smooth surface (as/site requirement)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  300000,
+        "workScope":  "PCC / screed for floor levelling",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_pcc_levelling_sqft",
+        "aliases":  [
+                        "PCC for levelling"
+                    ],
+        "minRate":  50,
+        "workType":  "Civil Work",
+        "maxRate":  50,
+        "description":  "providing 1:4 (cement : sand) 100mm thick mortar for existing floor leveling and smooth surface",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  50,
+        "workScope":  "PCC / screed for floor levelling",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_plaster_work",
+        "aliases":  [
+                        "plaster work"
+                    ],
+        "minRate":  null,
+        "workType":  "Civil Work",
+        "maxRate":  null,
+        "description":  "providing 1:4 (cement : sand) 12mm thick plaster on existing wall (as/site)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  null,
+        "workScope":  "Cement plaster",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_plaster_work_sqft",
+        "aliases":  [
+                        "POP plaster for Existing cement block Wall",
+                        "POP wall plaster and Exising Pop plaster or punning"
+                    ],
+        "minRate":  30,
+        "workType":  "Civil Work",
+        "maxRate":  35,
+        "description":  "providing 1:4 (cement : sand) 12mm thick plaster on existing wall (as/site)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  3,
+        "suggestedRate":  30,
+        "workScope":  "Cement plaster",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_raised_floor",
+        "aliases":  [
+                        "Raised Floor For Server Room",
+                        "Raised Floor For Pantry + Café + Server Room"
+                    ],
+        "minRate":  null,
+        "workType":  "Civil Work",
+        "maxRate":  null,
+        "description":  "100mm high PCC floor for raised plateform for 75mm pipes for water line",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  null,
+        "workScope":  "Raised PCC floor",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_rcc_lintel",
+        "aliases":  [
+                        "RCC Lintel Beam"
+                    ],
+        "minRate":  null,
+        "workType":  "Civil Work",
+        "maxRate":  null,
+        "description":  "providing RCC Lintel Beam For Door Support at +8\u0027 lvl",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  null,
+        "workScope":  "RCC lintel beam",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_waterproofing",
+        "aliases":  [
+                        "Water proofing for toilet and Pantry"
+                    ],
+        "minRate":  null,
+        "workType":  "Civil Work",
+        "maxRate":  null,
+        "description":  "providing DR. Fixit Water proofing chemical for toilets and pantry",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  null,
+        "workScope":  "Waterproofing for toilet and pantry",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_carpet_tile_sqft",
+        "aliases":  [
+                        "CARPET or PVC VINYL PLANK",
+                        "CARPET TILE FLOOR",
+                        "CARPET TILE (500MMX500MM)"
+                    ],
+        "minRate":  120,
+        "workType":  "Flooring",
+        "maxRate":  175,
+        "description":  "as/design and selection",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  120,
+        "workScope":  "Carpet tile",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Pantry"
+                         ],
+        "id":  "ws_pantry_wall_tile_sqft",
+        "aliases":  [
+                        "pantry wall tile above slab (2\u0027 high) to upper head storage"
+                    ],
+        "minRate":  120,
+        "workType":  "Flooring",
+        "maxRate":  120,
+        "description":  "Providing Fixing of (2\u0027x2\u0027, 12\"x18\", 12\"x12\" ) vitrified Tile with labour and required fixing material. (Make - Somani,Kajaria,vamoura,Gujrati same as other brand)",
+        "makes":  [
+                      "Kajaria",
+                      "Somani"
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  120,
+        "workScope":  "Pantry wall tiles",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_vinyl_flooring_sqft",
+        "aliases":  [
+                        "VINYL FLOORING"
+                    ],
+        "minRate":  150,
+        "workType":  "Flooring",
+        "maxRate":  150,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  150,
+        "workScope":  "Vinyl flooring",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_vitrified_floor_tiles_sqft",
+        "aliases":  [
+                        "Floor Tiles Tile Cost - up to 40 TO 60- sqft.",
+                        "TILE FLOORING WITH CHEMICAL",
+                        "Floor Tiles for office with 4\" high skirting Tile Cost - up to 40 TO 60- sqft.",
+                        "VITRIFIED FLOOR TILE",
+                        "Floor Tiles",
+                        "balcony\u0027s Floor Tiles (6 nos.)"
+                    ],
+        "minRate":  120,
+        "workType":  "Flooring",
+        "maxRate":  200,
+        "description":  "Providing Fixing of (4\u0027x2\u0027 \u0026 2\u0027X\u00272\u0027 ) vitrified Tile with chemical pasting and required fixing material. Make - Kajaria, Somani, same as other Tile Cost - up to 50/- sqft. Skirting will be measure at running feet with the same rate.",
+        "makes":  [
+                      "Kajaria",
+                      "Somani",
+                      "Varmora",
+                      "Granicer"
+                  ],
+        "sampleCount":  9,
+        "suggestedRate":  150,
+        "workScope":  "Vitrified floor tiles",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_aluminium_partition_sqft",
+        "aliases":  [
+                        "ALUMINIUM PARTITION"
+                    ],
+        "minRate":  350,
+        "workType":  "Partition and Glass",
+        "maxRate":  350,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  350,
+        "workScope":  "Aluminium partition",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Pantry"
+                         ],
+        "id":  "ws_flush_door_pcs",
+        "aliases":  [
+                        "Providing and fixing flush door with laminate finish required with fittings",
+                        "FLUSH DOOR WITH WOODEN FRAME",
+                        "wooden flush door with fitting and frame"
+                    ],
+        "minRate":  8500,
+        "workType":  "Partition and Glass",
+        "maxRate":  25000,
+        "description":  "40 mm thick both side laminate with required fittings like - tower bolt stopper and stopper with saal wood choukhat",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  11750,
+        "workScope":  "Flush door with laminate finish",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_frosted_film_on_glass_partiton_4_feet_high_sqft",
+        "aliases":  [
+                        "frosted film on glass partiton ( 4 feet high )"
+                    ],
+        "minRate":  40,
+        "workType":  "Partition and Glass",
+        "maxRate":  40,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  40,
+        "workScope":  "frosted film on glass partiton ( 4 feet high )",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_glass_door_pcs",
+        "aliases":  [
+                        "12mm thick toughened glass Door",
+                        "12mm thick toughened glass Door with Required black profile channel with Fittings (as/layout)"
+                    ],
+        "minRate":  20000,
+        "workType":  "Partition and Glass",
+        "maxRate":  21000,
+        "description":  "Make- gold plus,modi same as other",
+        "makes":  [
+                      "Modi",
+                      "Gold Plus"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  20500,
+        "workScope":  "Toughened glass door",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_glass_film_sqft",
+        "aliases":  [
+                        "GLASS FILM OVER THE EXISITNG GLASS"
+                    ],
+        "minRate":  50,
+        "workType":  "Partition and Glass",
+        "maxRate":  50,
+        "description":  "(MAIN DOOR + MD CABINS PARTITION)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  50,
+        "workScope":  "Glass film",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_glass_partition_lumpsum",
+        "aliases":  [
+                        "GLASS PARTITION COVERING WITH PANELING"
+                    ],
+        "minRate":  20000,
+        "workType":  "Partition and Glass",
+        "maxRate":  20000,
+        "description":  "as/discussed",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  20000,
+        "workScope":  "Toughened glass partition",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_glass_partition_pcs",
+        "aliases":  [
+                        "GLASS PARTITION"
+                    ],
+        "minRate":  450,
+        "workType":  "Partition and Glass",
+        "maxRate":  450,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  450,
+        "workScope":  "Toughened glass partition",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_glass_partition_sqft",
+        "aliases":  [
+                        "12mm thick toughened glass partition fixing with C profile section in floor and gypsum (as/layout) (up to 7\u0027 high from floor finish lvl)",
+                        "12mm thick toughened glass partition with black powder coated profile with glass (as/layout) (up to 8\u0027 high from floor finish lvl)"
+                    ],
+        "minRate":  400,
+        "workType":  "Partition and Glass",
+        "maxRate":  650,
+        "description":  "12mm thick toughened Glass partition with Required Fittings (Make - saint Gobain,Modi same as other) note - existing front glass will remain same",
+        "makes":  [
+                      "Saint Gobain",
+                      "Modi"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  525,
+        "workScope":  "Toughened glass partition",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_gypsum_partition_sqft",
+        "aliases":  [
+                        "75mm thick Gypsum Partition",
+                        "GYPSUM PARTITION",
+                        "75mm thick Gypsum Partition (as/layout) (up to Ceiling 13\u0027 high As/site)"
+                    ],
+        "minRate":  95,
+        "workType":  "Partition and Glass",
+        "maxRate":  140,
+        "description":  "providing and fixing of gypsum partition (50mm x 50 mm GI section with both side 12mm gypsum board with joint plaster)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  5,
+        "suggestedRate":  120,
+        "workScope":  "Gypsum partition",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Director Cabin"
+                         ],
+        "id":  "ws_toilet_fixtures_pcs",
+        "aliases":  [
+                        "Fixtures for toilet"
+                    ],
+        "minRate":  45000,
+        "workType":  "Toilet and Wet Areas",
+        "maxRate":  60000,
+        "description":  "1. Wall mounted WC (jaquar) with cistern + flush plate (GROHE GD- 2) 2. Table top basin with diverter (MAKE - JAQUAR / SOMAY/HINDWARE 3. wall mirror with light 4. Vanity with granite top with below storage 5. health Faucet 6. toilet paper Holder (Stainless steel heavy duty)",
+        "makes":  [
+                      "Jaquar",
+                      "Grohe",
+                      "Hindware"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  52500,
+        "workScope":  "Toilet fixtures set",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Director Cabin"
+                         ],
+        "id":  "ws_toilet_plumbing_pcs",
+        "aliases":  [
+                        "New Bathroom\u0027s pvc installation fittings + labour charges with required items."
+                    ],
+        "minRate":  25000,
+        "workType":  "Toilet and Wet Areas",
+        "maxRate":  30000,
+        "description":  "providing fitting and fixing of new pvc pipeline fittings for bathroom fixtures with required items. MAKE - Prince/ Prakash/Finolex same as other",
+        "makes":  [
+                      "Prince",
+                      "Prakash",
+                      "Finolex"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  27500,
+        "workScope":  "Bathroom PVC plumbing installation",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Director Cabin"
+                         ],
+        "id":  "ws_toilet_tiles_pcs",
+        "aliases":  [
+                        "Floor and Wall Tiles"
+                    ],
+        "minRate":  120,
+        "workType":  "Toilet and Wet Areas",
+        "maxRate":  150,
+        "description":  "Providing Fixing of (2\u0027x2\u0027, 12\"x18\", 12\"x12\" ) vitrified Tile with labour and required fixing material. (Make - Somani,Kajaria,vamoura,same as other brand)",
+        "makes":  [
+                      "Kajaria",
+                      "Somani"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  135,
+        "workScope":  "Toilet floor and wall tiles",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_baffle_ceiling_pcs",
+        "aliases":  [
+                        "BAFFLE CEILING"
+                    ],
+        "minRate":  450,
+        "workType":  "Suspended Ceiling",
+        "maxRate":  450,
+        "description":  "as/required",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  450,
+        "workScope":  "Baffle ceiling",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_grid_ceiling_pcs",
+        "aliases":  [
+                        "GRID CEILING"
+                    ],
+        "minRate":  150,
+        "workType":  "Suspended Ceiling",
+        "maxRate":  150,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  150,
+        "workScope":  "Grid ceiling",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_grid_ceiling_sqft",
+        "aliases":  [
+                        "Grid Ceiling (2\u0027x2\u0027)"
+                    ],
+        "minRate":  90,
+        "workType":  "Suspended Ceiling",
+        "maxRate":  90,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  90,
+        "workScope":  "Grid ceiling",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_gypsum_ceiling_pcs",
+        "aliases":  [
+                        "GYPSUM CEILING"
+                    ],
+        "minRate":  120,
+        "workType":  "Suspended Ceiling",
+        "maxRate":  120,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  120,
+        "workScope":  "Gypsum ceiling",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_gypsum_ceiling_sqft",
+        "aliases":  [
+                        "GYPSUM ceiling with cove designs (as/design)",
+                        "GYPSUM CEILING",
+                        "GYPSUM board ceiling with cove (as/disussed )"
+                    ],
+        "minRate":  90,
+        "workType":  "Suspended Ceiling",
+        "maxRate":  125,
+        "description":  "providing and fixing of Gypsum Board ceiling with required ISI GI channel cevered with 12mm thick gypsum board with required fittings. Make - Gyprock",
+        "makes":  [
+                      "Gyprock"
+                  ],
+        "sampleCount":  5,
+        "suggestedRate":  110,
+        "workScope":  "Gypsum ceiling",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_paint_complete_pcs",
+        "aliases":  [
+                        "PAINT WORK FOR CEILING AREA",
+                        "PAINT WORK FOR CEILING AND WALL"
+                    ],
+        "minRate":  25,
+        "workType":  "Suspended Ceiling",
+        "maxRate":  40,
+        "description":  "as/required",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  32.5,
+        "workScope":  "Paint work for walls, partitions and ceiling",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_pop_ceiling_sqft",
+        "aliases":  [
+                        "PLAIN POP CEILING",
+                        "POP CEILING WITH COVE"
+                    ],
+        "minRate":  120,
+        "workType":  "Suspended Ceiling",
+        "maxRate":  120,
+        "description":  "COVE will be measure extra in running feet with the same rate of 120 per running feet.",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  120,
+        "workScope":  "POP ceiling",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_rafter_ceiling_in_reception_area_sqft",
+        "aliases":  [
+                        "Rafter ceiling in reception area"
+                    ],
+        "minRate":  450,
+        "workType":  "Suspended Ceiling",
+        "maxRate":  450,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  450,
+        "workScope":  "Rafter ceiling in reception area",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_electrical_complete_lumpsum",
+        "aliases":  [
+                        "ELECTRICAL WORKS FOR COMPLETE OFFICE",
+                        "ELECTRICAL WORK"
+                    ],
+        "minRate":  55000,
+        "workType":  "Electrical Works",
+        "maxRate":  55000,
+        "description":  "providing fitting and Fixing of False ceiling\u0027s wiring,pvc conduiting, switch Board, ceiling panel for grid ceiling, MCB, Distribution Board, (Excluding items from our scope - Fan, Geyser,R.O.,chandelier, earthing\u0027s wiring ) Make - polycab for wiring + Anchor Penta for switches and board + Crompton/philips For concealed Ceiling Light .",
+        "makes":  [
+                      "Polycab",
+                      "Anchor",
+                      "Crompton",
+                      "Philips"
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  55000,
+        "workScope":  "Electrical works for complete area",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_electrical_complete_pcs",
+        "aliases":  [
+                        "ELECTRICAL WORK"
+                    ],
+        "minRate":  15000,
+        "workType":  "Electrical Works",
+        "maxRate":  15000,
+        "description":  "wiring, hanging light and other required works",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  15000,
+        "workScope":  "Electrical works for complete area",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_electrical_complete_sqft",
+        "aliases":  [
+                        "ELECTRICAL WORKS FOR COMPLETE OFFICE (as/drawing and 3D design)",
+                        "ELECTRICAL WORK"
+                    ],
+        "minRate":  200,
+        "workType":  "Electrical Works",
+        "maxRate":  250,
+        "description":  "providing fitting and Fixing of False ceiling\u0027s wiring,pvc conduiting, switch Board, LED Strips for cove and recessed light for false ceiling, MCB, Distribution Board, 2 - 3 electrical point on work + 4 electrical points in cabin + COVE LIGHT , Cove Strip, Profile Light, Hanging Light other required work (Excluding items from our scope - Fan, Geyser,R.O.,chandelier, earthing\u0027s wiring ) Make - polycab/Havells for wiring + GM/L\u0026T/ for switches + Syska/Crompton/ Philips For Resecced Ceiling Light .",
+        "makes":  [
+                      "Polycab",
+                      "Anchor",
+                      "Crompton",
+                      "Philips"
+                  ],
+        "sampleCount":  5,
+        "suggestedRate":  235,
+        "workScope":  "Electrical works for complete area",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_electrical_work_for_hanging_lights_and_other_lumpsum",
+        "aliases":  [
+                        "ELECTRICAL WORK FOR HANGING LIGHTS AND OTHER"
+                    ],
+        "minRate":  20000,
+        "workType":  "Electrical Works",
+        "maxRate":  20000,
+        "description":  "as/required",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  20000,
+        "workScope":  "ELECTRICAL WORK FOR HANGING LIGHTS AND OTHER",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_paint_complete_lumpsum",
+        "aliases":  [
+                        "Paint work for complete office area with required putty work"
+                    ],
+        "minRate":  45000,
+        "workType":  "Paint Works",
+        "maxRate":  45000,
+        "description":  "MAKE - premium emulsion",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  45000,
+        "workScope":  "Paint work for walls, partitions and ceiling",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_paint_complete_sqft",
+        "aliases":  [
+                        "Walls + Partition And Ceiling\u0027s Paint work for complete office area with required putty work",
+                        "PAINT WORK"
+                    ],
+        "minRate":  22,
+        "workType":  "Paint Works",
+        "maxRate":  30,
+        "description":  "MAKE - Asian Plastic Paint/Burger (plastic paint)",
+        "makes":  [
+                      "Asian"
+                  ],
+        "sampleCount":  5,
+        "suggestedRate":  28,
+        "workScope":  "Paint work for walls, partitions and ceiling",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Pantry"
+                         ],
+        "id":  "ws_0ver_head_storage_above_the_pantry_s_slab_sqft",
+        "aliases":  [
+                        "0ver head storage above the pantry\u0027s slab"
+                    ],
+        "minRate":  1000,
+        "workType":  "Furniture",
+        "maxRate":  1000,
+        "description":  "Made of 19mm thick ply/blockboard/HDHMR with laminate finish bith side with required fittings (SIZE - 6\u0027 wide x 3\u0027 high x 1\u0027 Depth)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  3,
+        "suggestedRate":  1000,
+        "workScope":  "0ver head storage above the pantry\u0027s slab",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Workstation Area"
+                         ],
+        "id":  "ws_2_sofa_seat_for_informal_area_pcs",
+        "aliases":  [
+                        "2 sofa seat for informal area"
+                    ],
+        "minRate":  8000,
+        "workType":  "Furniture",
+        "maxRate":  10000,
+        "description":  "as/3d design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  9000,
+        "workScope":  "2 sofa seat for informal area",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_bean_bag_pcs",
+        "aliases":  [
+                        "BEAN BAG"
+                    ],
+        "minRate":  10000,
+        "workType":  "Furniture",
+        "maxRate":  10000,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  10000,
+        "workScope":  "BEAN BAG",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Pantry",
+                             "Cafeteria"
+                         ],
+        "id":  "ws_below_storage_sqft",
+        "aliases":  [
+                        "wooden storage below the pantry\u0027s slab",
+                        "wooden storage below the sink\u0027s granite counter",
+                        "wooden storage below the sink\u0027s granite counter a",
+                        "wooden storage below the sink\u0027s granite counter and Over head Storage"
+                    ],
+        "minRate":  1000,
+        "workType":  "Furniture",
+        "maxRate":  1000,
+        "description":  "Made of 19mm thick ply/blockboard/HDHMR with laminate finish bith side with required fittings (SIZE - 6\u0027 wide x 3\u0027 high x 2\u0027 Depth)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  8,
+        "suggestedRate":  1000,
+        "workScope":  "Wooden storage below counter",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_book_shelf_3_x_8_pcs",
+        "aliases":  [
+                        "BOOK SHELF (3\u0027 X 8\u0027 )"
+                    ],
+        "minRate":  20000,
+        "workType":  "Furniture",
+        "maxRate":  20000,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  20000,
+        "workScope":  "BOOK SHELF (3\u0027 X 8\u0027 )",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_boss_chair_pcs",
+        "aliases":  [
+                        "BOSS CHAIR"
+                    ],
+        "minRate":  12000,
+        "workType":  "Furniture",
+        "maxRate":  12000,
+        "description":  "Size - 450mm x 450 mm (as/design)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  12000,
+        "workScope":  "Boss chair",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Cabin",
+                             "Executive Director Cabin",
+                             "Director Cabin"
+                         ],
+        "id":  "ws_cabin_chair_pcs",
+        "aliases":  [
+                        "Cabin\u0027s head chair",
+                        "Director\u0027s chair"
+                    ],
+        "minRate":  7500,
+        "workType":  "Furniture",
+        "maxRate":  10000,
+        "description":  "up to 10000/- per seat",
+        "makes":  [
+
+                  ],
+        "sampleCount":  16,
+        "suggestedRate":  7500,
+        "workScope":  "Cabin / director chair",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Executive Director Cabin"
+                         ],
+        "id":  "ws_cabin_s_table_with_laminate_finish_top_size_6_wi_pcs",
+        "aliases":  [
+                        "cabin\u0027s table with laminate finish top (size - 6\u0027 wide x 3\u0027 depth )"
+                    ],
+        "minRate":  22500,
+        "workType":  "Furniture",
+        "maxRate":  22500,
+        "description":  "made of 19mm thick commerical plywood with laminate finish top.",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  22500,
+        "workScope":  "cabin\u0027s table with laminate finish top (size - 6\u0027 wide x 3\u0027 depth )",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Director Cabin"
+                         ],
+        "id":  "ws_cabin_s_table_with_laminate_finish_top_size_7_wi_pcs",
+        "aliases":  [
+                        "cabin\u0027s table with laminate finish top (size - 7\u0027 wide x 3\u0027 depth )"
+                    ],
+        "minRate":  25000,
+        "workType":  "Furniture",
+        "maxRate":  25000,
+        "description":  "made of 19mm thick commerical plywood with laminate finish top.",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  25000,
+        "workScope":  "cabin\u0027s table with laminate finish top (size - 7\u0027 wide x 3\u0027 depth )",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Executive Director Cabin",
+                             "Director Cabin"
+                         ],
+        "id":  "ws_cabin_s_table_with_laminate_finish_top_pcs",
+        "aliases":  [
+                        "cabin\u0027s table with laminate finish top"
+                    ],
+        "minRate":  22500,
+        "workType":  "Furniture",
+        "maxRate":  42000,
+        "description":  "made of powder coated MS frame(internal) with 50mm thick PLPB laminted top",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  32250,
+        "workScope":  "cabin\u0027s table with laminate finish top",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_centre_table_pcs",
+        "aliases":  [
+                        "CENTRE TABLE"
+                    ],
+        "minRate":  10000,
+        "workType":  "Furniture",
+        "maxRate":  10000,
+        "description":  "Size - 600mm x 600 mm (as/design)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  10000,
+        "workScope":  "Centre table",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_circular_hexagonal_couch_pcs",
+        "aliases":  [
+                        "CIRCULAR/HEXAGONAL COUCH"
+                    ],
+        "minRate":  10000,
+        "workType":  "Furniture",
+        "maxRate":  10000,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  10000,
+        "workScope":  "CIRCULAR/HEXAGONAL COUCH",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Director Cabin",
+                             "Reception"
+                         ],
+        "id":  "ws_coffee_table_pcs",
+        "aliases":  [
+                        "Coffee table",
+                        "Coffee table ( 3\u0027x3\u0027 )",
+                        "Coffee table (3\u0027 x 3\u0027 )"
+                    ],
+        "minRate":  7500,
+        "workType":  "Furniture",
+        "maxRate":  8000,
+        "description":  "AS/DESIGN",
+        "makes":  [
+
+                  ],
+        "sampleCount":  10,
+        "suggestedRate":  7500,
+        "workScope":  "Coffee table",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_dice_s_couch_pcs",
+        "aliases":  [
+                        "DICE\u0027S COUCH"
+                    ],
+        "minRate":  10000,
+        "workType":  "Furniture",
+        "maxRate":  10000,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  10000,
+        "workScope":  "DICE\u0027S COUCH",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Director Cabin",
+                             "MD Cabin"
+                         ],
+        "id":  "ws_director_table_pcs",
+        "aliases":  [
+                        "Director\u0027s table with laminate finish top",
+                        "MD TABLE WITH SIDE STORAGE",
+                        "Director\u0027s table with laminate finish top (size - 7\u0027 wide x 3\u0027 depth )"
+                    ],
+        "minRate":  25000,
+        "workType":  "Furniture",
+        "maxRate":  55000,
+        "description":  "made of powder coated MS frame(internal) with wooden laminted top with laquered glass",
+        "makes":  [
+
+                  ],
+        "sampleCount":  6,
+        "suggestedRate":  42000,
+        "workScope":  "Director / MD table",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_executive_chair_pcs",
+        "aliases":  [
+                        "EXECUTIVE CHAIR"
+                    ],
+        "minRate":  7500,
+        "workType":  "Furniture",
+        "maxRate":  7500,
+        "description":  "Size - 600mm x 600 mm (as/design)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  7500,
+        "workScope":  "Executive chair",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_glass_door_rft",
+        "aliases":  [
+                        "MAIN GLASS DOOR PANELLING"
+                    ],
+        "minRate":  300,
+        "workType":  "Furniture",
+        "maxRate":  300,
+        "description":  "2\" wide wooden panelling with laminate finish",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  300,
+        "workScope":  "Toughened glass door",
+        "unit":  "rft"
+    },
+    {
+        "typicalAreas":  [
+                             "Pantry",
+                             "Cafeteria"
+                         ],
+        "id":  "ws_granite_top_sqft",
+        "aliases":  [
+                        "granite top",
+                        "granite top for 2 slab"
+                    ],
+        "minRate":  300,
+        "workType":  "Furniture",
+        "maxRate":  300,
+        "description":  "19mm thick granite top (single takkar)with required fixing labour and material. Granite base rate - 150/- sq ft",
+        "makes":  [
+
+                  ],
+        "sampleCount":  9,
+        "suggestedRate":  300,
+        "workScope":  "Granite counter top",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Workstation Area"
+                         ],
+        "id":  "ws_low_height_division_storage_5_feet_wide_x_4_feet_pcs",
+        "aliases":  [
+                        "low height division storage (5 feet wide x 4 feet high x 1 feet deep)"
+                    ],
+        "minRate":  15000,
+        "workType":  "Furniture",
+        "maxRate":  15000,
+        "description":  "structure made of MS and box made of wooden. As/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  15000,
+        "workScope":  "low height division storage (5 feet wide x 4 feet high x 1 feet deep)",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Workstation Area"
+                         ],
+        "id":  "ws_low_height_division_storage_pcs",
+        "aliases":  [
+                        "low height division storage"
+                    ],
+        "minRate":  12000,
+        "workType":  "Furniture",
+        "maxRate":  12000,
+        "description":  "structure made of MS and box made of wooden. As/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  12000,
+        "workScope":  "low height division storage",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Executive Director Cabin",
+                             "Director Cabin"
+                         ],
+        "id":  "ws_low_height_storage_size_3_wide_x_2_5_high_x_18_d_pcs",
+        "aliases":  [
+                        "Low height storage (size - 3\u0027 wide x 2.5\u0027 high x 18\" deep )"
+                    ],
+        "minRate":  7500,
+        "workType":  "Furniture",
+        "maxRate":  7500,
+        "description":  "made of 19mm thick commerical plywood with laminate finish with two drawer + one shutter below",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  7500,
+        "workScope":  "Low height storage (size - 3\u0027 wide x 2.5\u0027 high x 18\" deep )",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Director Cabin"
+                         ],
+        "id":  "ws_low_height_storage_size_4_wide_x_2_5_high_x_18_d_pcs",
+        "aliases":  [
+                        "Low height storage (size - 4\u0027 wide x 2.5\u0027 high x 18\" deep )"
+                    ],
+        "minRate":  10000,
+        "workType":  "Furniture",
+        "maxRate":  10000,
+        "description":  "made of 19mm thick commerical plywood with laminate finish with two drawer + one shutter below",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  10000,
+        "workScope":  "Low height storage (size - 4\u0027 wide x 2.5\u0027 high x 18\" deep )",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Executive Director Cabin",
+                             "Director Cabin"
+                         ],
+        "id":  "ws_low_height_storage_pcs",
+        "aliases":  [
+                        "Low height storage"
+                    ],
+        "minRate":  7500,
+        "workType":  "Furniture",
+        "maxRate":  10000,
+        "description":  "made of 19mm thick commerical plywood with laminate finish with two drawer + one shutter below",
+        "makes":  [
+
+                  ],
+        "sampleCount":  6,
+        "suggestedRate":  7500,
+        "workScope":  "Low height storage",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Meeting Room"
+                         ],
+        "id":  "ws_meeting_chair_pcs",
+        "aliases":  [
+                        "meeting table\u0027s chairs"
+                    ],
+        "minRate":  5000,
+        "workType":  "Furniture",
+        "maxRate":  5000,
+        "description":  "up to 5000/- per seat",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  5000,
+        "workScope":  "Meeting chair",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Meeting Room"
+                         ],
+        "id":  "ws_meeting_table_pcs",
+        "aliases":  [
+                        "meeting\u0027s table with laminate finish",
+                        "meeting\u0027s table with laminate finish (8feet wide x 4feet width x 2.5 feet high)"
+                    ],
+        "minRate":  24000,
+        "workType":  "Furniture",
+        "maxRate":  30000,
+        "description":  "made of powder coated MS frame(base structure) with PLPB (prelaminated particle board) finish with laminate(as/selection).",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  27000,
+        "workScope":  "Meeting table",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Workstation Area",
+                             "Cabin"
+                         ],
+        "id":  "ws_office_chair_pcs",
+        "aliases":  [
+                        "workstation\u0027s chair",
+                        "OFFICE CHAIR"
+                    ],
+        "minRate":  3200,
+        "workType":  "Furniture",
+        "maxRate":  4500,
+        "description":  "up to 4500/- per seat (mesh Design)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  9,
+        "suggestedRate":  4500,
+        "workScope":  "Office / workstation chair",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Pantry"
+                         ],
+        "id":  "ws_overhead_storage_sqft",
+        "aliases":  [
+                        "over head storage above the pantry\u0027s slab"
+                    ],
+        "minRate":  1000,
+        "workType":  "Furniture",
+        "maxRate":  1000,
+        "description":  "Made of 19mm thick ply/blockboard/ with laminate finish both side with required fittings (SIZE - 5\u0027 wide x 3\u0027 high x 1\u0027 Depth)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  1000,
+        "workScope":  "Overhead storage",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Cafeteria"
+                         ],
+        "id":  "ws_pantry_s_stools_pcs",
+        "aliases":  [
+                        "pantry\u0027s stools"
+                    ],
+        "minRate":  3000,
+        "workType":  "Furniture",
+        "maxRate":  3000,
+        "description":  "up to 3000/-per pcs",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  3000,
+        "workScope":  "pantry\u0027s stools",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Pantry",
+                             "Cafeteria"
+                         ],
+        "id":  "ws_pantry_wall_tile_sqft",
+        "aliases":  [
+                        "pantry wall tile above slab (2\u0027 high) to upper head storage",
+                        "pantry wall tile above slab (2\u0027 high) to upper head storage + wall tiles behind the refrigerator and WD (up to 5\u0027 high)",
+                        "pantry wall tile above slab (2\u0027 high) to upper head storage + wall tiles behind the refrigerator and WD"
+                    ],
+        "minRate":  120,
+        "workType":  "Furniture",
+        "maxRate":  150,
+        "description":  "Providing Fixing of (2\u0027x2\u0027, 12\"x18\", 12\"x12\" ) vitrified Tile with labour and required fixing material. (Make - Somani,Kajaria,vamoura,Gujrati same as other brand)",
+        "makes":  [
+                      "Kajaria",
+                      "Somani"
+                  ],
+        "sampleCount":  8,
+        "suggestedRate":  150,
+        "workScope":  "Pantry wall tiles",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Reception"
+                         ],
+        "id":  "ws_reception_chair_pcs",
+        "aliases":  [
+                        "Reception chair",
+                        "RECEPTION\u0027S CHAIR"
+                    ],
+        "minRate":  5000,
+        "workType":  "Furniture",
+        "maxRate":  7500,
+        "description":  "as/selection",
+        "makes":  [
+
+                  ],
+        "sampleCount":  6,
+        "suggestedRate":  6000,
+        "workScope":  "Reception chair",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Reception"
+                         ],
+        "id":  "ws_reception_counter_pcs",
+        "aliases":  [
+                        "Reception counter",
+                        "RECEPTION TABLE",
+                        "Reception counter (as/3D design)"
+                    ],
+        "minRate":  25000,
+        "workType":  "Furniture",
+        "maxRate":  37500,
+        "description":  "Made of 19mm thick ply/blockboard/HDHMR with laminate finish bith side with required fittings ( SIZE - 8\u0027 wide x 4\u0027 high x 3\u0027 Depth )",
+        "makes":  [
+
+                  ],
+        "sampleCount":  6,
+        "suggestedRate":  35000,
+        "workScope":  "Reception counter / table",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Cabin"
+                         ],
+        "id":  "ws_side_table_pcs",
+        "aliases":  [
+                        "boss\u0027s table + side table storage",
+                        "SIDE TABLE",
+                        "boss\u0027s table + side table storage (size - 5\u0027 wide x 3\u0027 depth x 2.5 feet high )"
+                    ],
+        "minRate":  7500,
+        "workType":  "Furniture",
+        "maxRate":  27500,
+        "description":  "made of powder coated MS frame(internal) with wooden laminted top with laquered glass",
+        "makes":  [
+
+                  ],
+        "sampleCount":  6,
+        "suggestedRate":  27500,
+        "workScope":  "Side table",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Pantry",
+                             "Cafeteria"
+                         ],
+        "id":  "ws_sink_mixer_lumpsum",
+        "aliases":  [
+                        "sink + mixture and required plumbing installation labour and their material"
+                    ],
+        "minRate":  12000,
+        "workType":  "Furniture",
+        "maxRate":  20000,
+        "description":  "sink cost - up to 5000/- wall mixture - up to 3000/-",
+        "makes":  [
+
+                  ],
+        "sampleCount":  9,
+        "suggestedRate":  12000,
+        "workScope":  "Sink, mixer and plumbing",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+                             "Reception"
+                         ],
+        "id":  "ws_sofa_for_reception_and_lounge_area_seat",
+        "aliases":  [
+                        "SOFA (FOR RECEPTION AND LOUNGE AREA)"
+                    ],
+        "minRate":  15000,
+        "workType":  "Furniture",
+        "maxRate":  15000,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  15000,
+        "workScope":  "SOFA (FOR RECEPTION AND LOUNGE AREA)",
+        "unit":  "seat"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_table_game_4_in_one_lumpsum",
+        "aliases":  [
+                        "TABLE GAME (4 IN ONE )"
+                    ],
+        "minRate":  65000,
+        "workType":  "Furniture",
+        "maxRate":  65000,
+        "description":  "SIZE - 54INCH X 24 INCH X 32 INCH HIGH BILLIARD , TABLE TENNIS , HOCKEY , FOOSBALL",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  65000,
+        "workScope":  "TABLE GAME (4 IN ONE )",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+                             "Director Cabin"
+                         ],
+        "id":  "ws_trap_door_pcs",
+        "aliases":  [
+                        "trap door for AHU Unit"
+                    ],
+        "minRate":  6000,
+        "workType":  "Furniture",
+        "maxRate":  6000,
+        "description":  "",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  6000,
+        "workScope":  "Trap door for AHU",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Cabin",
+                             "Executive Director Cabin",
+                             "Director Cabin"
+                         ],
+        "id":  "ws_visitor_chair_pcs",
+        "aliases":  [
+                        "Cabin\u0027s visitor chair",
+                        "visitor chair"
+                    ],
+        "minRate":  4000,
+        "workType":  "Furniture",
+        "maxRate":  4500,
+        "description":  "up to 4500/- per seat",
+        "makes":  [
+
+                  ],
+        "sampleCount":  16,
+        "suggestedRate":  4500,
+        "workScope":  "Visitor chair",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Executive Director Cabin",
+                             "Director Cabin",
+                             "MD Cabin"
+                         ],
+        "id":  "ws_waiting_sofa_pcs",
+        "aliases":  [
+                        "sofa set",
+                        "2 SEATER SOFA SET",
+                        "5 SEATER SOFA SET (3unit +2unit )",
+                        "2 SEATER SOFA/COUCH (1unit +1unit )"
+                    ],
+        "minRate":  8000,
+        "workType":  "Furniture",
+        "maxRate":  70000,
+        "description":  "as/design Selection",
+        "makes":  [
+
+                  ],
+        "sampleCount":  17,
+        "suggestedRate":  10000,
+        "workScope":  "Waiting / lounge sofa",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "Reception"
+                         ],
+        "id":  "ws_waiting_sofa_seat",
+        "aliases":  [
+                        "waiting area sofa set",
+                        "2 seater sofa"
+                    ],
+        "minRate":  8000,
+        "workType":  "Furniture",
+        "maxRate":  10000,
+        "description":  "AS/3D DESIGN",
+        "makes":  [
+
+                  ],
+        "sampleCount":  8,
+        "suggestedRate":  9000,
+        "workScope":  "Waiting / lounge sofa",
+        "unit":  "seat"
+    },
+    {
+        "typicalAreas":  [
+                             "Director Cabin"
+                         ],
+        "id":  "ws_waiting_sofa_sqft",
+        "aliases":  [
+                        "2 seater sofa"
+                    ],
+        "minRate":  8000,
+        "workType":  "Furniture",
+        "maxRate":  10000,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  9000,
+        "workScope":  "Waiting / lounge sofa",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Workstation Area"
+                         ],
+        "id":  "ws_wall_display_storage_8_feet_high_x_8_feet_wide_sqft",
+        "aliases":  [
+                        "Wall Display Storage (8 feet high x 8 feet wide)"
+                    ],
+        "minRate":  1000,
+        "workType":  "Furniture",
+        "maxRate":  1000,
+        "description":  "made of MS pipe with wooden planter as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  1000,
+        "workScope":  "Wall Display Storage (8 feet high x 8 feet wide)",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Director Cabin"
+                         ],
+        "id":  "ws_wall_storage_sqft",
+        "aliases":  [
+                        "Table\u0027s Back Wall Storage",
+                        "Wall Storage",
+                        "Table\u0027s Back Wall Storage (8\u0027 high x 6.5\u0027 wide)",
+                        "Wall Storage (8\u0027 high x 4\u0027 wide)"
+                    ],
+        "minRate":  800,
+        "workType":  "Furniture",
+        "maxRate":  1000,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  8,
+        "suggestedRate":  1000,
+        "workScope":  "Wall storage",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "Workstation Area",
+                             "Cabin"
+                         ],
+        "id":  "ws_workstation_pcs",
+        "aliases":  [
+                        "workstation\u0027s table with laminate finish top",
+                        "WORKSTATION",
+                        "workstation\u0027s table with laminate finish top (size - 3.5\u0027 wide x 2\u0027 depth )"
+                    ],
+        "minRate":  6000,
+        "workType":  "Furniture",
+        "maxRate":  7500,
+        "description":  "made of powder coated MS frame structure (internal) with 25mm thick PLPB laminate finish (as/selection)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  9,
+        "suggestedRate":  7000,
+        "workScope":  "Workstation",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_ahu_supply",
+        "aliases":  [
+                        "2 CHILLED WATER PIPING : MAKE - (jindal) Suppling,installation,testing and commissioning of M S heavy C -class piping Insulation with closed cell insulation of 25 mm thick 32mm 3. Y-STRAINER FOR AHUs PIPE LINE : MAKE - (sant/flowell) Supply,installction,testing and commissioning of following ‘Y strainers for Air handling units 32mm 4. Suppling,installing,testing and commissioning of following Ball valves one With Y strainers and other without strainer for AHU Pipe line in let and out let 15mm dia 5. DUCTWORK/AIR TERMINALS : MAKE - (jindal/sail) Supply, fabrication, installation, and testing of sheet metal ducts complete. Hanging arrangement including check nuts in Accordance with the approved shop drawing and specifications etc. 0.63mm (24gauge) GSS 7 Supply \u0026 fixing of :- Diffuser with damper (300x300) 8 INSULACTION :- 6 mm Naital rubber (Aflex/accoflex) 9 FLEXIBLE CANVASS CONNECTION:- Supply, installation and testing of 125 MM deep ant vibration flexible Joint at the outlet of packaged unites 10 AHU machine motor starter panel 11 AHU machine installation charge 12 AHU machine transportation and lifting charge"
+                    ],
+        "minRate":  null,
+        "workType":  "HVAC",
+        "maxRate":  null,
+        "description":  "",
+        "makes":  [
+                      "Jindal"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  null,
+        "workScope":  "AHU supply and installation",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_ahu_supply_lumpsum",
+        "aliases":  [
+                        "providing and supply 2000-2500 cfm AHU unit with complete installation and fittings with DUCT"
+                    ],
+        "minRate":  150000,
+        "workType":  "HVAC",
+        "maxRate":  150000,
+        "description":  "Make - Carrier/Zyco/Waves",
+        "makes":  [
+                      "Carrier",
+                      "Waves"
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  150000,
+        "workScope":  "AHU supply and installation",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_ahu_supply_sqft",
+        "aliases":  [
+                        "2 AIR HANDLING UNITS (AHU) 5000 CFM DS 4RD 50mm STATIC :- Make - (Carrier/Saleriya/web/ZECO/edgtech) Supply, testing, of double skin air handling unit Casing of air handling unit shall be in double skin construction, inner skin Shall be construction out of 24 gauge plain GS sheet\u0026 outer skin in 24 gauge pre-plasticized GS sheet sand witched between 25mm thick Injected PU foam insulation of density not less than 40 kg/Cum and Inspection door, fan section complete with forward curved type centrifugal Fan, and 3 phase squirrel cage induction motor with belt drive drive packag,Coil section with multi row deep chilled and aluminum fins contraction having wall thickness of tubes not less 0.4 mm face velocity across cooling coil shall not exceed 500 FPM, filter section complete with 50 mm thick Washable synthetic fiber filter.",
+                        "2 AIR HANDLING UNITS (AHU) 5000 CFM DS 4RD 50mm STATIC :- Make - (ZECO/edgtech) Supply, testing, of double skin air handling unit Casing of air handling unit shall be in double skin construction, inner skin Shall be construction out of 24 gauge plain GS sheet\u0026 outer skin in 24 gauge pre-plasticized GS sheet sand witched between 25mm thick Injected PU foam insulation of density not less than 40 kg/Cum and Inspection door, fan section complete with forward curved type centrifugal Fan, and 3 phase squirrel cage induction motor with belt drive drive packag,Coil section with multi row deep chilled and aluminum fins contraction having wall thickness of tubes not less 0.4 mm face velocity across cooling coil shall not exceed 500 FPM, filter section complete with 50 mm thick Washable synthetic fiber filter."
+                    ],
+        "minRate":  325,
+        "workType":  "HVAC",
+        "maxRate":  325,
+        "description":  "",
+        "makes":  [
+                      "Carrier",
+                      "Zeco"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  325,
+        "workScope":  "AHU supply and installation",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_butterfly_valve_pcs",
+        "aliases":  [
+                        "Providing \u0026 fixing cast iron Butterfly Valve Complete with MS flange nuts and bolts rubber insertion as required ISI make. (Make : Kartar/ Zoloto). - 65mm bore"
+                    ],
+        "minRate":  3725,
+        "workType":  "Fire Fighting",
+        "maxRate":  3725,
+        "description":  "",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  3725,
+        "workScope":  "Cast iron butterfly valve",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_downward_sprinkler_pcs",
+        "aliases":  [
+                        "P/F S.S Flexable Pipe 1000mm For Sprinklers Pipe Adjust Ceiling Lable as Per Direction with Accessories Complete in all respect.",
+                        "ceiling downword flexible sprinkler with 1mtr lengh",
+                        "P/F S.S Flexable Pipe 1000mm For Sprinklers Pipe Adjust Ceiling Lable as Per Direction with Accessories Complete in all respect. (Make-H.D/ Tyco)"
+                    ],
+        "minRate":  2000,
+        "workType":  "Fire Fighting",
+        "maxRate":  2695,
+        "description":  "Make - TYKO",
+        "makes":  [
+                      "Tyco"
+                  ],
+        "sampleCount":  5,
+        "suggestedRate":  2695,
+        "workScope":  "Ceiling downward flexible sprinkler",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_fire_detector_pcs",
+        "aliases":  [
+                        "3 fire detector with shielded wiring and fire alarm panel with hooter + testing and commisioning"
+                    ],
+        "minRate":  1500,
+        "workType":  "Fire Fighting",
+        "maxRate":  1500,
+        "description":  "Make - AGNI or same as other",
+        "makes":  [
+                      "Agni"
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  1500,
+        "workScope":  "Fire detector with alarm panel",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_fire_extinguisher_5",
+        "aliases":  [
+                        "MS door frame 1200x2100 door capable of accommodating fire hose reel, landing valve, hose pipes, fittings \u0026 accessories. The door shall have a front glass with lock and key arrangement \u0026 shall be painted with post office red colour (approval shall be taken on the basis of submitted sample before ordering) Cost of fire extinguishers not included in item rate. (Liasioing with civil contractor for making 1200x600x2100 Recessed type mansoary box (by civil contractor)."
+                    ],
+        "minRate":  57500,
+        "workType":  "Fire Fighting",
+        "maxRate":  57500,
+        "description":  "Each",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  57500,
+        "workScope":  "Fire extinguisher",
+        "unit":  "5"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_fire_extinguisher_pcs",
+        "aliases":  [
+                        "Providing \u0026 fixing mechanical foam type fire extinguisher 9 ltrs. (ISI marked. (Make: Guarsd / Safe Guards/ Life Guards/ Lightex/ Superex/ Safex).",
+                        "Providing \u0026 fixing of water pressure gas type fire extinguishers of 6 ltr. Capacity complete with initial charges and ISI Marked. (Make: Guarsd / Safe Guards/ Life Guards/ Lightex/ Superex/ Safex)."
+                    ],
+        "minRate":  null,
+        "workType":  "Fire Fighting",
+        "maxRate":  null,
+        "description":  "EACH",
+        "makes":  [
+
+                  ],
+        "sampleCount":  8,
+        "suggestedRate":  null,
+        "workScope":  "Fire extinguisher",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_ms_pipe_mtr",
+        "aliases":  [
+                        "Providing laying, jointly and testing of Heavy grade MS Pipe ISI Marked 1239 with special accessories such as tees, elbows, nut and bolts with welded joints including cutting \u0026 making iron clamps, bracket with metal fastener and painting with 2 Coats of synthetic paint etc. complete as required pipes. - 65 MM DIA",
+                        "Providing laying, jointly and testing of Heavy grade MS Pipe ISI Marked 1239 with special accessories such as tees, elbows, nut and bolts with welded joints including cutting \u0026 making iron clamps, bracket with metal fastener and painting with 2 Coats of synthetic paint etc. complete as required pipes. - 50 MM DIA",
+                        "Providing laying, jointly and testing of Heavy grade MS Pipe ISI Marked 1239 with special accessories such as tees, elbows, nut and bolts with welded joints including cutting \u0026 making iron clamps, bracket with metal fastener and painting with 2 Coats of synthetic paint etc. complete as required pipes. - 25 MM DIA",
+                        "Providing laying, jointly and testing of Heavy grade MS Pipe ISI Marked 1239 with special accessories such as tees, elbows, nut and bolts with welded joints including cutting \u0026 making iron clamps, bracket with metal fastener and painting with 2 Coats of synthetic paint etc. complete as required pipes. (Make :Jindal Hissa). - 65 MM DIA",
+                        "Providing laying, jointly and testing of Heavy grade MS Pipe ISI Marked 1239 with special accessories such as tees, elbows, nut and bolts with welded joints including cutting \u0026 making iron clamps, bracket with metal fastener and painting with 2 Coats of synthetic paint etc. complete as required pipes. (Make :Jindal Hissa). - 50 MM DIA",
+                        "Providing laying, jointly and testing of Heavy grade MS Pipe ISI Marked 1239 with special accessories such as tees, elbows, nut and bolts with welded joints including cutting \u0026 making iron clamps, bracket with metal fastener and painting with 2 Coats of synthetic paint etc. complete as required pipes. (Make :Jindal Hissa). - 25 MM DIA"
+                    ],
+        "minRate":  525,
+        "workType":  "Fire Fighting",
+        "maxRate":  1315,
+        "description":  "",
+        "makes":  [
+
+                  ],
+        "sampleCount":  12,
+        "suggestedRate":  825,
+        "workScope":  "MS heavy grade fire pipe",
+        "unit":  "mtr"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_ms_pipe_pcs",
+        "aliases":  [
+                        "Providing, fixing, testing \u0026 commissioning of MS air cushion tank on top of each riser fabricated from 8mm thick MS plate,250 mm in diameter and 1.2 m in height with dished ends fabricated from 10mm thick MS sheet,2coats of synthetic enamel paint over a coat of primer with Air release valve with stop cock, flanged inlet connection and drain arrangement with 25mm dia valve, pressure guage with gun metal stop cock complete with all accessories as required."
+                    ],
+        "minRate":  15625,
+        "workType":  "Fire Fighting",
+        "maxRate":  15625,
+        "description":  "Each",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  15625,
+        "workScope":  "MS heavy grade fire pipe",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_p_f_terraces_pump_panel_16_gauge_complete_in_all_pcs",
+        "aliases":  [
+                        "P/F Terraces Pump Panel 16 Gauge Complete in all respect."
+                    ],
+        "minRate":  null,
+        "workType":  "Fire Fighting",
+        "maxRate":  null,
+        "description":  "SET.",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  null,
+        "workScope":  "P/F Terraces Pump Panel 16 Gauge Complete in all respect.",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_providing_and_fixing_inspectors_test_assembly_co_pcs",
+        "aliases":  [
+                        "Providing and fixing inspectors test assembly complete with test valve, sight glass sectional drain valve, union with corrosion resistant orifice all complete strictly as per drawing. (Make: Zoloto)"
+                    ],
+        "minRate":  15625,
+        "workType":  "Fire Fighting",
+        "maxRate":  15625,
+        "description":  "",
+        "makes":  [
+                      "Zoloto"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  15625,
+        "workScope":  "Providing and fixing inspectors test assembly complete with test valve, sight gl",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_providing_fixing_double_flanged_flexicon_expansi_pcs",
+        "aliases":  [
+                        "Providing \u0026 fixing double flanged flexicon expansion joint with unit control of standard length as per maufacturers specs tested to a pressure of 20Kg/Sqcm including rubber gaskets, flanges, nuts, bolts and washers complete as required."
+                    ],
+        "minRate":  15625,
+        "workType":  "Fire Fighting",
+        "maxRate":  15625,
+        "description":  "",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  15625,
+        "workScope":  "Providing \u0026 fixing double flanged flexicon expansion joint with unit control of",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_providing_fixing_nipple_down_complete_in_all_res_pcs",
+        "aliases":  [
+                        "Providing \u0026 Fixing Nipple Down Complete in all respect."
+                    ],
+        "minRate":  15625,
+        "workType":  "Fire Fighting",
+        "maxRate":  15625,
+        "description":  "",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  15625,
+        "workScope":  "Providing \u0026 Fixing Nipple Down Complete in all respect.",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_providing_fixing_of_installation_control_valve_w_pcs",
+        "aliases":  [
+                        "Providing \u0026 Fixing of installation control valve with turbine type automatic Alarm Gong to be connected with control valve, drain \u0026 test valve all flanged connections as per manufacturer\u0027s specifications complete. (Make : Kirloskar)"
+                    ],
+        "minRate":  15625,
+        "workType":  "Fire Fighting",
+        "maxRate":  15625,
+        "description":  "",
+        "makes":  [
+                      "Kirloskar"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  15625,
+        "workScope":  "Providing \u0026 Fixing of installation control valve with turbine type automatic Ala",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_providing_laying_testing_and_commissioning_of_ms_pcs",
+        "aliases":  [
+                        "Providing, laying, testing and commissioning of MS heavy Grade ERW pipes for underground applications confirming to IS: 1239 / IS : 3589 with necessary flanges and fittings such as elbows and as elbows and tees with a primer coat along with wrapping and coating of pipe PYPCOYE 4 mm thick conforming to IS:10221. If required excavation all the type soils refilling the trenches to same finish. Holidays test shall be curried out to check for proper workmanship on the laying of all underground piping.(MAKE ; PIPE COATE)"
+                    ],
+        "minRate":  null,
+        "workType":  "Fire Fighting",
+        "maxRate":  null,
+        "description":  "",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  null,
+        "workScope":  "Providing, laying, testing and commissioning of MS heavy Grade ERW pipes for und",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_providing_testing_and_commissioning_of_the_insta_pcs",
+        "aliases":  [
+                        "Providing testing and commissioning of the installation control valve including with following fittings, (Make : Kirloskar)."
+                    ],
+        "minRate":  15625,
+        "workType":  "Fire Fighting",
+        "maxRate":  15625,
+        "description":  "",
+        "makes":  [
+                      "Kirloskar"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  15625,
+        "workScope":  "Providing testing and commissioning of the installation control valve including",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_supply_erection_testing_commissioniing_of_firema_pcs",
+        "aliases":  [
+                        "Supply, Erection, Testing \u0026 commissioniing of firemans axe with heavy rubber handle ."
+                    ],
+        "minRate":  15625,
+        "workType":  "Fire Fighting",
+        "maxRate":  15625,
+        "description":  "Each",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  15625,
+        "workScope":  "Supply, Erection, Testing \u0026 commissioniing of firemans axe with heavy rubber han",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_upside_sprinkler_pcs",
+        "aliases":  [
+                        "Providing \u0026 Fixing 15 mm dia gun metal (Pendent Type) sprinkle head with quartz bulb complete with all respect",
+                        "upside sprinkler with testing and commisioning",
+                        "Providing \u0026 Fixing 15 mm dia gun metal (Pendent Type) sprinkle head with quartz bulb complete with all respect (Make : H.D/ Y- King / TYOCO)"
+                    ],
+        "minRate":  550,
+        "workType":  "Fire Fighting",
+        "maxRate":  700,
+        "description":  "Make - TYKO",
+        "makes":  [
+                      "Tyco"
+                  ],
+        "sampleCount":  5,
+        "suggestedRate":  700,
+        "workScope":  "Upright sprinkler",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_fire_extinguisher_pcs",
+        "aliases":  [
+                        "Providing \u0026 fixing ISI marked fire extinguishers of ABC type of 4 Kg. capacities complete with horn and value with initial charge as required. ISI mark. (Make: Guarsd / Safe Guards/ Life Guards/ Lightex/ Superex/ Safex)."
+                    ],
+        "minRate":  2500,
+        "workType":  "Alarm System",
+        "maxRate":  2500,
+        "description":  "",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  2500,
+        "workScope":  "Fire extinguisher",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_ms_pipe_pcs",
+        "aliases":  [
+                        "Providing \u0026 fixing manual call box 16 guage in 100 x 100 mm enclosure with arrangement to raise the alarm when the glazz in manually broken complete as required including hammer.",
+                        "Providing \u0026 fixing manual call box 16 guage in 100 x 100 mm enclosure with arrangement to raise the alarm when the glazz in manually broken complete as required including hammer. ( Make : Agni Protection)."
+                    ],
+        "minRate":  1050,
+        "workType":  "Alarm System",
+        "maxRate":  1050,
+        "description":  "",
+        "makes":  [
+                      "Agni"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  1050,
+        "workScope":  "MS heavy grade fire pipe",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_p_f_heat_detectors_with_base_complete_in_all_res_pcs",
+        "aliases":  [
+                        "P/F Heat Detectors with base Complete in all respect.",
+                        "P/F Heat Detectors with base Complete in all respect. (Make: Agni Protection)"
+                    ],
+        "minRate":  1995,
+        "workType":  "Alarm System",
+        "maxRate":  1995,
+        "description":  "",
+        "makes":  [
+                      "Agni"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  1995,
+        "workScope":  "P/F Heat Detectors with base Complete in all respect.",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_p_f_smoke_detectors_with_base_complete_in_all_re_pcs",
+        "aliases":  [
+                        "P/F Smoke Detectors with base Complete in all respect.",
+                        "P/F Smoke Detectors with base Complete in all respect. (Make: Agni Protection)"
+                    ],
+        "minRate":  2200,
+        "workType":  "Alarm System",
+        "maxRate":  2200,
+        "description":  "",
+        "makes":  [
+                      "Agni"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  2200,
+        "workScope":  "P/F Smoke Detectors with base Complete in all respect.",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_providing_fixing_of_dual_tone_electric_fire_hoot_pcs",
+        "aliases":  [
+                        "Providing \u0026 fixing of DUAL / tone electric fire hooter suitable for wall mounting inside the building for localized warming range of hooter shall be 80 dB to 120 dB.",
+                        "Providing \u0026 fixing of DUAL / tone electric fire hooter suitable for wall mounting inside the building for localized warming range of hooter shall be 80 dB to 120 dB. ( Make : Agni Protection)."
+                    ],
+        "minRate":  1050,
+        "workType":  "Alarm System",
+        "maxRate":  1050,
+        "description":  "",
+        "makes":  [
+                      "Agni"
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  1050,
+        "workScope":  "Providing \u0026 fixing of DUAL / tone electric fire hooter suitable for wall mountin",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_supplying_and_drawing_of_pvc_insulated_copper_co_mtr",
+        "aliases":  [
+                        "Supplying and drawing of PVC insulated Copper conductor 2C 1.5 sq. mm including terminating connection etc. as required",
+                        "Supplying and drawing of PVC insulated Copper conductor 2C 1.5 sq. mm including terminating connection etc. as required (Make : Polycap)."
+                    ],
+        "minRate":  160,
+        "workType":  "Alarm System",
+        "maxRate":  160,
+        "description":  "",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  160,
+        "workScope":  "Supplying and drawing of PVC insulated Copper conductor 2C 1.5 sq. mm including",
+        "unit":  "mtr"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_aluminium_window_sqft",
+        "aliases":  [
+                        "ALUMINIUM WINDOWS"
+                    ],
+        "minRate":  475,
+        "workType":  "Doors and Windows",
+        "maxRate":  475,
+        "description":  "with frame and glass",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  475,
+        "workScope":  "Aluminium window with glass",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_director_table_sqft",
+        "aliases":  [
+                        "WPC WALL CLADDING BEHIND THE MD TABLE"
+                    ],
+        "minRate":  200,
+        "workType":  "Wall Finishes",
+        "maxRate":  200,
+        "description":  "(as/design)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  200,
+        "workScope":  "Director / MD table",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_wall_cladding_pcs",
+        "aliases":  [
+                        "WALL CLADDING WITH WPC/ CHARCOL PANEL FOR DECORATIVE WALL"
+                    ],
+        "minRate":  150,
+        "workType":  "Wall Finishes",
+        "maxRate":  150,
+        "description":  "as/required",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  150,
+        "workScope":  "WPC / charcoal wall cladding",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_wallpaper_sqft",
+        "aliases":  [
+                        "CUSTOMISED VINYL WALLPAPER OVER THE EXISITING GLASS WALL",
+                        "WALL DÉCOR WITH WALLPAPER (BEHIND THE COUCH\u0027S WALL)"
+                    ],
+        "minRate":  130,
+        "workType":  "Wall Finishes",
+        "maxRate":  150,
+        "description":  "as/design (BEHIND THE SOFA SET)",
+        "makes":  [
+
+                  ],
+        "sampleCount":  3,
+        "suggestedRate":  140,
+        "workScope":  "Wallpaper",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_wooden_panelling_rft",
+        "aliases":  [
+                        "WOODEN PANELLING OVER THE EXISTING GLAZING FRAME"
+                    ],
+        "minRate":  450,
+        "workType":  "Wall Finishes",
+        "maxRate":  450,
+        "description":  "_",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  450,
+        "workScope":  "Wooden panelling",
+        "unit":  "rft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_glass_film_pcs",
+        "aliases":  [
+                        "GLASS FILM"
+                    ],
+        "minRate":  35,
+        "workType":  "Window Treatments",
+        "maxRate":  35,
+        "description":  "as/required",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  35,
+        "workScope":  "Glass film",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_window_blinds_pcs",
+        "aliases":  [
+                        "WINDOW BLINDES"
+                    ],
+        "minRate":  140,
+        "workType":  "Window Treatments",
+        "maxRate":  140,
+        "description":  "as/required",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  140,
+        "workScope":  "Window / roller blinds",
+        "unit":  "pcs"
+    },
+    {
+        "typicalAreas":  [
+                             "MD Cabin"
+                         ],
+        "id":  "ws_window_blinds_sqft",
+        "aliases":  [
+                        "EXTERNAL GLAZING ROLLER BLINDS",
+                        "Rollers Blinds (for external glazing glass)"
+                    ],
+        "minRate":  150,
+        "workType":  "Window Treatments",
+        "maxRate":  150,
+        "description":  "Make -winfab, vista, hightech ,same as other",
+        "makes":  [
+
+                  ],
+        "sampleCount":  4,
+        "suggestedRate":  150,
+        "workScope":  "Window / roller blinds",
+        "unit":  "sqft"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_biometric_punching_machine_with_fittings",
+        "aliases":  [
+                        "Biometric punching machine with Fittings"
+                    ],
+        "minRate":  null,
+        "workType":  "System Integration",
+        "maxRate":  null,
+        "description":  "500 person capacity",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  null,
+        "workScope":  "Biometric punching machine with Fittings",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_cctv_fittings_with_6_camera_excluding_tft_screen_lumpsum",
+        "aliases":  [
+                        "CCTV fittings with 6 camera excluding TFT Screen"
+                    ],
+        "minRate":  200000,
+        "workType":  "System Integration",
+        "maxRate":  200000,
+        "description":  "providing fitting and fixing of 6 CCTV camara with required DVR Box ,wiring, Night vision Camara. Without lcd Screen MAKE - CP plus",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  200000,
+        "workScope":  "CCTV fittings with 6 camera excluding TFT Screen",
+        "unit":  "lumpsum"
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_hdmi_cabling_for_3_director_cabin",
+        "aliases":  [
+                        "HDMI cabling for 3 Director Cabin"
+                    ],
+        "minRate":  null,
+        "workType":  "System Integration",
+        "maxRate":  null,
+        "description":  "for LCD screen",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  null,
+        "workScope":  "HDMI cabling for 3 Director Cabin",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_kat_6_wiring_for_networking",
+        "aliases":  [
+                        "KAT 6 wiring for Networking"
+                    ],
+        "minRate":  null,
+        "workType":  "System Integration",
+        "maxRate":  null,
+        "description":  "For work station + cabins + other",
+        "makes":  [
+
+                  ],
+        "sampleCount":  2,
+        "suggestedRate":  null,
+        "workScope":  "KAT 6 wiring for Networking",
+        "unit":  ""
+    },
+    {
+        "typicalAreas":  [
+
+                         ],
+        "id":  "ws_wooden_stand_for_chess_board_and_ludo_pcs",
+        "aliases":  [
+                        "WOODEN STAND FOR CHESS BOARD AND LUDO"
+                    ],
+        "minRate":  5000,
+        "workType":  "Miscellaneous",
+        "maxRate":  5000,
+        "description":  "as/design",
+        "makes":  [
+
+                  ],
+        "sampleCount":  1,
+        "suggestedRate":  5000,
+        "workScope":  "WOODEN STAND FOR CHESS BOARD AND LUDO",
+        "unit":  "pcs"
+    }
+]
