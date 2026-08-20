@@ -75,6 +75,11 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
     await CatalogRepository.instance.reload();
   }
 
+  Future<void> _reloadAppData() async {
+    await _reloadDrafts();
+    await _clientsKey.currentState?.reload();
+  }
+
   Future<void> _reloadDrafts() async {
     final drafts = await DraftStore().list();
     if (!mounted) return;
@@ -106,7 +111,6 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < AppBreakpoints.compact;
-        final wide = constraints.maxWidth >= AppBreakpoints.wide;
         return Scaffold(
           extendBody: compact,
           body: SafeArea(
@@ -125,46 +129,22 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
               Expanded(
                 child: Column(
                   children: [
-                    AppHeader(
-                      title: compact ? 'biconcept' : 'biconcept digital architecture',
-                      muted: true,
-                      compact: compact,
-                      searchHint: _searchHint,
-                      onSearch: _tab == 2
-                          ? (value) => setState(() => _query = value.trim())
-                          : null,
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            tooltip: 'Ask $kAgentName',
-                            onPressed: () {
-                              if (wide) {
-                                _agentKey.currentState?.toggle();
-                                setState(() => _showAgent = _agentKey.currentState?.expanded ?? !_showAgent);
-                              } else {
-                                _openAgentSheet(catalog);
-                              }
-                            },
-                            icon: Icon(
-                              (_agentKey.currentState?.expanded ?? _showAgent)
-                                  ? Icons.smart_toy
-                                  : Icons.smart_toy_outlined,
-                              color: AppColors.primarySoft,
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'Settings',
-                            onPressed: () => setState(() => _tab = 5),
-                            icon: const CircleAvatar(
-                              radius: 16,
-                              backgroundColor: AppColors.cardHover,
-                              child: Icon(Icons.person_rounded, color: AppColors.muted, size: 18),
-                            ),
-                          ),
-                        ],
+                    if (compact)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: AgentLauncherButton(onPressed: () => _openAgentSheet(catalog)),
+                        ),
                       ),
-                    ),
+                    if (_tab == 2)
+                      AppHeader(
+                        title: '',
+                        muted: true,
+                        compact: compact,
+                        searchHint: _searchHint,
+                        onSearch: (value) => setState(() => _query = value.trim()),
+                      ),
                     Expanded(
                       child: IndexedStack(
                         index: _tab,
@@ -215,7 +195,7 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
                   ],
                 ),
               ),
-              if (wide) ...[
+              if (!compact) ...[
                 const VerticalDivider(width: 1),
                 CollapsibleAgentPanel(
                   key: _agentKey,
@@ -226,6 +206,7 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
                     onNavigate: (screen) => _navigate(screen),
                     onOpenQuotation: (draft) => _openQuotation(catalog, draft),
                     onEstimatesChanged: _reloadDrafts,
+                    onAppDataChanged: _reloadAppData,
                   ),
                 ),
               ],
@@ -345,6 +326,7 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
             await _openQuotation(catalog, draft);
           },
           onEstimatesChanged: _reloadDrafts,
+          onAppDataChanged: _reloadAppData,
         ),
       ),
     );

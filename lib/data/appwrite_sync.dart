@@ -246,6 +246,44 @@ class AppwriteSync {
     );
   }
 
+  /// Read rows from an Appwrite table for the in-app agent.
+  ///
+  /// [tableId] must be one of `clients`, `estimates`, `company`, or `catalog`.
+  /// [contains] is an optional case-insensitive substring filter on the JSON.
+  Future<List<Map<String, dynamic>>> queryTable(
+    AppwriteCloudSettings settings, {
+    required String tableId,
+    String? contains,
+    int limit = 25,
+  }) async {
+    const allowed = {
+      appwriteClientsTableId,
+      appwriteEstimatesTableId,
+      appwriteCompanyTableId,
+      appwriteCatalogTableId,
+    };
+    final id = tableId.trim().toLowerCase();
+    if (!allowed.contains(id)) {
+      throw FormatException(
+        'Unknown table "$tableId". Use clients, estimates, company, or catalog.',
+      );
+    }
+    final rows = await _listAll(_tables(settings), settings.databaseId.trim(), id);
+    var maps = <Map<String, dynamic>>[
+      for (final row in rows) {...Map<String, dynamic>.from(row.data), 'id': row.$id},
+    ];
+    final needle = contains?.trim().toLowerCase() ?? '';
+    if (needle.isNotEmpty) {
+      maps = [
+        for (final row in maps)
+          if (jsonEncode(row).toLowerCase().contains(needle)) row,
+      ];
+    }
+    final cap = limit.clamp(1, 100);
+    if (maps.length > cap) maps = maps.take(cap).toList();
+    return maps;
+  }
+
   Future<CloudSyncResult> sync({
     required AppwriteCloudSettings settings,
     required List<ClientRecord> localClients,

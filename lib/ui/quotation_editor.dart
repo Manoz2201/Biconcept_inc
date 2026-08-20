@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../agent/catalog_tools.dart';
 import '../agent/estimate_agent.dart';
 import '../data/catalog_repository.dart';
 import '../data/draft_store.dart';
@@ -47,6 +48,15 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
 
   EstimateDraft get draft => widget.draft;
   EstimateCatalog get catalog => widget.catalog;
+
+  AgentActions get _agentActions => AgentActions(
+        onEstimatesChanged: () async {
+          if (mounted) setState(() {});
+        },
+        onAppDataChanged: () async {
+          if (mounted) setState(() {});
+        },
+      );
 
   @override
   void initState() {
@@ -122,7 +132,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: _editorShell(compact: compact, wide: wide)),
-                if (wide) ...[
+                if (!compact) ...[
                   const VerticalDivider(width: 1),
                   CollapsibleAgentPanel(
                     key: _agentKey,
@@ -130,6 +140,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                     draft: draft,
                     initiallyExpanded: _showAgent,
                     onExpandedChanged: (value) => setState(() => _showAgent = value),
+                    actions: _agentActions,
                   ),
                 ],
               ],
@@ -156,14 +167,6 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (!compact)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 2, 8, 8),
-              child: Text(
-                'biconcept digital architecture',
-                style: TextStyle(color: AppColors.muted, fontSize: compact ? 14 : 16, fontWeight: FontWeight.w600),
-              ),
-            ),
           Row(
             children: [
               IconButton(
@@ -202,25 +205,8 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                 onPressed: _saving ? null : _save,
                 icon: const Icon(Icons.check_circle_outline),
               ),
-              IconButton(
-                tooltip: (_agentKey.currentState?.expanded ?? _showAgent)
-                    ? 'Collapse $kAgentName'
-                    : 'Ask $kAgentName',
-                onPressed: () {
-                  if (wide) {
-                    _agentKey.currentState?.toggle();
-                    setState(() => _showAgent = _agentKey.currentState?.expanded ?? !_showAgent);
-                  } else {
-                    _openAgentSheet();
-                  }
-                },
-                icon: Icon(
-                  (_agentKey.currentState?.expanded ?? _showAgent)
-                      ? Icons.smart_toy
-                      : Icons.smart_toy_outlined,
-                  color: AppColors.primarySoft,
-                ),
-              ),
+              if (compact)
+                AgentLauncherButton(onPressed: _openAgentSheet),
               PopupMenuButton<String>(
                 tooltip: 'More',
                 onSelected: (value) {
@@ -1341,6 +1327,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
         catalog: catalog,
         draft: draft,
         onCollapse: () => Navigator.pop(context),
+        actions: _agentActions,
       ),
     );
   }

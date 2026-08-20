@@ -1,8 +1,17 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../agent/agent_service.dart';
+import '../agent/app_tools.dart';
 import '../agent/catalog_tools.dart';
+import '../agent/document_reader.dart';
 import '../agent/estimate_agent.dart';
 import '../agent/llm_client.dart';
+import '../data/agent_session_store.dart';
 import '../data/settings_store.dart';
 import '../models/estimate_document.dart';
 import '../models/estimate_models.dart';
@@ -11,7 +20,7 @@ import '../theme/app_theme.dart';
 const kAgentName = 'Manoj Singharya';
 const kAgentNameLower = 'manoj singharya';
 const kAgentInitials = 'MS';
-const kAgentRole = 'estimator agent';
+const kAgentRole = 'app operator';
 
 Future<void> showAgentSheet({
   required BuildContext context,
@@ -72,10 +81,15 @@ class CollapsibleAgentPanel extends StatefulWidget {
 class CollapsibleAgentPanelState extends State<CollapsibleAgentPanel> {
   late bool _expanded = widget.initiallyExpanded;
   final _input = TextEditingController();
-  final _messages = <_ChatTurn>[];
   bool _busy = false;
 
   bool get expanded => _expanded;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(AgentSessionStore.instance.ensureLoaded());
+  }
 
   void toggle() {
     setState(() => _expanded = !_expanded);
@@ -110,16 +124,20 @@ class CollapsibleAgentPanelState extends State<CollapsibleAgentPanel> {
     }
     return SizedBox(
       width: 336,
-      child: _AgentChatView(
-        catalog: widget.catalog,
-        draft: widget.draft,
-        actions: widget.actions,
-        input: _input,
-        messages: _messages,
-        busy: _busy,
-        onCollapse: collapse,
-        onBusy: (value) => setState(() => _busy = value),
-        onMessages: () => setState(() {}),
+      child: ListenableBuilder(
+        listenable: AgentSessionStore.instance,
+        builder: (context, _) {
+          return _AgentChatView(
+            catalog: widget.catalog,
+            draft: widget.draft,
+            actions: widget.actions,
+            session: AgentSessionStore.instance,
+            input: _input,
+            busy: _busy,
+            onCollapse: collapse,
+            onBusy: (value) => setState(() => _busy = value),
+          );
+        },
       ),
     );
   }
@@ -189,8 +207,13 @@ class AgentPanel extends StatefulWidget {
 
 class _AgentPanelState extends State<AgentPanel> {
   final _input = TextEditingController();
-  final _messages = <_ChatTurn>[];
   bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(AgentSessionStore.instance.ensureLoaded());
+  }
 
   @override
   void dispose() {
@@ -200,16 +223,20 @@ class _AgentPanelState extends State<AgentPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return _AgentChatView(
-      catalog: widget.catalog,
-      draft: widget.draft,
-      actions: widget.actions,
-      input: _input,
-      messages: _messages,
-      busy: _busy,
-      onCollapse: widget.onCollapse,
-      onBusy: (value) => setState(() => _busy = value),
-      onMessages: () => setState(() {}),
+    return ListenableBuilder(
+      listenable: AgentSessionStore.instance,
+      builder: (context, _) {
+        return _AgentChatView(
+          catalog: widget.catalog,
+          draft: widget.draft,
+          actions: widget.actions,
+          session: AgentSessionStore.instance,
+          input: _input,
+          busy: _busy,
+          onCollapse: widget.onCollapse,
+          onBusy: (value) => setState(() => _busy = value),
+        );
+      },
     );
   }
 }
@@ -218,10 +245,9 @@ class _AgentChatView extends StatelessWidget {
   const _AgentChatView({
     required this.catalog,
     required this.input,
-    required this.messages,
+    required this.session,
     required this.busy,
     required this.onBusy,
-    required this.onMessages,
     this.draft,
     this.actions,
     this.onCollapse,
@@ -230,22 +256,21 @@ class _AgentChatView extends StatelessWidget {
   final EstimateCatalog catalog;
   final EstimateDraft? draft;
   final AgentActions? actions;
+  final AgentSessionStore session;
   final TextEditingController input;
-  final List<_ChatTurn> messages;
   final bool busy;
   final ValueChanged<bool> onBusy;
-  final VoidCallback onMessages;
   final VoidCallback? onCollapse;
 
   List<String> get _prompts => draft == null
       ? const [
-          'list estimates',
-          'open OM CRE',
-          'create an estimate for ABC with civil work',
+          'list clients',
+          'what is on the calendar',
+          'summarize the attached file',
         ]
       : const [
           'use max rate for gypsum partition',
-          'add a flooring scope at ₹180/sqft',
+          'who is this client in CRM',
         ];
 
   @override
@@ -294,8 +319,8 @@ class _AgentChatView extends StatelessWidget {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
                     children: [
-                      if (messages.isEmpty) _emptyState(context),
-                      for (final turn in messages) _bubble(turn),
+                      if (session.messages.isEmpty) _emptyState(context),
+                      for (final turn in session.messages) _bubble(turn),
                       if (busy) const _TypingBubble(),
                     ],
                   ),
@@ -358,6 +383,14 @@ class _AgentChatView extends StatelessWidget {
               ],
             ),
           ),
+          IconButton(
+            tooltip: 'New chat',
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+            padding: EdgeInsets.zero,
+            onPressed: busy ? null : () => session.clear(),
+            icon: const Icon(Icons.add_comment_outlined, size: 20, color: AppColors.muted),
+          ),
           if (onCollapse != null)
             IconButton(
               tooltip: 'Collapse $kAgentName',
@@ -378,8 +411,8 @@ class _AgentChatView extends StatelessWidget {
       children: [
         Text(
           draft == null
-              ? 'Ask about estimates, the rate card, or to create a quotation. API key lives in Settings.'
-              : 'This quotation is open. Ask to change quantities, rates, add or delete scopes, or save.',
+              ? 'Ask about the app, the web, or attach a PDF, Word, or Excel file. Chat stays in this session on this device.'
+              : 'This quotation is open. Attach a file, change lines, or ask about the client.',
           style: const TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
         ),
         const SizedBox(height: 16),
@@ -403,7 +436,7 @@ class _AgentChatView extends StatelessWidget {
     );
   }
 
-  Widget _bubble(_ChatTurn turn) {
+  Widget _bubble(AgentChatTurn turn) {
     final user = turn.user;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -433,13 +466,28 @@ class _AgentChatView extends StatelessWidget {
                       : AppColors.outline.withValues(alpha: 0.55),
                 ),
               ),
-              child: Text(
-                turn.text,
-                style: TextStyle(
-                  color: user ? AppColors.primarySoft : AppColors.text,
-                  fontSize: 13,
-                  height: 1.4,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (turn.attachments.isNotEmpty) ...[
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final file in turn.attachments) _FileChip(label: file.name, kind: file.kind),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                  Text(
+                    turn.text,
+                    style: TextStyle(
+                      color: user ? AppColors.primarySoft : AppColors.text,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -451,84 +499,225 @@ class _AgentChatView extends StatelessWidget {
   Widget _composer(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 14),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: TextField(
-              controller: input,
-              enabled: !busy,
-              minLines: 1,
-              maxLines: 4,
-              style: const TextStyle(fontSize: 13),
-              decoration: InputDecoration(
-                hintText: 'Ask $kAgentName',
-                hintStyle: const TextStyle(color: AppColors.muted, fontSize: 13),
-                filled: true,
-                fillColor: AppColors.card,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(99),
-                  borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.7)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(99),
-                  borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.7)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(99),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 1.2),
-                ),
-                disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(99),
-                  borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.4)),
+          if (session.pending.isNotEmpty) ...[
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final file in session.pending)
+                  _FileChip(
+                    label: file.name,
+                    kind: file.kind,
+                    onRemove: busy ? null : () => session.removePending(file.id),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+          Row(
+            children: [
+              IconButton(
+                tooltip: 'Attach PDF, Word or Excel',
+                onPressed: busy ? null : () => _attach(context),
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+                padding: EdgeInsets.zero,
+                icon: const Icon(Icons.attach_file_rounded, size: 20, color: AppColors.muted),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: input,
+                  enabled: !busy,
+                  minLines: 1,
+                  maxLines: 4,
+                  style: const TextStyle(fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Ask $kAgentName',
+                    hintStyle: const TextStyle(color: AppColors.muted, fontSize: 13),
+                    filled: true,
+                    fillColor: AppColors.card,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(99),
+                      borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.7)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(99),
+                      borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.7)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(99),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.2),
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(99),
+                      borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.4)),
+                    ),
+                  ),
+                  onSubmitted: (_) => _send(context),
                 ),
               ),
-              onSubmitted: (_) => _send(context),
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton.filled(
-            onPressed: busy ? null : () => _send(context),
-            tooltip: 'Send',
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: const Color(0xFF1A1010),
-              disabledBackgroundColor: AppColors.cardHover,
-              minimumSize: const Size(44, 44),
-              maximumSize: const Size(44, 44),
-              padding: EdgeInsets.zero,
-            ),
-            icon: const Icon(Icons.send_rounded, size: 18),
+              const SizedBox(width: 8),
+              IconButton.filled(
+                onPressed: busy ? null : () => _send(context),
+                tooltip: 'Send',
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: const Color(0xFF1A1010),
+                  disabledBackgroundColor: AppColors.cardHover,
+                  minimumSize: const Size(44, 44),
+                  maximumSize: const Size(44, 44),
+                  padding: EdgeInsets.zero,
+                ),
+                icon: const Icon(Icons.send_rounded, size: 18),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
+  Future<void> _attach(BuildContext context) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['pdf', 'doc', 'docx', 'xls', 'xlsx'],
+      allowMultiple: true,
+      withData: true,
+    );
+    if (result == null) return;
+    for (final file in result.files) {
+      try {
+        final bytes = file.bytes ??
+            (file.path == null || file.path!.isEmpty ? null : await File(file.path!).readAsBytes());
+        if (bytes == null) {
+          throw DocumentReadException('Could not read ${file.name}.');
+        }
+        final extract = DocumentReader.fromBytes(bytes, file.name);
+        await session.attachExtract(extract, copyBytes: bytes);
+      } catch (error) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString().replaceFirst('DocumentReadException: ', ''))),
+        );
+      }
+    }
+  }
+
   Future<void> _send(BuildContext context, [String? preset]) async {
-    final text = (preset ?? input.text).trim();
-    if (text.isEmpty) return;
+    final pending = session.takePending();
+    var text = (preset ?? input.text).trim();
+    if (text.isEmpty && pending.isEmpty) return;
+    if (text.isEmpty) {
+      text = pending.length == 1
+          ? 'Read and summarize ${pending.first.name}.'
+          : 'Read and summarize the attached files.';
+    }
     input.clear();
-    messages.add(_ChatTurn(text, user: true));
+    await session.addTurn(AgentChatTurn(text: text, user: true, attachments: pending));
     onBusy(true);
-    onMessages();
-    final settings = await SettingsStore().load();
-    LlmClient? client;
-    if (settings.isConfigured) {
-      client = LlmClient(baseUrl: settings.baseUrl, apiKey: settings.apiKey, model: settings.model);
+    final reply = await _runAgent(text);
+    if (!context.mounted) return;
+    await session.addTurn(AgentChatTurn(text: reply, user: false));
+    onBusy(false);
+  }
+
+  Future<String> _runAgent(String text) async {
+    final store = SettingsStore();
+    final tools = AppTools(
+      catalogTools: CatalogTools(catalog: catalog, draft: draft, actions: actions),
+    );
+    final snapshot = StringBuffer(const JsonEncoder.withIndent('  ').convert(await tools.snapshot()));
+    final documents = session.documentsContext();
+    if (documents.isNotEmpty) {
+      snapshot.write('\n\nSession documents:\n$documents');
+    }
+    final extra = snapshot.toString();
+    final history = session.llmHistory();
+
+    final cloudflare = await store.loadCloudflare();
+    if (cloudflare.isConfigured) {
+      final agent = AgentService(
+        accountId: cloudflare.accountId,
+        apiToken: cloudflare.apiToken,
+        extraSystem: AppTools.workersAiToolPrompt(),
+        onAppTool: (name, arguments) async {
+          try {
+            return await tools.execute(name, arguments);
+          } catch (error) {
+            return 'Tool $name failed: $error';
+          }
+        },
+      );
+      return agent.chat(text, extraUserContext: extra, history: history);
+    }
+
+    final settings = await store.load();
+    if (!settings.isConfigured) {
+      return 'Add your Cloudflare Account ID and API token in Settings so Manoj Singharya can run. A DeepSeek key still works as fallback.';
     }
     final agent = EstimateAgent(
       catalog: catalog,
       draft: draft,
-      client: client,
+      client: LlmClient(baseUrl: settings.baseUrl, apiKey: settings.apiKey, model: settings.model),
       actions: actions,
     );
-    final result = await agent.chat(text);
-    if (!context.mounted) return;
-    messages.add(_ChatTurn(result.message, user: false));
-    onBusy(false);
-    onMessages();
+    final result = await agent.chat(text, extraUserContext: extra, history: history);
+    return result.message;
+  }
+}
+
+class _FileChip extends StatelessWidget {
+  const _FileChip({required this.label, required this.kind, this.onRemove});
+
+  final String label;
+  final String kind;
+  final VoidCallback? onRemove;
+
+  IconData get _icon => switch (kind) {
+        'pdf' => Icons.picture_as_pdf_outlined,
+        'word' => Icons.description_outlined,
+        'excel' => Icons.table_chart_outlined,
+        _ => Icons.insert_drive_file_outlined,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(left: 8, right: onRemove == null ? 8 : 2, top: 4, bottom: 4),
+      decoration: BoxDecoration(
+        color: AppColors.cardHover,
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: AppColors.outline.withValues(alpha: 0.55)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_icon, size: 14, color: AppColors.primarySoft),
+          const SizedBox(width: 4),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 140),
+            child: Text(
+              label,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.primarySoft, fontSize: 11),
+            ),
+          ),
+          if (onRemove != null)
+            InkWell(
+              onTap: onRemove,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.close, size: 14, color: AppColors.muted),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 
@@ -679,8 +868,17 @@ class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderState
   }
 }
 
-class _ChatTurn {
-  const _ChatTurn(this.text, {required this.user});
-  final String text;
-  final bool user;
+class AgentLauncherButton extends StatelessWidget {
+  const AgentLauncherButton({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: 'Ask $kAgentName',
+      onPressed: onPressed,
+      icon: const _AgentAvatar(size: 32),
+    );
+  }
 }

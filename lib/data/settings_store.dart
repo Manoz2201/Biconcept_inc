@@ -21,6 +21,15 @@ class LlmSettings {
   bool get isConfigured => apiKey.trim().isNotEmpty && baseUrl.trim().isNotEmpty;
 }
 
+class CloudflareAiSettings {
+  const CloudflareAiSettings({this.accountId = '', this.apiToken = ''});
+
+  final String accountId;
+  final String apiToken;
+
+  bool get isConfigured => accountId.trim().isNotEmpty && apiToken.trim().isNotEmpty;
+}
+
 class SettingsStore {
   SettingsStore({FlutterSecureStorage? storage})
       : _storage = storage ?? const FlutterSecureStorage();
@@ -28,6 +37,8 @@ class SettingsStore {
   static const _baseUrlKey = 'llm_base_url';
   static const _modelKey = 'llm_model';
   static const _apiKeyKey = 'llm_api_key';
+  static const _cfAccountKey = 'cf_account_id';
+  static const _cfTokenKey = 'cf_api_token';
   static const _githubRepoKey = 'github_repo';
   static const _githubBranchKey = 'github_branch';
   static const _githubTokenKey = 'github_token';
@@ -55,6 +66,20 @@ class SettingsStore {
     await _storage.write(key: _baseUrlKey, value: settings.baseUrl.trim());
     await _storage.write(key: _modelKey, value: settings.model.trim());
     await _storage.write(key: _apiKeyKey, value: settings.apiKey.trim());
+  }
+
+  Future<CloudflareAiSettings> loadCloudflare() async {
+    final accountId = await _storage.read(key: _cfAccountKey);
+    final token = await _storage.read(key: _cfTokenKey);
+    return CloudflareAiSettings(
+      accountId: accountId ?? '',
+      apiToken: token ?? '',
+    );
+  }
+
+  Future<void> saveCloudflare(CloudflareAiSettings settings) async {
+    await _storage.write(key: _cfAccountKey, value: settings.accountId.trim());
+    await _storage.write(key: _cfTokenKey, value: settings.apiToken.trim());
   }
 
   Future<GitHubCloudSettings> loadGitHub() async {

@@ -33,6 +33,9 @@ class _SettingsPageState extends State<SettingsPage> {
   final _baseUrl = TextEditingController();
   final _model = TextEditingController();
   final _apiKey = TextEditingController();
+  final _cfAccount = TextEditingController();
+  final _cfToken = TextEditingController();
+  final _ghToken = TextEditingController();
   final _brand = TextEditingController();
   final _address = TextEditingController();
   final _phone = TextEditingController();
@@ -76,6 +79,11 @@ class _SettingsPageState extends State<SettingsPage> {
     _model.text = settings.model;
     _customModel = settings.model.trim().isNotEmpty && settings.model.trim() != SettingsStore.defaultModel;
     _apiKey.text = settings.apiKey;
+    final cloudflare = await _store.loadCloudflare();
+    _cfAccount.text = cloudflare.accountId;
+    _cfToken.text = cloudflare.apiToken;
+    final github = await _store.loadGitHub();
+    _ghToken.text = github.token;
     _brand.text = prefs.brand;
     _address.text = prefs.companyAddress;
     _phone.text = prefs.companyPhone;
@@ -97,6 +105,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _baseUrl.dispose();
     _model.dispose();
     _apiKey.dispose();
+    _cfAccount.dispose();
+    _cfToken.dispose();
+    _ghToken.dispose();
     _brand.dispose();
     _address.dispose();
     _phone.dispose();
@@ -323,6 +334,29 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 10),
             Text(_updateError!, style: const TextStyle(color: AppColors.down, fontSize: 12, height: 1.35)),
           ],
+          const SizedBox(height: 16),
+          _LabeledField(
+            label: 'GitHub token (private repo)',
+            child: TextField(
+              controller: _ghToken,
+              obscureText: _obscure,
+              style: const TextStyle(fontFamily: 'Consolas', fontSize: 14),
+              decoration: _fieldDecoration(
+                hint: 'ghp_… Contents: Read',
+                suffix: IconButton(
+                  onPressed: () => setState(() => _obscure = !_obscure),
+                  icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: AppColors.muted),
+                ),
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(left: 8, top: 6),
+            child: Text(
+              'Required while Manoz2201/Biconcept_inc is private. Token stays on this device.',
+              style: TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
+          ),
           if (_downloadProgress != null) ...[
             const SizedBox(height: 14),
             LinearProgressIndicator(
@@ -379,11 +413,22 @@ class _SettingsPageState extends State<SettingsPage> {
     return token.isEmpty ? null : token;
   }
 
+  Future<void> _persistGithubToken() async {
+    final current = await _store.loadGitHub();
+    await _store.saveGitHub(
+      current.copyWith(
+        repo: current.repo.trim().isEmpty ? defaultUpdateRepo : current.repo,
+        token: _ghToken.text.trim(),
+      ),
+    );
+  }
+
   Future<void> _checkForUpdate() async {
     setState(() {
       _updateChecking = true;
       _updateError = null;
     });
+    await _persistGithubToken();
     final result = await _updates.check(current: _buildInfo, token: await _githubToken());
     if (!mounted) return;
     setState(() {
@@ -615,22 +660,50 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Configure the DeepSeek AI integration for automated estimation. The API key stays on this machine.',
+            'Manoj Singharya can search the web, query Appwrite, and act across the app. Account ID and API token stay on this machine.',
             style: TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 20),
           _LabeledField(
-            label: 'API Key',
+            label: 'Cloudflare Account ID',
+            child: TextField(
+              controller: _cfAccount,
+              style: const TextStyle(fontFamily: 'Consolas', fontSize: 14),
+              decoration: _fieldDecoration(hint: '32-character account id'),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _LabeledField(
+            label: 'Cloudflare API Token',
+            child: TextField(
+              controller: _cfToken,
+              obscureText: _obscure,
+              style: const TextStyle(fontFamily: 'Consolas', fontSize: 14),
+              decoration: _fieldDecoration(
+                hint: 'Workers AI token',
+                suffix: IconButton(
+                  onPressed: () => setState(() => _obscure = !_obscure),
+                  icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: AppColors.muted),
+                ),
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(left: 8, top: 6),
+            child: Text(
+              'Needs Workers AI permission. Model: @cf/meta/llama-3.2-3b-instruct.',
+              style: TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _LabeledField(
+            label: 'DeepSeek API Key (fallback)',
             child: TextField(
               controller: _apiKey,
               obscureText: _obscure,
               style: const TextStyle(fontFamily: 'Consolas', fontSize: 14),
               decoration: _fieldDecoration(
                 hint: 'sk-…',
-                suffix: IconButton(
-                  onPressed: () => setState(() => _obscure = !_obscure),
-                  icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: AppColors.muted),
-                ),
               ),
             ),
           ),
@@ -849,6 +922,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _saveAgent() async {
+    await _store.saveCloudflare(
+      CloudflareAiSettings(accountId: _cfAccount.text, apiToken: _cfToken.text),
+    );
     await _store.save(
       LlmSettings(
         baseUrl: _baseUrl.text,
@@ -860,7 +936,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('DeepSeek API settings saved on this machine')),
+      const SnackBar(content: Text('Manoj Singharya agent settings saved on this machine')),
     );
   }
 

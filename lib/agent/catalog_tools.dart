@@ -13,11 +13,13 @@ class AgentActions {
     this.onNavigate,
     this.onOpenQuotation,
     this.onEstimatesChanged,
+    this.onAppDataChanged,
   });
 
   final void Function(String screen)? onNavigate;
   final Future<void> Function(EstimateDraft draft)? onOpenQuotation;
   final Future<void> Function()? onEstimatesChanged;
+  final Future<void> Function()? onAppDataChanged;
 }
 
 class CatalogTools {
@@ -309,6 +311,19 @@ class CatalogTools {
       },
     },
   ];
+
+  /// Rate-card reminder appended to the full app-operator prompt.
+  static String workersAiToolPrompt() {
+    final names = [
+      for (final item in definitions)
+        if (item['function'] is Map) (item['function'] as Map)['name']?.toString() ?? '',
+    ].where((name) => name.isNotEmpty).join(', ');
+    return '''
+Quotation / rate-card tools: $names.
+Never invent unit rates. Stay within minRate and maxRate when those exist. Do not compute GST yourself.
+Open or create an estimate before editing lines. After edits, mention totals from tools.
+''';
+  }
 
   Future<String> execute(String name, String argumentsJson) async {
     Map<String, dynamic> args = {};

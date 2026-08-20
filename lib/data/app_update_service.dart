@@ -235,8 +235,13 @@ class AppUpdateService {
       );
     }
     if (response.statusCode == 404) {
+      if (token == null || token.trim().isEmpty) {
+        throw FormatException(
+          '${parsed.slug} is private (or has no Release). Paste a GitHub token with Contents: Read on this card, then check again.',
+        );
+      }
       throw FormatException(
-        'No GitHub Release on ${parsed.slug}. Tag vX.Y.Z to publish one, or save a GitHub token if the repo is private.',
+        'GitHub returned 404 for ${parsed.slug}. Fine-grained tokens must include this repo (Contents: Read), and a Release tag vX.Y.Z must exist.',
       );
     }
     _throwIfFailed(response, 'Could not check GitHub Releases');

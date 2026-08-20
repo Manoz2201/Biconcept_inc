@@ -346,12 +346,14 @@ class AppHeader extends StatelessWidget {
       fontWeight: FontWeight.w600,
       letterSpacing: muted ? 0 : -0.6,
     );
-    final titleText = Text(
-      title,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: titleStyle,
-    );
+    final titleText = title.isEmpty
+        ? null
+        : Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: titleStyle,
+          );
     final searchField = onSearch == null
         ? null
         : TextField(
@@ -373,7 +375,8 @@ class AppHeader extends StatelessWidget {
           children: [
             Row(
               children: [
-                Expanded(child: titleText),
+                if (titleText != null) Expanded(child: titleText),
+                if (titleText == null) const Spacer(),
                 ?trailing,
               ],
             ),
@@ -390,8 +393,10 @@ class AppHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(28, 18, 28, 8),
       child: Row(
         children: [
-          Flexible(child: titleText),
-          const SizedBox(width: 16),
+          if (titleText != null) ...[
+            Flexible(child: titleText),
+            const SizedBox(width: 16),
+          ],
           if (searchField != null)
             Flexible(
               flex: 2,
