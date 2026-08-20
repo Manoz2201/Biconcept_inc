@@ -71,6 +71,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _lastSyncedAt = AppwriteAutoSync.instance.lastSyncedAt ?? _lastSyncedAt;
       if (!AppwriteAutoSync.instance.busy) {
         _companySaving = false;
+        _agentSaving = false;
       }
     });
   }
@@ -137,6 +138,9 @@ class _SettingsPageState extends State<SettingsPage> {
     });
     _listenForAutoSave();
     _hydrating = false;
+    if (_normalizeGithubToken(_ghToken.text).isNotEmpty) {
+      unawaited(_checkForUpdate(silent: true));
+    }
   }
 
   @override
@@ -353,9 +357,14 @@ class _SettingsPageState extends State<SettingsPage> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _MiniStat(label: 'Version', value: _buildInfo.version)),
+              Expanded(child: _MiniStat(label: 'This device', value: _buildInfo.display)),
               const SizedBox(width: 10),
-              Expanded(child: _MiniStat(label: 'Build', value: '${_buildInfo.buildNumber}')),
+              Expanded(
+                child: _MiniStat(
+                  label: 'Latest release',
+                  value: latest?.display ?? '—',
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -378,9 +387,16 @@ class _SettingsPageState extends State<SettingsPage> {
           if (available) ...[
             const SizedBox(height: 10),
             Text(
-              'GitHub Release ${latest.display} is ready for this device.',
+              'GitHub Release ${latest.display} is newer. Download it here and Android or Windows will install it.',
               style: const TextStyle(color: AppColors.text, fontSize: 13),
             ),
+            if (latest.assetForPlatform() != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                latest.assetForPlatform()!.name,
+                style: const TextStyle(color: AppColors.muted, fontSize: 12),
+              ),
+            ],
             if (latest.notes.trim().isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
@@ -414,7 +430,7 @@ class _SettingsPageState extends State<SettingsPage> {
           const Padding(
             padding: EdgeInsets.only(left: 8, top: 6),
             child: Text(
-              'Required while Manoz2201/Biconcept_inc is private. Token stays on this device.',
+              'Required while Manoz2201/Biconcept_inc is private. Saved to the central Appwrite company table.',
               style: TextStyle(color: AppColors.muted, fontSize: 12),
             ),
           ),
@@ -427,31 +443,58 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ],
           const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: busy ? null : (available ? _installUpdate : _checkForUpdate),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-              icon: busy
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.text),
-                    )
-                  : Icon(available ? Icons.download : Icons.refresh, size: 18),
-              label: Text(
-                _updateBusy
-                    ? 'Updating…'
-                    : _updateChecking
-                        ? 'Checking…'
-                        : available
-                            ? 'Update app'
-                            : 'Check for update',
+          if (available) ...[
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: busy ? null : _installUpdate,
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                icon: _updateBusy
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.text),
+                      )
+                    : const Icon(Icons.download, size: 18),
+                label: Text(
+                  _updateBusy ? 'Downloading…' : 'Download and install ${latest.display}',
+                ),
               ),
             ),
+            const SizedBox(height: 8),
+          ],
+          SizedBox(
+            width: double.infinity,
+            child: available
+                ? OutlinedButton.icon(
+                    onPressed: busy ? null : () => _checkForUpdate(),
+                    icon: _updateChecking
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh, size: 18),
+                    label: Text(_updateChecking ? 'Checking…' : 'Check again'),
+                  )
+                : FilledButton.icon(
+                    onPressed: busy ? null : () => _checkForUpdate(),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    icon: busy
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.text),
+                          )
+                        : const Icon(Icons.refresh, size: 18),
+                    label: Text(_updateChecking ? 'Checking…' : 'Check for update'),
+                  ),
           ),
           if (latest != null && latest.htmlUrl.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -469,13 +512,28 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<String?> _githubToken() async {
+    final typed = _normalizeGithubToken(_ghToken.text);
+    if (typed.isNotEmpty) return typed;
     final github = await _store.loadGitHub();
-    final token = github.token.trim();
+    final token = _normalizeGithubToken(github.token);
     return token.isEmpty ? null : token;
   }
 
+  String _normalizeGithubToken(String raw) {
+    var token = raw.trim();
+    if (token.length >= 2 &&
+        ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'")))) {
+      token = token.substring(1, token.length - 1).trim();
+    }
+    const bearer = 'Bearer ';
+    if (token.toLowerCase().startsWith(bearer.toLowerCase())) {
+      token = token.substring(bearer.length).trim();
+    }
+    return token;
+  }
+
   Future<void> _persistGithubToken() async {
-    final token = _ghToken.text.trim();
+    final token = _normalizeGithubToken(_ghToken.text);
     final current = await _store.loadGitHub();
     await _store.saveGitHub(
       current.copyWith(
@@ -485,29 +543,34 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _checkForUpdate() async {
+  Future<void> _checkForUpdate({bool silent = false}) async {
     setState(() {
       _updateChecking = true;
       _updateError = null;
     });
-    await _persistGithubToken();
+    if (!silent) await _persistGithubToken();
     final result = await _updates.check(current: _buildInfo, token: await _githubToken());
+    AppUpdateNotice.instance.apply(result);
     if (!mounted) return;
     setState(() {
       _updateChecking = false;
       _latest = result.latest;
       _updateError = result.error;
     });
-    if (!mounted) return;
+    if (!mounted || silent) return;
     if (result.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.error!)));
       return;
     }
-    if (!result.available) {
+    if (result.available) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You are on ${_buildInfo.display}')),
+        SnackBar(content: Text('BiConcept ${result.latest!.display} is ready to download and install')),
       );
+      return;
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('You are on ${_buildInfo.display}')),
+    );
   }
 
   Future<void> _installUpdate() async {
@@ -518,22 +581,22 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() => _updateError = 'This release has no installer for ${Platform.operatingSystem}.');
       return;
     }
-    if (Platform.isWindows) {
-      final go = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Restart to update'),
-          content: Text(
-            'BiConcept will download ${release.display}, close, replace this install, and reopen.',
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Update app')),
-          ],
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(Platform.isWindows ? 'Restart to update' : 'Install update'),
+        content: Text(
+          Platform.isWindows
+              ? 'BiConcept will download ${release.display} (${asset.name}), close, replace this install, and reopen.'
+              : 'BiConcept will download ${release.display} (${asset.name}). Android will then ask you to install the APK.',
         ),
-      );
-      if (go != true) return;
-    }
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Download and install')),
+        ],
+      ),
+    );
+    if (go != true) return;
     setState(() {
       _updateBusy = true;
       _updateError = null;
@@ -553,7 +616,7 @@ class _SettingsPageState extends State<SettingsPage> {
           await installAndroidApk(file.path);
         } on PlatformException catch (error) {
           if (error.code == 'need_install_permission') {
-            throw FormatException(error.message ?? 'Allow BiConcept to install updates, then tap Update app again.');
+            throw FormatException(error.message ?? 'Allow BiConcept to install updates, then tap Download and install again.');
           }
           rethrow;
         }
@@ -720,7 +783,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Manoj Singharya can search the web, query Appwrite, and act across the app. Cloudflare credentials stay on this device.',
+            'Manoj Singharya can search the web, query Appwrite, and act across the app. Cloudflare credentials save to the central Appwrite company table.',
             style: TextStyle(color: AppColors.muted),
           ),
           const SizedBox(height: 20),
@@ -759,7 +822,11 @@ class _SettingsPageState extends State<SettingsPage> {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              _agentSaving ? 'Saving on this device…' : 'Saved automatically on this device.',
+              _agentSaving || _syncBusy
+                  ? 'Saving to Appwrite…'
+                  : (_lastSyncedAt != null
+                      ? 'Saved to Appwrite · ${_ago(_lastSyncedAt!)}'
+                      : 'Saves to the central Appwrite company table'),
               style: const TextStyle(color: AppColors.muted, fontSize: 12),
             ),
           ),
@@ -900,7 +967,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _agentSaving = false);
     if (silent) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Manoj Singharya agent settings saved on this machine')),
+      const SnackBar(content: Text('Agent credentials saved to Appwrite')),
     );
   }
 
@@ -1190,7 +1257,12 @@ class _MiniStat extends StatelessWidget {
         children: [
           Text(label.toUpperCase(), style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2)),
           const SizedBox(height: 6),
-          Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, height: 1.1)),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, height: 1.1),
+          ),
         ],
       ),
     );

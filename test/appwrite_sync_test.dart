@@ -124,6 +124,9 @@ void main() {
       companyPhone: '+91 8178869148',
       gstPercent: 18,
       hvacGstPercent: 28,
+      cfAccountId: 'account-1',
+      cfApiToken: 'cf-token',
+      githubToken: 'gh-token',
       savedAt: DateTime.utc(2026, 8, 21, 2),
     );
     final restored = companyFromAppwriteRow(companyToAppwriteRow(prefs));
@@ -132,6 +135,25 @@ void main() {
     expect(restored.companyPhone, '+91 8178869148');
     expect(restored.gstPercent, 18);
     expect(restored.hvacGstPercent, 28);
+    expect(restored.cfAccountId, 'account-1');
+    expect(restored.cfApiToken, 'cf-token');
+    expect(restored.githubToken, 'gh-token');
+  });
+
+  test('mergeCompanyPrefs keeps credentials when the newer snapshot omits them', () {
+    final older = AppPrefsCache(
+      brand: 'Old',
+      cfAccountId: 'account-1',
+      cfApiToken: 'cf-token',
+      githubToken: 'gh-token',
+      savedAt: DateTime.utc(2026, 1, 1),
+    );
+    final newer = AppPrefsCache(brand: 'New', savedAt: DateTime.utc(2026, 8, 20));
+    final merged = mergeCompanyPrefs(newer, older);
+    expect(merged.brand, 'New');
+    expect(merged.cfAccountId, 'account-1');
+    expect(merged.cfApiToken, 'cf-token');
+    expect(merged.githubToken, 'gh-token');
   });
 
   test('mergeCompanyPrefs keeps the newer savedAt', () {

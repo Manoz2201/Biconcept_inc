@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'appwrite_backend.dart';
 import 'appwrite_sync.dart';
 import 'github_sync.dart';
+import 'local_cache.dart';
 
 class LlmSettings {
   const LlmSettings({
@@ -69,33 +70,58 @@ class SettingsStore {
   }
 
   Future<CloudflareAiSettings> loadCloudflare() async {
-    final accountId = await _storage.read(key: _cfAccountKey);
-    final token = await _storage.read(key: _cfTokenKey);
-    return CloudflareAiSettings(
-      accountId: accountId ?? '',
-      apiToken: token ?? '',
-    );
+    final prefs = await LocalCache.instance.loadPrefs();
+    if (prefs.cfAccountId.trim().isNotEmpty || prefs.cfApiToken.trim().isNotEmpty) {
+      return CloudflareAiSettings(
+        accountId: prefs.cfAccountId.trim(),
+        apiToken: prefs.cfApiToken.trim(),
+      );
+    }
+    final accountId = (await _storage.read(key: _cfAccountKey))?.trim() ?? '';
+    final token = (await _storage.read(key: _cfTokenKey))?.trim() ?? '';
+    if (accountId.isNotEmpty || token.isNotEmpty) {
+      final migrated = CloudflareAiSettings(accountId: accountId, apiToken: token);
+      await saveCloudflare(migrated);
+      return migrated;
+    }
+    return const CloudflareAiSettings();
   }
 
-  Future<void> saveCloudflare(CloudflareAiSettings settings) async {
+  Future<void> saveCloudflare(CloudflareAiSettings settings, {bool syncToCloud = true}) async {
     await _storage.write(key: _cfAccountKey, value: settings.accountId.trim());
     await _storage.write(key: _cfTokenKey, value: settings.apiToken.trim());
+    if (!syncToCloud) return;
+    await LocalCache.instance.updatePrefs((prefs) {
+      prefs.cfAccountId = settings.accountId.trim();
+      prefs.cfApiToken = settings.apiToken.trim();
+    });
   }
 
   Future<GitHubCloudSettings> loadGitHub() async {
+    final prefs = await LocalCache.instance.loadPrefs();
+    if (prefs.githubToken.trim().isNotEmpty) {
+      return GitHubCloudSettings(
+        repo: prefs.githubRepo.trim(),
+        token: prefs.githubToken.trim(),
+      );
+    }
     final repo = await _storage.read(key: _githubRepoKey);
     final branch = await _storage.read(key: _githubBranchKey);
     final token = await _storage.read(key: _githubTokenKey);
     final synced = await _storage.read(key: _githubSyncedAtKey);
-    return GitHubCloudSettings(
+    final local = GitHubCloudSettings(
       repo: repo ?? '',
       branch: (branch == null || branch.trim().isEmpty) ? 'main' : branch.trim(),
       token: token ?? '',
       lastSyncedAt: DateTime.tryParse(synced ?? ''),
     );
+    if (local.token.trim().isNotEmpty || local.repo.trim().isNotEmpty) {
+      await saveGitHub(local);
+    }
+    return local;
   }
 
-  Future<void> saveGitHub(GitHubCloudSettings settings) async {
+  Future<void> saveGitHub(GitHubCloudSettings settings, {bool syncToCloud = true}) async {
     await _storage.write(key: _githubRepoKey, value: settings.repo.trim());
     await _storage.write(key: _githubBranchKey, value: settings.branch.trim().isEmpty ? 'main' : settings.branch.trim());
     await _storage.write(key: _githubTokenKey, value: settings.token.trim());
@@ -103,6 +129,29 @@ class SettingsStore {
       await _storage.delete(key: _githubSyncedAtKey);
     } else {
       await _storage.write(key: _githubSyncedAtKey, value: settings.lastSyncedAt!.toIso8601String());
+    }
+    if (!syncToCloud) return;
+    await LocalCache.instance.updatePrefs((prefs) {
+      prefs.githubRepo = settings.repo.trim();
+      prefs.githubToken = settings.token.trim();
+    });
+  }
+
+  Future<void> applyCentralCredentials(AppPrefsCache prefs) async {
+    if (prefs.cfAccountId.trim().isNotEmpty || prefs.cfApiToken.trim().isNotEmpty) {
+      await saveCloudflare(
+        CloudflareAiSettings(accountId: prefs.cfAccountId, apiToken: prefs.cfApiToken),
+        syncToCloud: false,
+      );
+    }
+    if (prefs.githubToken.trim().isNotEmpty || prefs.githubRepo.trim().isNotEmpty) {
+      await saveGitHub(
+        GitHubCloudSettings(
+          repo: prefs.githubRepo.trim(),
+          token: prefs.githubToken.trim(),
+        ),
+        syncToCloud: false,
+      );
     }
   }
 

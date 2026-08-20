@@ -20,6 +20,10 @@ class AppPrefsCache {
     this.lastClient = '',
     this.lastProject = '',
     this.lastCarpetArea,
+    this.cfAccountId = '',
+    this.cfApiToken = '',
+    this.githubRepo = '',
+    this.githubToken = '',
     this.savedAt,
   })  : recentAreaNames = recentAreaNames ?? <String>[],
         recentWorkTypeIds = recentWorkTypeIds ?? <String>[],
@@ -36,6 +40,10 @@ class AppPrefsCache {
   String lastClient;
   String lastProject;
   double? lastCarpetArea;
+  String cfAccountId;
+  String cfApiToken;
+  String githubRepo;
+  String githubToken;
   DateTime? savedAt;
 
   Map<String, dynamic> toJson() => {
@@ -50,6 +58,10 @@ class AppPrefsCache {
         'lastClient': lastClient,
         'lastProject': lastProject,
         'lastCarpetArea': lastCarpetArea,
+        'cfAccountId': cfAccountId,
+        'cfApiToken': cfApiToken,
+        'githubRepo': githubRepo,
+        'githubToken': githubToken,
         'savedAt': savedAt?.toIso8601String(),
       };
 
@@ -66,6 +78,10 @@ class AppPrefsCache {
       lastClient: json['lastClient']?.toString() ?? '',
       lastProject: json['lastProject']?.toString() ?? '',
       lastCarpetArea: (json['lastCarpetArea'] as num?)?.toDouble(),
+      cfAccountId: json['cfAccountId']?.toString() ?? '',
+      cfApiToken: json['cfApiToken']?.toString() ?? '',
+      githubRepo: json['githubRepo']?.toString() ?? '',
+      githubToken: json['githubToken']?.toString() ?? '',
       savedAt: DateTime.tryParse(json['savedAt']?.toString() ?? ''),
     );
   }
@@ -190,6 +206,7 @@ class LocalCache {
     prefs.savedAt = DateTime.now();
     _prefs = prefs;
     await _writeJson(await prefsFile(), prefs.toJson());
+    unawaited(CloudHooks.afterPrefsApplied?.call(prefs.toJson()) ?? Future<void>.value());
     if (syncToCloud) {
       unawaited(CloudHooks.afterPrefsSave?.call(prefs.toJson()) ?? Future<void>.value());
     }

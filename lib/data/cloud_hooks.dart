@@ -8,4 +8,5 @@ class CloudHooks {
   static Future<void> Function(String id)? afterEstimateDelete;
   static Future<void> Function(Map<String, dynamic> overlay)? afterCatalogSave;
   static Future<void> Function(Map<String, dynamic> prefs)? afterPrefsSave;
+  static Future<void> Function(Map<String, dynamic> prefs)? afterPrefsApplied;
 }

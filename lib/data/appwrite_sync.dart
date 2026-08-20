@@ -220,9 +220,41 @@ List<Map<String, dynamic>> mergeCatalogItems(dynamic local, dynamic remote) {
 AppPrefsCache mergeCompanyPrefs(AppPrefsCache local, AppPrefsCache remote) {
   final localAt = local.savedAt;
   final remoteAt = remote.savedAt;
-  if (remoteAt == null) return local;
-  if (localAt == null) return remote;
-  return localAt.isBefore(remoteAt) ? remote : local;
+  late final AppPrefsCache newer;
+  late final AppPrefsCache older;
+  if (remoteAt == null) {
+    newer = local;
+    older = remote;
+  } else if (localAt == null || localAt.isBefore(remoteAt)) {
+    newer = remote;
+    older = local;
+  } else {
+    newer = local;
+    older = remote;
+  }
+  String keep(String primary, String fallback) {
+    final value = primary.trim();
+    return value.isNotEmpty ? value : fallback.trim();
+  }
+
+  return AppPrefsCache(
+    brand: newer.brand,
+    companyAddress: newer.companyAddress,
+    companyPhone: newer.companyPhone,
+    gstPercent: newer.gstPercent,
+    hvacGstPercent: newer.hvacGstPercent,
+    recentAreaNames: List<String>.from(newer.recentAreaNames),
+    recentWorkTypeIds: List<String>.from(newer.recentWorkTypeIds),
+    recentScopeIds: List<String>.from(newer.recentScopeIds),
+    lastClient: newer.lastClient,
+    lastProject: newer.lastProject,
+    lastCarpetArea: newer.lastCarpetArea,
+    cfAccountId: keep(newer.cfAccountId, older.cfAccountId),
+    cfApiToken: keep(newer.cfApiToken, older.cfApiToken),
+    githubRepo: keep(newer.githubRepo, older.githubRepo),
+    githubToken: keep(newer.githubToken, older.githubToken),
+    savedAt: newer.savedAt ?? older.savedAt,
+  );
 }
 
 class AppwriteSync {
@@ -347,12 +379,14 @@ class AppwriteSync {
     );
   }
 
-  Future<void> upsertCompany(AppwriteCloudSettings settings, AppPrefsCache prefs) {
-    return _upsert(
+  Future<void> upsertCompany(AppwriteCloudSettings settings, AppPrefsCache prefs) async {
+    final remote = await _pullCompany(settings);
+    final merged = mergeCompanyPrefs(prefs, remote);
+    await _upsert(
       settings,
       tableId: appwriteCompanyTableId,
       rowId: appwriteCompanyRowId,
-      data: companyToAppwriteRow(prefs),
+      data: companyToAppwriteRow(merged),
     );
   }
 

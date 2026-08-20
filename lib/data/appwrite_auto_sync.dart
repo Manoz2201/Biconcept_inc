@@ -71,6 +71,9 @@ class AppwriteAutoSync extends ChangeNotifier {
           await _store.saveAppwrite(settings.copyWith(lastSyncedAt: lastSyncedAt));
           notifyListeners();
         });
+    CloudHooks.afterPrefsApplied = (prefs) async {
+      await _store.applyCentralCredentials(AppPrefsCache.fromJson(prefs));
+    };
   }
 
   Future<void> ensureStarted() async {
@@ -81,6 +84,8 @@ class AppwriteAutoSync extends ChangeNotifier {
     final settings = await _store.loadAppwrite();
     lastSyncedAt = settings.lastSyncedAt;
     notifyListeners();
+    unawaited(_store.loadCloudflare());
+    unawaited(_store.loadGitHub());
     _periodic = Timer.periodic(periodicInterval, (_) {
       unawaited(syncNow(silent: true));
     });
@@ -178,6 +183,7 @@ class AppwriteAutoSync extends ChangeNotifier {
     CloudHooks.afterEstimateDelete = null;
     CloudHooks.afterCatalogSave = null;
     CloudHooks.afterPrefsSave = null;
+    CloudHooks.afterPrefsApplied = null;
   }
 }
 

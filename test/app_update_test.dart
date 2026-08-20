@@ -1,3 +1,4 @@
+import 'package:biconcept/data/app_update_service.dart';
 import 'package:biconcept/data/app_version.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -60,6 +61,49 @@ void main() {
         remoteBuild: 40,
       ),
       isFalse,
+    );
+  });
+
+  test('preferredReleaseAsset picks the versioned installer, not the first leftover', () {
+    const assets = [
+      AppReleaseAsset(
+        name: 'biconcept-1.1.0-android.apk',
+        apiUrl: 'https://api.github.com/1.1.0.apk',
+        browserUrl: '',
+      ),
+      AppReleaseAsset(
+        name: 'biconcept-1.1.3-android.apk',
+        apiUrl: 'https://api.github.com/1.1.3.apk',
+        browserUrl: '',
+      ),
+      AppReleaseAsset(
+        name: 'biconcept-1.1.0-windows.zip',
+        apiUrl: 'https://api.github.com/1.1.0.zip',
+        browserUrl: '',
+      ),
+      AppReleaseAsset(
+        name: 'biconcept-1.1.3-windows.zip',
+        apiUrl: 'https://api.github.com/1.1.3.zip',
+        browserUrl: '',
+      ),
+    ];
+    expect(
+      preferredReleaseAsset(
+        assets,
+        version: '1.1.3',
+        extension: '.apk',
+        platformHint: 'android',
+      )?.name,
+      'biconcept-1.1.3-android.apk',
+    );
+    expect(
+      preferredReleaseAsset(
+        assets,
+        version: '1.1.3',
+        extension: '.zip',
+        platformHint: 'windows',
+      )?.name,
+      'biconcept-1.1.3-windows.zip',
     );
   });
 }

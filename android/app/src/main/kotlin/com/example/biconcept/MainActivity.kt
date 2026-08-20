@@ -184,7 +184,7 @@ class MainActivity : FlutterActivity() {
             )
             result.error(
                 "need_install_permission",
-                "Allow BiConcept to install updates, then tap Update app again.",
+                "Allow BiConcept to install updates, then tap Download and install again.",
                 null,
             )
             return

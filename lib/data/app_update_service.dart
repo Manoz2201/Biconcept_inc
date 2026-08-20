@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
@@ -78,6 +79,59 @@ class AppUpdateCheck {
   }
 }
 
+/// Broadcasts the last GitHub Releases check so Settings and Home can offer install.
+class AppUpdateNotice extends ChangeNotifier {
+  AppUpdateNotice._();
+  static final AppUpdateNotice instance = AppUpdateNotice._();
+
+  AppRelease? latest;
+  bool available = false;
+  String? error;
+
+  void apply(AppUpdateCheck result) {
+    latest = result.latest;
+    available = result.available && result.latest?.assetForPlatform() != null;
+    error = result.error;
+    notifyListeners();
+  }
+}
+
+/// Picks the installer that matches [version], otherwise the newest versioned file.
+AppReleaseAsset? preferredReleaseAsset(
+  List<AppReleaseAsset> assets, {
+  required String version,
+  required String extension,
+  String? platformHint,
+}) {
+  final ext = extension.toLowerCase();
+  final wanted = normalizeVersion(version);
+  final matches = <AppReleaseAsset>[
+    for (final asset in assets)
+      if (_assetMatches(asset.name, ext, platformHint)) asset,
+  ];
+  if (matches.isEmpty && platformHint != null) {
+    return preferredReleaseAsset(assets, version: version, extension: extension);
+  }
+  if (matches.isEmpty) return null;
+  for (final asset in matches) {
+    if (asset.name.toLowerCase().contains(wanted)) return asset;
+  }
+  matches.sort((a, b) => compareVersions(_versionInAssetName(b.name), _versionInAssetName(a.name)));
+  return matches.first;
+}
+
+bool _assetMatches(String name, String extension, String? platformHint) {
+  final lower = name.toLowerCase();
+  if (!lower.endsWith(extension)) return false;
+  if (extension == '.zip' && lower.contains('source')) return false;
+  if (platformHint != null && !lower.contains(platformHint)) return false;
+  return true;
+}
+
+String _versionInAssetName(String name) {
+  return RegExp(r'(\d+\.\d+\.\d+)').firstMatch(name)?.group(1) ?? '0.0.0';
+}
+
 class AppUpdateService {
   AppUpdateService({
     http.Client? httpClient,
@@ -129,8 +183,12 @@ class AppUpdateService {
       throw const FormatException('This release has no installer for this device.');
     }
     final dir = await getTemporaryDirectory();
-    final ext = Platform.isAndroid ? 'apk' : 'zip';
-    final file = File('${dir.path}${Platform.pathSeparator}biconcept-update.$ext');
+    final fallbackExt = Platform.isAndroid ? 'apk' : 'zip';
+    final rawName = asset.name.trim();
+    final safeName = rawName.isEmpty
+        ? 'biconcept-update.$fallbackExt'
+        : rawName.replaceAll(RegExp(r'[^\w.\-]'), '_');
+    final file = File('${dir.path}${Platform.pathSeparator}$safeName');
     if (file.existsSync()) {
       await file.delete();
     }
@@ -227,8 +285,24 @@ class AppUpdateService {
   }
 
   Future<AppRelease?> _fetchLatest(GitHubRepoRef parsed, String? token) async {
+    final headers = _headers(token);
+    if (token != null && token.trim().isNotEmpty) {
+      final repoUri = Uri.https('api.github.com', '/repos/${parsed.slug}');
+      final repoResponse = await _http.get(repoUri, headers: headers);
+      if (repoResponse.statusCode == 401) {
+        throw const FormatException(
+          'GitHub rejected this token. Create a new token with Contents: Read on this repo.',
+        );
+      }
+      if (repoResponse.statusCode == 404) {
+        throw FormatException(
+          'This token cannot see ${parsed.slug}. Fine-grained tokens must list that exact repo under Repository access, with Contents: Read.',
+        );
+      }
+    }
+
     final uri = Uri.https('api.github.com', '/repos/${parsed.slug}/releases/latest');
-    final response = await _http.get(uri, headers: _headers(token));
+    final response = await _http.get(uri, headers: headers);
     if (response.statusCode == 401) {
       throw const FormatException(
         'GitHub rejected the request. If the repo is private, save a token with Contents read.',
@@ -241,7 +315,7 @@ class AppUpdateService {
         );
       }
       throw FormatException(
-        'GitHub returned 404 for ${parsed.slug}. Fine-grained tokens must include this repo (Contents: Read), and a Release tag vX.Y.Z must exist.',
+        'No GitHub Release on ${parsed.slug} yet. A git tag is not enough — publish a Release with the APK and Windows zip.',
       );
     }
     _throwIfFailed(response, 'Could not check GitHub Releases');
@@ -296,10 +370,20 @@ class AppUpdateService {
       notes: resolvedNotes,
       channel: channel,
       gitSha: gitSha,
-      android: _firstAsset(assets, (name) => name.endsWith('.apk') && name.contains('android')) ??
-          _firstAsset(assets, (name) => name.endsWith('.apk')),
-      windows: _firstAsset(assets, (name) => name.endsWith('.zip') && name.contains('windows')) ??
-          _firstAsset(assets, (name) => name.endsWith('.zip') && !name.contains('source')),
+      android: preferredReleaseAsset(
+            assets,
+            version: version,
+            extension: '.apk',
+            platformHint: 'android',
+          ) ??
+          preferredReleaseAsset(assets, version: version, extension: '.apk'),
+      windows: preferredReleaseAsset(
+            assets,
+            version: version,
+            extension: '.zip',
+            platformHint: 'windows',
+          ) ??
+          preferredReleaseAsset(assets, version: version, extension: '.zip'),
     );
   }
 
@@ -323,14 +407,6 @@ class AppUpdateService {
       browserUrl: json['browser_download_url']?.toString() ?? '',
       size: int.tryParse(json['size']?.toString() ?? '') ?? 0,
     );
-  }
-
-  AppReleaseAsset? _firstAsset(List<AppReleaseAsset> assets, bool Function(String name) match) {
-    for (final asset in assets) {
-      final name = asset.name.toLowerCase();
-      if (match(name)) return asset;
-    }
-    return null;
   }
 
   Map<String, String> _headers(String? token, {bool download = false}) => {

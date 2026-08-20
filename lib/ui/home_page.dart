@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../agent/catalog_tools.dart';
+import '../data/app_update_service.dart';
 import '../data/appwrite_auto_sync.dart';
 import '../data/catalog_repository.dart';
 import '../data/draft_store.dart';
@@ -137,6 +138,33 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
                           alignment: Alignment.centerRight,
                           child: AgentLauncherButton(onPressed: () => _openAgentSheet(catalog)),
                         ),
+                      ),
+                    if (_tab != 5)
+                      ListenableBuilder(
+                        listenable: AppUpdateNotice.instance,
+                        builder: (context, _) {
+                          final notice = AppUpdateNotice.instance;
+                          final release = notice.latest;
+                          if (!notice.available || release == null) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                            child: Material(
+                              color: AppColors.primary.withValues(alpha: 0.14),
+                              borderRadius: BorderRadius.circular(16),
+                              child: ListTile(
+                                leading: const Icon(Icons.system_update_alt, color: AppColors.primary),
+                                title: Text('BiConcept ${release.display} is ready'),
+                                subtitle: const Text('Download the latest release and install it in the app'),
+                                trailing: TextButton(
+                                  onPressed: () => setState(() => _tab = 5),
+                                  child: const Text('Install'),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     if (_tab == 2)
                       AppHeader(
