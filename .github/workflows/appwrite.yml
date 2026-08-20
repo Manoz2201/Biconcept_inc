@@ -1,7 +1,7 @@
 name: Appwrite
 
 # Deploys TablesDB schema from appwrite.config.json.
-# Add repository secret APPWRITE_API_KEY (server key with tables read/write).
+# Requires repository secret APPWRITE_API_KEY (tables read/write).
 # Do not commit the key.
 on:
   push:
@@ -22,6 +22,10 @@ jobs:
     name: Push tables
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      APPWRITE_ENDPOINT: https://sgp.cloud.appwrite.io/v1
+      APPWRITE_PROJECT_ID: 6a86a3d4001d87aa9809
+      APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -32,18 +36,14 @@ jobs:
       - name: Install Appwrite CLI
         run: npm install -g appwrite-cli
 
-      - name: Authenticate
-        env:
-          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
+      - name: Push tables
         run: |
           if [ -z "$APPWRITE_API_KEY" ]; then
             echo "Add GitHub secret APPWRITE_API_KEY (Appwrite API key with tables read/write)."
             exit 1
           fi
           appwrite client \
-            --endpoint "https://sgp.cloud.appwrite.io/v1" \
-            --project-id "6a86a3d4001d87aa9809" \
+            --endpoint "$APPWRITE_ENDPOINT" \
+            --project-id "$APPWRITE_PROJECT_ID" \
             --key "$APPWRITE_API_KEY"
-
-      - name: Push tables
-        run: appwrite push tables --all --force
+          appwrite push tables --all --force
