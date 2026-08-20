@@ -1,9 +1,9 @@
 {
   "schema": "biconcept-release-v1",
-  "version": "1.1.4",
-  "build": 6,
-  "tag": "v1.1.4",
+  "version": "1.1.5",
+  "build": 7,
+  "tag": "v1.1.5",
   "channel": "release",
-  "gitSha": "40e559ee0c2e22e4e393db737078eb0db5b4d97b",
-  "notes": "BiConcept 1.1.4. Download and install the latest GitHub Release from Settings."
+  "gitSha": "b1d951a9f3a06321510e880b43e5e8be562e74af",
+  "notes": "BiConcept 1.1.5. Download and install the APK or Windows zip in the app. GitHub Release pages are not opened."
 }

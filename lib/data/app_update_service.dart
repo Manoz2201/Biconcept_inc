@@ -132,6 +132,21 @@ String _versionInAssetName(String name) {
   return RegExp(r'(\d+\.\d+\.\d+)').firstMatch(name)?.group(1) ?? '0.0.0';
 }
 
+/// GitHub CDNs reject the API token. Only send it on github.com hosts.
+bool githubDownloadSendsAuth(Uri uri) {
+  final host = uri.host.toLowerCase();
+  return host == 'api.github.com' || host == 'github.com' || host == 'www.github.com';
+}
+
+bool looksLikeZipInstaller(List<int> bytes) {
+  return bytes.length >= 2 && bytes[0] == 0x50 && bytes[1] == 0x4B;
+}
+
+bool looksLikeWebpageOrApiError(List<int> bytes) {
+  final text = utf8.decode(bytes.take(96).toList(), allowMalformed: true).trimLeft().toLowerCase();
+  return text.startsWith('<!doctype') || text.startsWith('<html') || text.startsWith('{');
+}
+
 class AppUpdateService {
   AppUpdateService({
     http.Client? httpClient,
@@ -194,15 +209,7 @@ class AppUpdateService {
     }
 
     onProgress?.call(-1);
-    final request = http.Request('GET', Uri.parse(asset.downloadUrl));
-    request.headers.addAll(_headers(token, download: true));
-    final response = await _http.send(request);
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw FormatException(
-        'Could not download the update (HTTP ${response.statusCode}).',
-      );
-    }
-
+    final response = await _followDownload(Uri.parse(asset.downloadUrl), token);
     final total = response.contentLength ?? asset.size;
     var received = 0;
     final sink = file.openWrite();
@@ -218,8 +225,51 @@ class AppUpdateService {
     } finally {
       await sink.close();
     }
+    await _assertInstallerFile(file);
     onProgress?.call(1);
     return file;
+  }
+
+  Future<http.StreamedResponse> _followDownload(Uri start, String? token) async {
+    var uri = start;
+    for (var hop = 0; hop < 8; hop++) {
+      final request = http.Request('GET', uri);
+      request.followRedirects = false;
+      request.headers.addAll(
+        _headers(githubDownloadSendsAuth(uri) ? token : null, download: true),
+      );
+      if (!githubDownloadSendsAuth(uri)) {
+        request.headers['Accept'] = '*/*';
+      }
+      final response = await _http.send(request);
+      final code = response.statusCode;
+      if (code >= 200 && code < 300) return response;
+      if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
+        final location = response.headers['location'];
+        await response.stream.drain<void>();
+        if (location == null || location.trim().isEmpty) {
+          throw FormatException('Could not download the update (HTTP $code).');
+        }
+        uri = uri.resolve(location);
+        continue;
+      }
+      await response.stream.drain<void>();
+      throw FormatException('Could not download the update (HTTP $code).');
+    }
+    throw const FormatException('Could not download the update (too many redirects).');
+  }
+
+  Future<void> _assertInstallerFile(File file) async {
+    if (!file.existsSync() || file.lengthSync() < 32) {
+      throw const FormatException('The update file was empty. Try Download and install again.');
+    }
+    final header = await file.openRead(0, 96).first;
+    if (looksLikeWebpageOrApiError(header) || !looksLikeZipInstaller(header)) {
+      await file.delete();
+      throw const FormatException(
+        'GitHub sent a web page instead of the installer. The app will not open GitHub — tap Download and install again after checking the token.',
+      );
+    }
   }
 
   Future<Directory> extractWindowsZip(File zip) async {
@@ -388,12 +438,9 @@ class AppUpdateService {
   }
 
   Future<Map<String, dynamic>> _fetchManifest(AppReleaseAsset asset, String? token) async {
-    final response = await _http.get(
-      Uri.parse(asset.downloadUrl),
-      headers: _headers(token, download: true),
-    );
-    _throwIfFailed(response, 'Could not read latest.json');
-    final decoded = jsonDecode(response.body);
+    final streamed = await _followDownload(Uri.parse(asset.downloadUrl), token);
+    final body = await streamed.stream.bytesToString();
+    final decoded = jsonDecode(body);
     if (decoded is! Map) {
       throw const FormatException('latest.json is not an object');
     }

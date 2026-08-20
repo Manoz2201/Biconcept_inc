@@ -106,4 +106,21 @@ void main() {
       'biconcept-1.1.3-windows.zip',
     );
   });
+
+  test('github download sends the token only to github.com hosts', () {
+    expect(githubDownloadSendsAuth(Uri.parse('https://api.github.com/repos/x/y/releases/assets/1')), isTrue);
+    expect(githubDownloadSendsAuth(Uri.parse('https://github.com/x/y/releases/download/v1/a.apk')), isTrue);
+    expect(
+      githubDownloadSendsAuth(Uri.parse('https://release-assets.githubusercontent.com/github-production-release-asset/1')),
+      isFalse,
+    );
+    expect(githubDownloadSendsAuth(Uri.parse('https://objects.githubusercontent.com/foo')), isFalse);
+  });
+
+  test('installer bytes must be a zip/apk, not a GitHub HTML page', () {
+    expect(looksLikeZipInstaller([0x50, 0x4B, 0x03, 0x04]), isTrue);
+    expect(looksLikeWebpageOrApiError('<!DOCTYPE html><html>'.codeUnits), isTrue);
+    expect(looksLikeWebpageOrApiError('{"message":"Not Found"}'.codeUnits), isTrue);
+    expect(looksLikeWebpageOrApiError([0x50, 0x4B, 0x03, 0x04]), isFalse);
+  });
 }

@@ -38,6 +38,7 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
   bool _showAgent = true;
   final _agentKey = GlobalKey<CollapsibleAgentPanelState>();
   final _clientsKey = GlobalKey<ClientsPageState>();
+  final _settingsKey = GlobalKey<SettingsPageState>();
   int _appliedSync = 0;
 
   @override
@@ -156,9 +157,14 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
                               child: ListTile(
                                 leading: const Icon(Icons.system_update_alt, color: AppColors.primary),
                                 title: Text('BiConcept ${release.display} is ready'),
-                                subtitle: const Text('Download the latest release and install it in the app'),
+                                subtitle: const Text('Download and install in the app — GitHub will not open'),
                                 trailing: TextButton(
-                                  onPressed: () => setState(() => _tab = 5),
+                                  onPressed: () {
+                                    setState(() => _tab = 5);
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      unawaited(_settingsKey.currentState?.installAvailableUpdate() ?? Future<void>.value());
+                                    });
+                                  },
                                   child: const Text('Install'),
                                 ),
                               ),
@@ -211,6 +217,7 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
                           CalendarPage(drafts: _drafts, compact: compact),
                           RateCardPage(catalog: catalog, query: _query, compact: compact),
                           SettingsPage(
+                            key: _settingsKey,
                             embedded: true,
                             onAppDataChanged: () async {
                               await _reloadDrafts();

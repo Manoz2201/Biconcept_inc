@@ -24,10 +24,10 @@ class SettingsPage extends StatefulWidget {
   final Future<void> Function()? onAppDataChanged;
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  State<SettingsPage> createState() => SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class SettingsPageState extends State<SettingsPage> {
   final _store = SettingsStore();
   final _updates = AppUpdateService();
   final _cfAccount = TextEditingController();
@@ -387,7 +387,7 @@ class _SettingsPageState extends State<SettingsPage> {
           if (available) ...[
             const SizedBox(height: 10),
             Text(
-              'GitHub Release ${latest.display} is newer. Download it here and Android or Windows will install it.',
+              'A newer build is ready. BiConcept will download the APK or Windows zip and install it here — it will not open GitHub.',
               style: const TextStyle(color: AppColors.text, fontSize: 13),
             ),
             if (latest.assetForPlatform() != null) ...[
@@ -496,16 +496,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     label: Text(_updateChecking ? 'Checking…' : 'Check for update'),
                   ),
           ),
-          if (latest != null && latest.htmlUrl.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: busy ? null : () => openHttpUrl(latest.htmlUrl),
-                child: const Text('Open GitHub Release'),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -573,6 +563,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Future<void> installAvailableUpdate() => _installUpdate();
+
   Future<void> _installUpdate() async {
     final release = _latest;
     if (release == null) return;
@@ -597,6 +589,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
     if (go != true) return;
+    await _persistGithubToken();
     setState(() {
       _updateBusy = true;
       _updateError = null;
