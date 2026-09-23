@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -13,6 +14,9 @@ String suggestedBackupFileName([DateTime? now]) {
 }
 
 Future<Directory> backupDirectory() async {
+  if (kIsWeb) {
+    throw const FormatException('CSV backup is not available in the browser.');
+  }
   final root = await getApplicationDocumentsDirectory();
   final dir = Directory('${root.path}/biconcept/backups');
   if (!await dir.exists()) await dir.create(recursive: true);
@@ -24,6 +28,9 @@ Future<String?> saveBackupCsv({
   required String csv,
   required String fileName,
 }) async {
+  if (kIsWeb) {
+    throw const FormatException('CSV backup is not available in the browser.');
+  }
   if (Platform.isWindows) {
     final chosen = await _windowsSavePath(fileName);
     if (chosen == null || chosen.trim().isEmpty) return null;
@@ -51,6 +58,7 @@ Future<String?> saveBackupCsv({
 }
 
 Future<String?> pickBackupCsv() async {
+  if (kIsWeb) return null;
   if (Platform.isWindows) {
     final chosen = await _windowsOpenPath();
     if (chosen == null || chosen.trim().isEmpty) return null;
@@ -67,6 +75,7 @@ Future<String?> pickBackupCsv() async {
 }
 
 Future<void> revealBackupLocation(String path) async {
+  if (kIsWeb) return;
   if (Platform.isWindows) {
     await Process.run('explorer', ['/select,', path]);
     return;

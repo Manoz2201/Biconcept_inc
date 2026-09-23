@@ -1,30 +1,28 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../models/office_models.dart';
 import 'app_notifications.dart';
+import 'json_disk.dart';
 
 class OfficeStore extends ChangeNotifier {
   OfficeStore._();
   static final instance = OfficeStore._();
 
   Directory? overrideDirectory;
+  final _disk = JsonDisk(
+    relativePath: 'biconcept/office',
+    prefsPrefix: 'biconcept.office.',
+  );
   final events = <CalendarEvent>[];
   final installments = <PaymentInstallment>[];
   final payments = <PaymentEntry>[];
   bool _loaded = false;
 
-  Future<Directory> _dir() async {
-    final root = overrideDirectory ?? await getApplicationDocumentsDirectory();
-    final dir = Directory('${root.path}/biconcept/office');
-    if (!await dir.exists()) await dir.create(recursive: true);
-    return dir;
+  Future<void> _bind() async {
+    _disk.overrideRoot = overrideDirectory;
   }
-
-  Future<File> _file() async => File('${(await _dir()).path}/office.json');
 
   @visibleForTesting
   Future<void> bindTo(Directory dir) async {
@@ -42,23 +40,21 @@ class OfficeStore extends ChangeNotifier {
     installments.clear();
     payments.clear();
     try {
-      final file = await _file();
-      if (await file.exists()) {
-        final decoded = jsonDecode(await file.readAsString());
-        if (decoded is Map) {
-          events.addAll([
-            for (final item in decoded['events'] as List? ?? const [])
-              if (item is Map) CalendarEvent.fromJson(Map<String, dynamic>.from(item)),
-          ]);
-          installments.addAll([
-            for (final item in decoded['installments'] as List? ?? const [])
-              if (item is Map) PaymentInstallment.fromJson(Map<String, dynamic>.from(item)),
-          ]);
-          payments.addAll([
-            for (final item in decoded['payments'] as List? ?? const [])
-              if (item is Map) PaymentEntry.fromJson(Map<String, dynamic>.from(item)),
-          ]);
-        }
+      await _bind();
+      final decoded = await _disk.readJson('office.json');
+      if (decoded != null) {
+        events.addAll([
+          for (final item in decoded['events'] as List? ?? const [])
+            if (item is Map) CalendarEvent.fromJson(Map<String, dynamic>.from(item)),
+        ]);
+        installments.addAll([
+          for (final item in decoded['installments'] as List? ?? const [])
+            if (item is Map) PaymentInstallment.fromJson(Map<String, dynamic>.from(item)),
+        ]);
+        payments.addAll([
+          for (final item in decoded['payments'] as List? ?? const [])
+            if (item is Map) PaymentEntry.fromJson(Map<String, dynamic>.from(item)),
+        ]);
       }
     } catch (_) {}
     _loaded = true;
@@ -71,7 +67,8 @@ class OfficeStore extends ChangeNotifier {
       'installments': [for (final item in installments) item.toJson()],
       'payments': [for (final item in payments) item.toJson()],
     };
-    await (await _file()).writeAsString(const JsonEncoder.withIndent('  ').convert(payload));
+    await _bind();
+    await _disk.writeJson('office.json', payload);
     notifyListeners();
   }
 

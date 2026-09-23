@@ -1,43 +1,43 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easy_seo/flutter_easy_seo.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app.dart';
+import 'features/chat/data/local/open_chat_database.dart';
+import 'features/chat/presentation/providers/chat_provider.dart';
 import 'data/appwrite_live.dart';
 import 'data/schedule.dart';
-import 'ui/home_page.dart';
-import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  EasySEOManager.instance.init(
+    baseUrl: 'https://biconcept.in',
+    siteName: 'BiConcept',
+    siteDescription: 'Architecture and interiors in Noida.',
+    enableInteractiveMode: false,
+    showResultDialog: false,
+    enableLiveOutput: kIsWeb,
+    pages: const [
+      '/',
+      '/services',
+      '/services/:slug',
+      '/portfolio',
+      '/portfolio/:slug',
+      '/team',
+      '/about',
+      '/contact',
+    ],
+  );
   installAppwriteLiveSync();
   unawaited(ScheduleService.instance.start());
-  runApp(const BiconceptApp());
-}
-
-class BiconceptApp extends StatelessWidget {
-  const BiconceptApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'BiConcept',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark(),
-      scrollBehavior: const AppScrollBehavior(),
-      builder: (context, child) {
-        final media = MediaQuery.of(context);
-        return GestureDetector(
-          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-          behavior: HitTestBehavior.deferToChild,
-          child: MediaQuery(
-            data: media.copyWith(
-              textScaler: media.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.15),
-            ),
-            child: child ?? const SizedBox.shrink(),
-          ),
-        );
-      },
-      home: const EstimateHomePage(),
-    );
-  }
+  final chatDb = await openChatDatabase();
+  runApp(
+    ProviderScope(
+      overrides: [chatDatabaseProvider.overrideWithValue(chatDb)],
+      child: const BiconceptApp(),
+    ),
+  );
 }

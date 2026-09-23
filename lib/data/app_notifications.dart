@@ -112,4 +112,21 @@ class AppNotifications {
     ];
     return bits.isEmpty ? 'BiConcept reminder' : bits.join(' · ');
   }
+
+  Future<void> showImmediate({required String title, required String body}) async {
+    if (kIsWeb) return;
+    if (!_ready) await initialize();
+    if (!_ready) return;
+    try {
+      await _plugin.show(
+        id: DateTime.now().millisecondsSinceEpoch & 0x7fffffff,
+        title: title,
+        body: body,
+        notificationDetails: const NotificationDetails(
+          android: _androidChannel,
+          windows: WindowsNotificationDetails(),
+        ),
+      );
+    } catch (_) {}
+  }
 }

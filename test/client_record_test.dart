@@ -1,3 +1,4 @@
+import 'package:biconcept/data/crm_lead_sync.dart';
 import 'package:biconcept/models/client_record.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -33,5 +34,20 @@ void main() {
     expect(fromId.id, 'keep-me');
     final fromDollar = ClientRecord.fromJson({r'$id': 'row-1', 'name': 'Asha'});
     expect(fromDollar.id, 'row-1');
+  });
+
+  test('portal lead maps onto a CRM lead with a stable id', () {
+    final lead = clientRecordFromPortal(
+      accountId: 'acc_1',
+      name: 'Asha',
+      email: 'asha@example.com',
+      phone: '9876543210',
+      title: 'Villa plan',
+      description: 'Need a 3BHK layout',
+    );
+    expect(lead.id, 'lead_acc_1');
+    expect(lead.stage, CrmStage.lead);
+    expect(lead.source, 'client_portal');
+    expect(lead.project, 'Villa plan');
   });
 }

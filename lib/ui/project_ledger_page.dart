@@ -169,7 +169,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
             if (label.isNotEmpty)
               Text(
                 label.toUpperCase(),
-                style: const TextStyle(color: Color(0xFF5ADACE), fontSize: 12, letterSpacing: 1.6, fontWeight: FontWeight.w600),
+                style: TextStyle(color: AppColors.primary, fontSize: 12, letterSpacing: 1.6, fontWeight: FontWeight.w600),
               ),
             const SizedBox(height: 6),
             Text(
@@ -224,7 +224,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
             label: 'Total Contract Value',
             value: inrCompact(contract),
             icon: Icons.request_quote_outlined,
-            iconColor: const Color(0xFF5ADACE),
+            iconColor: AppColors.primary,
             footerIcon: Icons.arrow_upward,
             footer: statusLabel,
             footerColor: AppColors.completed,
@@ -300,8 +300,8 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
               if (widget.onEditSchedule != null)
                 TextButton.icon(
                   onPressed: widget.onEditSchedule,
-                  icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF5ADACE)),
-                  label: const Text('EDIT', style: TextStyle(color: Color(0xFF5ADACE), letterSpacing: 1.3)),
+                  icon: Icon(Icons.edit_outlined, size: 16, color: AppColors.primary),
+                  label: Text('EDIT', style: TextStyle(color: AppColors.primary, letterSpacing: 1.3)),
                 ),
             ],
           ),
@@ -310,7 +310,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
           decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(24)),
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: account.installments.isEmpty
-              ? const Padding(
+              ? Padding(
                   padding: EdgeInsets.all(24),
                   child: Text(
                     'No collection schedule yet. Create one from an estimate T&C.',
@@ -419,7 +419,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
                           color: item.isPaid
                               ? AppColors.completed
                               : overdue
-                                  ? const Color(0xFF1A1010)
+                                  ? AppColors.onPrimary
                                   : AppColors.muted,
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -466,7 +466,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
                   PopupMenuItem(value: _LedgerFilter.income, child: Text('Income')),
                   PopupMenuItem(value: _LedgerFilter.expense, child: Text('Expense')),
                 ],
-                child: const CircleAvatar(
+                child: CircleAvatar(
                   radius: 16,
                   backgroundColor: AppColors.card,
                   child: Icon(Icons.filter_list, size: 18, color: AppColors.muted),
@@ -479,7 +479,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
           decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(24)),
           clipBehavior: Clip.antiAlias,
           child: entries.isEmpty
-              ? const Padding(
+              ? Padding(
                   padding: EdgeInsets.all(24),
                   child: Text('No ledger entries yet. Record a received or sent payment.', style: TextStyle(color: AppColors.muted)),
                 )
@@ -493,9 +493,9 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
                     if (entries.length > visible.length)
                       TextButton(
                         onPressed: () => setState(() => _shown += 8),
-                        child: const Text(
+                        child: Text(
                           'LOAD OLDER ENTRIES',
-                          style: TextStyle(color: Color(0xFF5ADACE), letterSpacing: 1.4),
+                          style: TextStyle(color: AppColors.primary, letterSpacing: 1.4),
                         ),
                       ),
                   ],
@@ -509,7 +509,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
     return Container(
       color: AppColors.sidebar,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: const Row(
+      child: Row(
         children: [
           SizedBox(width: 88, child: Text('DATE', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2))),
           Expanded(child: Text('DESCRIPTION', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2))),
@@ -550,7 +550,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
                   const SizedBox(height: 4),
                   Text(
                     '${_prettyDate(item.date)}${subtitle.isEmpty ? '' : ' · $subtitle'}',
-                    style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                    style: TextStyle(color: AppColors.muted, fontSize: 12),
                   ),
                 ],
               ),
@@ -573,7 +573,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
         children: [
           SizedBox(
             width: 88,
-            child: Text(_prettyDate(item.date), style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+            child: Text(_prettyDate(item.date), style: TextStyle(color: AppColors.muted, fontSize: 12)),
           ),
           Expanded(
             child: Column(
@@ -581,7 +581,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
               children: [
                 Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
                 if (subtitle.isNotEmpty)
-                  Text(subtitle, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+                  Text(subtitle, style: TextStyle(color: AppColors.muted, fontSize: 12)),
               ],
             ),
           ),
@@ -603,7 +603,7 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: AppColors.cardHover, borderRadius: BorderRadius.circular(99)),
-      child: Text(label.toUpperCase(), style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 0.8)),
+      child: Text(label.toUpperCase(), style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 0.8)),
     );
   }
 
@@ -618,11 +618,11 @@ class _ProjectLedgerPageState extends State<ProjectLedgerPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.analytics_outlined, color: Color(0xFF5ADACE), size: 32),
+          Icon(Icons.analytics_outlined, color: AppColors.primary, size: 32),
           const SizedBox(height: 10),
           const Text('cashflow visualization', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Received vs pending collections for this project.',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.muted, fontSize: 12),
@@ -679,8 +679,8 @@ class _KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = highlight ? const Color(0xFF1A1010) : AppColors.text;
-    final muted = highlight ? const Color(0xFF1A1010).withValues(alpha: 0.7) : AppColors.muted;
+    final fg = highlight ? AppColors.onPrimary : AppColors.text;
+    final muted = highlight ? AppColors.onPrimary.withValues(alpha: 0.7) : AppColors.muted;
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(

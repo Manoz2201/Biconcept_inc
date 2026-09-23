@@ -268,6 +268,509 @@
                 }
             ],
             "indexes": []
+        },
+        {
+            "$id": "users",
+            "$permissions": [
+                "read(\"users\")",
+                "create(\"users\")",
+                "update(\"users\")",
+                "delete(\"team:firm_staff/admin\")"
+            ],
+            "databaseId": "6a86ad9300190bcdd0df",
+            "name": "Users",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                {
+                    "key": "accountId",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "name",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "email",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "phone",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 32,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "role",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 32,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "clientId",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "vendorId",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "emailVerified",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": false
+                },
+                {
+                    "key": "isActive",
+                    "type": "boolean",
+                    "required": false,
+                    "array": false,
+                    "default": true
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                },
+                {
+                    "key": "updatedAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "accountId",
+                    "type": "unique",
+                    "status": "available",
+                    "columns": ["accountId"],
+                    "orders": []
+                },
+                {
+                    "key": "email",
+                    "type": "key",
+                    "status": "available",
+                    "columns": ["email"],
+                    "orders": []
+                },
+                {
+                    "key": "role",
+                    "type": "key",
+                    "status": "available",
+                    "columns": ["role"],
+                    "orders": []
+                },
+                {
+                    "key": "isActive",
+                    "type": "key",
+                    "status": "available",
+                    "columns": ["isActive"],
+                    "orders": []
+                }
+            ]
+        },
+        {
+            "$id": "audit_logs",
+            "$permissions": [
+                "read(\"team:firm_staff/admin\")",
+                "create(\"users\")"
+            ],
+            "databaseId": "6a86ad9300190bcdd0df",
+            "name": "Audit logs",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                {
+                    "key": "userId",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "action",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "metadata",
+                    "type": "mediumtext",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "timestamp",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                },
+                {
+                    "key": "ipAddress",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "userId",
+                    "type": "key",
+                    "status": "available",
+                    "columns": ["userId"],
+                    "orders": []
+                },
+                {
+                    "key": "action",
+                    "type": "key",
+                    "status": "available",
+                    "columns": ["action"],
+                    "orders": []
+                }
+            ]
+        },
+        {
+            "$id": "projects",
+            "$permissions": [
+                "create(\"team:firm_staff/admin\")",
+                "create(\"team:firm_staff/architect\")",
+                "read(\"team:clients\")",
+                "read(\"team:firm_staff/admin\")",
+                "read(\"team:firm_staff/architect\")",
+                "read(\"team:firm_staff/accountant\")",
+                "update(\"team:firm_staff/admin\")",
+                "update(\"team:firm_staff/architect\")",
+                "delete(\"team:firm_staff/admin\")"
+            ],
+            "databaseId": "6a86ad9300190bcdd0df",
+            "name": "Projects",
+            "enabled": true,
+            "rowSecurity": true,
+            "columns": [
+                {
+                    "key": "projectNumber",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 32,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "clientId",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "serviceRequestId",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "quotationId",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "title",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 255,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "description",
+                    "type": "mediumtext",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "status",
+                    "type": "varchar",
+                    "required": true,
+                    "array": false,
+                    "size": 32,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "priority",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 16,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "startDate",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                },
+                {
+                    "key": "endDate",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                },
+                {
+                    "key": "actualStartDate",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                },
+                {
+                    "key": "actualEndDate",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                },
+                {
+                    "key": "budget",
+                    "type": "double",
+                    "required": false,
+                    "array": false,
+                    "default": null
+                },
+                {
+                    "key": "spent",
+                    "type": "double",
+                    "required": false,
+                    "array": false,
+                    "default": 0
+                },
+                {
+                    "key": "progress",
+                    "type": "integer",
+                    "required": false,
+                    "array": false,
+                    "default": 0
+                },
+                {
+                    "key": "assignedArchitect",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "teamMembers",
+                    "type": "varchar",
+                    "required": false,
+                    "array": true,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "coverImageId",
+                    "type": "varchar",
+                    "required": false,
+                    "array": false,
+                    "size": 64,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "workspaceJson",
+                    "type": "mediumtext",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "encrypt": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                },
+                {
+                    "key": "updatedAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false,
+                    "default": null,
+                    "format": ""
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "projectNumber",
+                    "type": "key",
+                    "status": "available",
+                    "columns": ["projectNumber"],
+                    "orders": []
+                },
+                {
+                    "key": "clientId",
+                    "type": "key",
+                    "status": "available",
+                    "columns": ["clientId"],
+                    "orders": []
+                },
+                {
+                    "key": "status",
+                    "type": "key",
+                    "status": "available",
+                    "columns": ["status"],
+                    "orders": []
+                },
+                {
+                    "key": "assignedArchitect",
+                    "type": "key",
+                    "status": "available",
+                    "columns": ["assignedArchitect"],
+                    "orders": []
+                },
+                {
+                    "key": "title",
+                    "type": "fulltext",
+                    "status": "available",
+                    "columns": ["title"],
+                    "orders": []
+                }
+            ]
+        }
+    ],
+    "teams": [
+        {
+            "$id": "firm_staff",
+            "name": "Firm staff"
+        },
+        {
+            "$id": "clients",
+            "name": "Clients"
+        },
+        {
+            "$id": "vendors",
+            "name": "Vendors"
+        }
+    ],
+    "functions": [
+        {
+            "$id": "validate-email",
+            "name": "validate-email",
+            "runtime": "node-18.0",
+            "execute": ["users"],
+            "events": [],
+            "schedule": "",
+            "timeout": 30,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "path": "functions/validate-email",
+            "scopes": []
+        },
+        {
+            "$id": "generate-project-number",
+            "name": "generate-project-number",
+            "runtime": "node-18.0",
+            "execute": ["users"],
+            "events": [],
+            "schedule": "",
+            "timeout": 15,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "src/main.js",
+            "commands": "",
+            "path": "functions/generate-project-number",
+            "scopes": []
+        },
+        {
+            "$id": "workers-ai-proxy",
+            "name": "workers-ai-proxy",
+            "runtime": "node-18.0",
+            "execute": ["users"],
+            "events": [],
+            "schedule": "",
+            "timeout": 60,
+            "enabled": true,
+            "logging": true,
+            "entrypoint": "src/main.js",
+            "commands": "",
+            "path": "functions/workers-ai-proxy",
+            "scopes": []
         }
     ]
 }

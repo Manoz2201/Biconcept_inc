@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -281,9 +281,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
             decoration: BoxDecoration(
               color: AppColors.card,
               borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.22), blurRadius: 20, offset: const Offset(0, 10)),
-              ],
+              boxShadow: AppShadows.raised(),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(24),
@@ -348,7 +346,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
           children: [
             Image.asset(companyLogoAsset, height: 32, fit: BoxFit.contain, filterQuality: FilterQuality.high),
             const SizedBox(width: 10),
-            const Text(
+            Text(
               'biconcept hq',
               style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -0.2),
             ),
@@ -375,7 +373,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'CLIENT DETAILS',
                   style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w500),
                 ),
@@ -387,7 +385,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                       backgroundColor: AppColors.cardHover,
                       child: Text(
                         _initials(draft.client),
-                        style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: AppColors.text, fontWeight: FontWeight.w600),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -399,13 +397,13 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                             draft.client.isEmpty ? 'Untitled client' : draft.client,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
+                            style: TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                           Text(
                             'attn: ${draft.estimateType.isEmpty ? 'quotation' : draft.estimateType.toLowerCase()}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                            style: TextStyle(color: AppColors.muted, fontSize: 13),
                           ),
                         ],
                       ),
@@ -417,7 +415,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    const Text('Project:', style: TextStyle(color: AppColors.muted, fontSize: 13)),
+                    Text('Project:', style: TextStyle(color: AppColors.muted, fontSize: 13)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -425,7 +423,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                         textAlign: TextAlign.right,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: AppColors.text, fontSize: 15),
+                        style: TextStyle(color: AppColors.text, fontSize: 15),
                       ),
                     ),
                   ],
@@ -486,11 +484,11 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     if (top.isEmpty || sum <= 0) {
       return const SizedBox.shrink();
     }
-    const palette = [AppColors.completed, Color(0xFF5ADACE), AppColors.primary];
+    final palette = [AppColors.completed, AppColors.primary, AppColors.primary];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'BUDGET ALLOCATION',
           style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3, fontWeight: FontWeight.w500),
         ),
@@ -559,7 +557,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
           ),
           child: Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -578,7 +576,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                   textAlign: TextAlign.right,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.text,
                     fontSize: 28,
                     fontWeight: FontWeight.w600,
@@ -611,17 +609,17 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 15)),
+          Text(label, style: TextStyle(color: AppColors.muted, fontSize: 15)),
           if (badge != null) ...[
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(6)),
-              child: Text(badge, style: const TextStyle(color: AppColors.muted, fontSize: 10, fontFamily: 'Consolas')),
+              child: Text(badge, style: TextStyle(color: AppColors.muted, fontSize: 10, fontFamily: 'Consolas')),
             ),
           ],
           const Spacer(),
-          Text(value, style: const TextStyle(color: AppColors.text, fontSize: 15, fontFamily: 'Consolas')),
+          Text(value, style: TextStyle(color: AppColors.text, fontSize: 15, fontFamily: 'Consolas')),
         ],
       ),
     );
@@ -639,7 +637,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.outline.withValues(alpha: 0.45), width: 2),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.add_circle_outline, size: 20, color: AppColors.muted),
@@ -675,14 +673,14 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                   section.workType,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
               IconButton(
                 tooltip: 'Add scope to ${section.workType}',
                 visualDensity: VisualDensity.compact,
                 onPressed: () => _addScope(workTypeId: section.lines.isEmpty ? null : section.lines.first.workTypeId),
-                icon: const Icon(Icons.add, size: 18, color: AppColors.muted),
+                icon: Icon(Icons.add, size: 18, color: AppColors.muted),
               ),
             ],
           ),
@@ -698,14 +696,14 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                     textAlign: TextAlign.right,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1),
+                    style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   inr(section.total),
                   textAlign: TextAlign.right,
-                  style: const TextStyle(color: AppColors.text, fontSize: 15, fontFamily: 'Consolas', fontWeight: FontWeight.w600),
+                  style: TextStyle(color: AppColors.text, fontSize: 15, fontFamily: 'Consolas', fontWeight: FontWeight.w600),
                 ),
                 if (!compact) const SizedBox(width: 40),
               ],
@@ -718,17 +716,17 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
   }
 
   Widget _headerRow() {
-    const style = TextStyle(color: AppColors.muted, fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 1.1);
+    final style = TextStyle(color: AppColors.muted, fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 1.1);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: _columns(
         children: [
-          const Text('S.NO', style: style),
-          const Text('SCOPE / DESCRIPTION', style: style),
-          const Text('UNIT', style: style, textAlign: TextAlign.center),
-          const Text('UNIT RATE', style: style, textAlign: TextAlign.right),
-          const Text('QTY', style: style, textAlign: TextAlign.center),
-          const Text('AMOUNT', style: style, textAlign: TextAlign.right),
+          Text('S.NO', style: style),
+          Text('SCOPE / DESCRIPTION', style: style),
+          Text('UNIT', style: style, textAlign: TextAlign.center),
+          Text('UNIT RATE', style: style, textAlign: TextAlign.right),
+          Text('QTY', style: style, textAlign: TextAlign.center),
+          Text('AMOUNT', style: style, textAlign: TextAlign.right),
           const SizedBox.shrink(),
         ],
       ),
@@ -760,7 +758,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                 controller: editor.name,
                 focusNode: editor.nameFocus,
                 hintText: 'Scope name',
-                style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w500),
+                style: TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w500),
                 onChanged: (value) => _patch(line.id, (item) {
                   if (item.description.trim() == item.name.trim()) {
                     item.description = '';
@@ -773,7 +771,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                 focusNode: editor.detailsFocus,
                 hintText: 'Description',
                 maxLines: 2,
-                style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                style: TextStyle(color: AppColors.muted, fontSize: 13),
                 onChanged: (value) => _patch(line.id, (item) {
                   item.description = value;
                 }),
@@ -786,7 +784,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
             focusNode: editor.unitRateFocus,
             textAlign: TextAlign.right,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(color: AppColors.muted, fontSize: 14, fontFamily: 'Consolas'),
+            style: TextStyle(color: AppColors.muted, fontSize: 14, fontFamily: 'Consolas'),
             onChanged: (value) {
               _patch(line.id, (item) {
                 item.unitRate = parseNumber(value);
@@ -814,7 +812,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
             visualDensity: VisualDensity.compact,
             constraints: const BoxConstraints.tightFor(width: 36, height: 36),
             padding: EdgeInsets.zero,
-            icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.muted),
+            icon: Icon(Icons.delete_outline, size: 18, color: AppColors.muted),
             onPressed: () => _deleteScope(line),
           ),
         ],
@@ -855,7 +853,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                   controller: editor.name,
                   focusNode: editor.nameFocus,
                   hintText: 'Scope name',
-                  style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w500),
+                  style: TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w500),
                   onChanged: (value) => _patch(line.id, (item) {
                     if (item.description.trim() == item.name.trim()) {
                       item.description = '';
@@ -867,7 +865,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
               IconButton(
                 tooltip: 'Delete scope',
                 onPressed: () => _deleteScope(line),
-                icon: const Icon(Icons.delete_outline, color: AppColors.muted),
+                icon: Icon(Icons.delete_outline, color: AppColors.muted),
               ),
             ],
           ),
@@ -876,7 +874,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
             focusNode: editor.detailsFocus,
             hintText: 'Description',
             maxLines: 2,
-            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+            style: TextStyle(color: AppColors.muted, fontSize: 13),
             onChanged: (value) => _patch(line.id, (item) {
               item.description = value;
             }),
@@ -893,7 +891,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                   textAlign: TextAlign.right,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   hintText: 'Rate',
-                  style: const TextStyle(color: AppColors.muted, fontSize: 14, fontFamily: 'Consolas'),
+                  style: TextStyle(color: AppColors.muted, fontSize: 14, fontFamily: 'Consolas'),
                   onChanged: (value) {
                     _patch(line.id, (item) {
                       item.unitRate = parseNumber(value);
@@ -910,7 +908,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
           const SizedBox(height: 4),
           Row(
             children: [
-              const Text('AMOUNT', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1)),
+              Text('AMOUNT', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1)),
               const SizedBox(width: 12),
               Expanded(
                 child: _cellField(
@@ -1040,7 +1038,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         border: InputBorder.none,
         enabledBorder: InputBorder.none,
-        focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.up, width: 1)),
+        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.up, width: 1)),
       ),
       onChanged: onChanged,
     );
@@ -1078,7 +1076,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
         value: value,
         items: items,
         onChanged: onChanged,
-        style: const TextStyle(color: AppColors.muted, fontSize: 13),
+        style: TextStyle(color: AppColors.muted, fontSize: 13),
         dropdownColor: AppColors.cardHover,
       ),
     );
@@ -1098,7 +1096,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     final palettes = [
       (const Color(0xFF4EB397), const Color(0xFF00382B)),
       (const Color(0xFF01A89D), const Color(0xFF003531)),
-      (AppColors.primary, const Color(0xFF5B1A13)),
+      (AppColors.primary, AppColors.onPrimary),
     ];
     final colors = palettes[index % palettes.length];
     return (icon, colors.$1, colors.$2);
@@ -1298,7 +1296,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
       await openExportedFile(file);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Platform.isWindows ? 'Exported ${file.path}' : 'PDF ready to share or save')),
+        SnackBar(content: Text(!kIsWeb && defaultTargetPlatform == TargetPlatform.windows ? 'Exported ${file.path}' : 'PDF ready to share or save')),
       );
     } catch (error) {
       if (!mounted) return;
@@ -1312,7 +1310,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
       await openExportedFile(file);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Platform.isWindows ? 'Exported ${file.path}' : 'Excel ready to share or save')),
+        SnackBar(content: Text(!kIsWeb && defaultTargetPlatform == TargetPlatform.windows ? 'Exported ${file.path}' : 'Excel ready to share or save')),
       );
     } catch (error) {
       if (!mounted) return;
@@ -1363,7 +1361,7 @@ class _StatusPulse extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.8, fontWeight: FontWeight.w500),
+            style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.8, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -1403,7 +1401,7 @@ class _ExportXlsxButton extends StatelessWidget {
       onPressed: onPressed,
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.primarySoft,
-        foregroundColor: const Color(0xFF5B1A13),
+        foregroundColor: AppColors.onPrimary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       ),

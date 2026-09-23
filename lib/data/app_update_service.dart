@@ -50,9 +50,12 @@ class AppRelease {
   String get display => build > 0 ? '$version+$build' : version;
 
   AppReleaseAsset? assetForPlatform() {
-    if (Platform.isAndroid) return android;
-    if (Platform.isWindows) return windows;
-    return null;
+    if (kIsWeb) return null;
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => android,
+      TargetPlatform.windows => windows,
+      _ => null,
+    };
   }
 }
 
@@ -197,8 +200,11 @@ class AppUpdateService {
     if (asset == null || asset.downloadUrl.isEmpty) {
       throw const FormatException('This release has no installer for this device.');
     }
+    if (kIsWeb) {
+      throw const FormatException('Install updates from the Android or Windows app.');
+    }
     final dir = await getTemporaryDirectory();
-    final fallbackExt = Platform.isAndroid ? 'apk' : 'zip';
+    final fallbackExt = defaultTargetPlatform == TargetPlatform.android ? 'apk' : 'zip';
     final rawName = asset.name.trim();
     final safeName = rawName.isEmpty
         ? 'biconcept-update.$fallbackExt'

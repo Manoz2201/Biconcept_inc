@@ -1,0 +1,6 @@
+{
+  "name": "gst-tds-calculate",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/main.js"
+}

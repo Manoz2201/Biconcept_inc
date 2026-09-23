@@ -110,7 +110,7 @@ class _RateCardPageState extends State<RateCardPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text.rich(
-                const TextSpan(
+                TextSpan(
                   text: 'rate catalog',
                   children: [TextSpan(text: '.', style: TextStyle(color: AppColors.primary))],
                 ),
@@ -150,7 +150,7 @@ class _RateCardPageState extends State<RateCardPage> {
       decoration: InputDecoration(
         isDense: true,
         hintText: 'Search work type, scope or area',
-        prefixIcon: const Icon(Icons.search_rounded, color: AppColors.muted),
+        prefixIcon: Icon(Icons.search_rounded, color: AppColors.muted),
         filled: true,
         fillColor: AppColors.card,
         contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -158,7 +158,7 @@ class _RateCardPageState extends State<RateCardPage> {
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF5ADACE)),
+          borderSide: BorderSide(color: AppColors.primary),
         ),
       ),
     );
@@ -204,7 +204,7 @@ class _RateCardPageState extends State<RateCardPage> {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          const Positioned(
+          Positioned(
             left: 0,
             top: 0,
             bottom: 0,
@@ -213,7 +213,7 @@ class _RateCardPageState extends State<RateCardPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [AppColors.primary, Color(0xFF5ADACE), Colors.transparent],
+                  colors: [AppColors.primary, AppColors.primary, Colors.transparent],
                 ),
               ),
               child: SizedBox(width: 3),
@@ -223,7 +223,7 @@ class _RateCardPageState extends State<RateCardPage> {
             children: [
               if (!compact) const _TableHeader(),
               if (rows.isEmpty)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.fromLTRB(24, 28, 24, 32),
                   child: Align(
                     alignment: Alignment.centerLeft,
@@ -311,7 +311,7 @@ class _CatalogRow {
   Color get dot {
     if (custom) return AppColors.outline;
     if (type.isHvac) return AppColors.completed;
-    return const Color(0xFF5ADACE);
+    return AppColors.primary;
   }
 }
 
@@ -327,8 +327,8 @@ class _GhostAction extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF5ADACE),
-        side: BorderSide(color: const Color(0xFF5ADACE).withValues(alpha: 0.4)),
+        foregroundColor: AppColors.primary,
+        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4)),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -351,7 +351,7 @@ class _FilledAction extends StatelessWidget {
       onPressed: onTap,
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.primary,
-        foregroundColor: const Color(0xFF1A1010),
+        foregroundColor: AppColors.onPrimary,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -382,13 +382,13 @@ class _TypeChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (selected) ...[
-                const Icon(Icons.check_circle, size: 14, color: Color(0xFF1A1010)),
+                Icon(Icons.check_circle, size: 14, color: AppColors.onPrimary),
                 const SizedBox(width: 6),
               ],
               Text(
                 label.toUpperCase(),
                 style: TextStyle(
-                  color: selected ? const Color(0xFF1A1010) : AppColors.muted,
+                  color: selected ? AppColors.onPrimary : AppColors.muted,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.1,
@@ -410,7 +410,7 @@ class _TableHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(22, 14, 14, 14),
       color: AppColors.cardHover.withValues(alpha: 0.45),
-      child: const Row(
+      child: Row(
         children: [
           SizedBox(
             width: 56,
@@ -476,7 +476,7 @@ class _ScopeRow extends StatelessWidget {
             row.scope.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
         if (row.custom) ...[
@@ -488,7 +488,7 @@ class _ScopeRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(99),
               border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.cached, size: 12, color: AppColors.primary),
@@ -503,7 +503,7 @@ class _ScopeRow extends StatelessWidget {
     final unitChip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(8)),
-      child: Text(unit, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+      child: Text(unit, style: TextStyle(color: AppColors.muted, fontSize: 13)),
     );
     final rateText = Text(
       rate,
@@ -517,7 +517,7 @@ class _ScopeRow extends StatelessWidget {
     final edit = IconButton(
       tooltip: 'Edit unit and price',
       onPressed: onEdit,
-      icon: const Icon(Icons.edit_outlined, size: 18, color: AppColors.muted),
+      icon: Icon(Icons.edit_outlined, size: 18, color: AppColors.muted),
     );
 
     return Material(
@@ -540,7 +540,7 @@ class _ScopeRow extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text(
                             '${row.ref}  ·  $unit  ·  $rate',
-                            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                            style: TextStyle(color: AppColors.muted, fontSize: 12),
                           ),
                         ],
                       ),
@@ -552,7 +552,7 @@ class _ScopeRow extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 56,
-                      child: Text(row.ref, style: const TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.4)),
+                      child: Text(row.ref, style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.4)),
                     ),
                     Expanded(flex: 5, child: name),
                     Expanded(

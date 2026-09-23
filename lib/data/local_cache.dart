@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../models/company_profile.dart';
 import 'cloud_hooks.dart';
+import 'json_disk.dart';
 
 class AppPrefsCache {
   AppPrefsCache({
@@ -102,25 +104,28 @@ class LocalCache {
 
   Directory? overrideDirectory;
   AppPrefsCache? _prefs;
+  final _disk = JsonDisk(
+    relativePath: 'biconcept/cache',
+    prefsPrefix: 'biconcept.cache.',
+    useSupport: true,
+  );
 
   static const _encoder = JsonEncoder.withIndent('  ');
+  static const _catalogName = 'catalog_cache.json';
+  static const _prefsName = 'prefs_cache.json';
+
+  void _bind() => _disk.overrideDataDir = overrideDirectory;
 
   Future<Directory> directory() async {
-    if (overrideDirectory != null) {
-      if (!await overrideDirectory!.exists()) {
-        await overrideDirectory!.create(recursive: true);
-      }
-      return overrideDirectory!;
-    }
-    final support = await getApplicationSupportDirectory();
-    final dir = Directory('${support.path}/biconcept/cache');
-    if (!await dir.exists()) await dir.create(recursive: true);
-    return dir;
+    _bind();
+    final dir = await _disk.folder();
+    if (dir != null) return dir;
+    throw UnsupportedError('Local cache folder is not available in the browser.');
   }
 
-  Future<File> catalogFile() async => File('${(await directory()).path}/catalog_cache.json');
+  Future<File> catalogFile() async => File('${(await directory()).path}/$_catalogName');
 
-  Future<File> prefsFile() async => File('${(await directory()).path}/prefs_cache.json');
+  Future<File> prefsFile() async => File('${(await directory()).path}/$_prefsName');
 
   Future<File> _legacyOverlayFile() async {
     final root = await getApplicationDocumentsDirectory();
@@ -157,29 +162,39 @@ class LocalCache {
   }
 
   Future<Map<String, dynamic>> loadCatalogOverlay() async {
-    final files = <File>[
-      await catalogFile(),
-      if (overrideDirectory == null) ...[
+    _bind();
+    try {
+      final json = await _disk.readJson(_catalogName);
+      if (json != null) return json;
+    } catch (_) {}
+    if (!kIsWeb && overrideDirectory == null) {
+      final files = <File>[
         await _documentsBackupFile(),
         await _legacyOverlayFile(),
-      ],
-    ];
-    for (final file in files) {
-      try {
-        final json = await _readJson(file);
-        if (json != null) return json;
-      } catch (_) {}
+      ];
+      for (final file in files) {
+        try {
+          final json = await _readJson(file);
+          if (json != null) return json;
+        } catch (_) {}
+      }
     }
     return {'areas': [], 'workTypes': [], 'scopes': []};
   }
 
   Future<void> saveCatalogOverlay(Map<String, dynamic> overlay, {bool syncToCloud = true}) async {
+    _bind();
     final payload = {
       ...overlay,
       'savedAt': DateTime.now().toIso8601String(),
     };
-    await _writeJson(await catalogFile(), payload);
-    if (overrideDirectory != null) return;
+    await _disk.writeJson(_catalogName, payload);
+    if (overrideDirectory != null || kIsWeb) {
+      if (syncToCloud) {
+        unawaited(CloudHooks.afterCatalogSave?.call(payload) ?? Future<void>.value());
+      }
+      return;
+    }
     try {
       await _writeJson(await _documentsBackupFile(), payload);
     } catch (_) {}
@@ -194,7 +209,8 @@ class LocalCache {
   Future<AppPrefsCache> loadPrefs() async {
     if (_prefs != null) return _prefs!;
     try {
-      final json = await _readJson(await prefsFile());
+      _bind();
+      final json = await _disk.readJson(_prefsName);
       _prefs = json == null ? AppPrefsCache() : AppPrefsCache.fromJson(json);
     } catch (_) {
       _prefs = AppPrefsCache();
@@ -205,7 +221,8 @@ class LocalCache {
   Future<void> savePrefs(AppPrefsCache prefs, {bool syncToCloud = true}) async {
     prefs.savedAt = DateTime.now();
     _prefs = prefs;
-    await _writeJson(await prefsFile(), prefs.toJson());
+    _bind();
+    await _disk.writeJson(_prefsName, prefs.toJson());
     unawaited(CloudHooks.afterPrefsApplied?.call(prefs.toJson()) ?? Future<void>.value());
     if (syncToCloud) {
       unawaited(CloudHooks.afterPrefsSave?.call(prefs.toJson()) ?? Future<void>.value());
@@ -227,7 +244,10 @@ class LocalCache {
     if (list.length > limit) list.removeRange(limit, list.length);
   }
 
-  Future<String> catalogPath() async => (await catalogFile()).path;
+  Future<String> catalogPath() async {
+    _bind();
+    return _disk.pathOf(_catalogName);
+  }
 
   void clearMemory() {
     _prefs = null;

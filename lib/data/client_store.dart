@@ -1,32 +1,24 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-
-import 'package:path_provider/path_provider.dart';
 
 import '../models/client_record.dart';
 import '../models/estimate_document.dart';
 import 'cloud_hooks.dart';
+import 'json_disk.dart';
 
 class ClientStore {
   Directory? overrideDirectory;
+  final _disk = JsonDisk(
+    relativePath: 'biconcept/clients',
+    prefsPrefix: 'biconcept.clients.',
+  );
 
-  Future<Directory> _dir() async {
-    final root = overrideDirectory ?? await getApplicationDocumentsDirectory();
-    final dir = Directory('${root.path}/biconcept/clients');
-    if (!await dir.exists()) await dir.create(recursive: true);
-    return dir;
-  }
-
-  Future<File> _file(String id) async {
-    final dir = await _dir();
-    return File('${dir.path}/$id.json');
-  }
+  void _bind() => _disk.overrideDataDir = overrideDirectory;
 
   Future<void> save(ClientRecord client, {bool touch = true, bool syncToCloud = true}) async {
     if (touch) client.updatedAt = DateTime.now();
-    final file = await _file(client.id);
-    await file.writeAsString(const JsonEncoder.withIndent('  ').convert(client.toJson()));
+    _bind();
+    await _disk.writeJson('${client.id}.json', client.toJson());
     if (syncToCloud) {
       unawaited(CloudHooks.afterClientSave?.call(client) ?? Future<void>.value());
     }
@@ -42,16 +34,14 @@ class ClientStore {
   }
 
   Future<List<ClientRecord>> list() async {
-    final dir = await _dir();
-    final files = dir.listSync().whereType<File>().where((file) => file.path.endsWith('.json'));
+    _bind();
+    final names = await _disk.listNames();
     final clients = <ClientRecord>[];
-    for (final file in files) {
+    for (final name in names) {
       try {
-        final decoded = jsonDecode(await file.readAsString());
-        if (decoded is! Map) continue;
-        final json = Map<String, dynamic>.from(decoded);
-        final fileId = _idFromFile(file);
-        json['id'] = clientIdFromJson(json) ?? fileId;
+        final json = await _disk.readJson(name);
+        if (json == null) continue;
+        json['id'] = clientIdFromJson(json) ?? _idFromName(name);
         clients.add(ClientRecord.fromJson(json));
       } catch (_) {}
     }
@@ -59,17 +49,63 @@ class ClientStore {
     return clients;
   }
 
-  String _idFromFile(File file) {
-    final name = file.uri.pathSegments.isEmpty ? file.path : file.uri.pathSegments.last;
+  String _idFromName(String name) {
     return name.endsWith('.json') ? name.substring(0, name.length - 5) : name;
   }
 
   Future<void> delete(String id, {bool syncToCloud = true}) async {
-    final file = await _file(id);
-    if (await file.exists()) await file.delete();
+    _bind();
+    await _disk.delete('$id.json');
     if (syncToCloud) {
       unawaited(CloudHooks.afterClientDelete?.call(id) ?? Future<void>.value());
     }
+  }
+
+  Future<int> mergeRemoteLeads(List<ClientRecord> remote) async {
+    if (remote.isEmpty) return 0;
+    final existing = await list();
+    final ids = {for (final client in existing) client.id};
+    final emails = {
+      for (final client in existing)
+        if (client.email.trim().isNotEmpty) client.email.trim().toLowerCase(): client,
+    };
+    var added = 0;
+    for (final lead in remote) {
+      final email = lead.email.trim().toLowerCase();
+      ClientRecord? match;
+      if (ids.contains(lead.id)) {
+        for (final item in existing) {
+          if (item.id == lead.id) {
+            match = item;
+            break;
+          }
+        }
+      } else if (email.isNotEmpty) {
+        match = emails[email];
+      }
+      if (match != null) {
+        var changed = false;
+        if (match.phone.trim().isEmpty && lead.phone.trim().isNotEmpty) {
+          match.phone = lead.phone.trim();
+          changed = true;
+        }
+        if (match.email.trim().isEmpty && lead.email.trim().isNotEmpty) {
+          match.email = lead.email.trim();
+          changed = true;
+        }
+        if (match.project.trim().isEmpty && lead.project.trim().isNotEmpty) {
+          match.project = lead.project.trim();
+          changed = true;
+        }
+        if (changed) await save(match, touch: false, syncToCloud: false);
+        continue;
+      }
+      await save(lead, syncToCloud: false);
+      ids.add(lead.id);
+      if (email.isNotEmpty) emails[email] = lead;
+      added++;
+    }
+    return added;
   }
 
   Future<void> syncFromEstimates(List<EstimateDraft> drafts) async {

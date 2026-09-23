@@ -1,10 +1,14 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 const _exportChannel = MethodChannel('com.example.biconcept/export');
 
 Future<void> openExportedFile(File file) async {
+  if (kIsWeb) {
+    throw UnsupportedError('Open export is only set up for Android and Windows');
+  }
   if (Platform.isWindows) {
     await Process.run('cmd', ['/c', 'start', '', file.path]);
     return;
@@ -27,6 +31,9 @@ Future<void> openExportedFile(File file) async {
 }
 
 Future<void> openHttpUrl(String url) async {
+  if (kIsWeb) {
+    throw UnsupportedError('Open URL is only set up for Android and Windows');
+  }
   if (Platform.isWindows) {
     await Process.run('cmd', ['/c', 'start', '', url]);
     return;
@@ -38,7 +45,7 @@ Future<void> openHttpUrl(String url) async {
 }
 
 Future<void> installAndroidApk(String path) async {
-  if (!Platform.isAndroid) {
+  if (kIsWeb || !Platform.isAndroid) {
     throw UnsupportedError('APK install is only set up for Android');
   }
   await _exportChannel.invokeMethod<void>('installApk', {'path': path});

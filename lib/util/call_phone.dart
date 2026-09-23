@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 const _channel = MethodChannel('com.example.biconcept/export');
@@ -12,6 +13,11 @@ String sanitizePhoneNumber(String phone) {
 Future<bool> callPhoneNumber(String phone) async {
   final number = sanitizePhoneNumber(phone);
   if (number.isEmpty) return false;
+
+  if (kIsWeb) {
+    await Clipboard.setData(ClipboardData(text: number));
+    return true;
+  }
 
   if (Platform.isAndroid) {
     await _channel.invokeMethod<void>('dialPhone', {'number': number});

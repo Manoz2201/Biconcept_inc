@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../agent/document_reader.dart';
+import 'json_disk.dart';
 
 class AgentAttachment {
   AgentAttachment({
@@ -96,6 +95,11 @@ class AgentSessionStore extends ChangeNotifier {
   static const _documentChars = 20000;
 
   Directory? overrideDirectory;
+  final _disk = JsonDisk(
+    relativePath: 'biconcept/cache/agent_session',
+    prefsPrefix: 'biconcept.session.',
+    useSupport: true,
+  );
   String sessionId = '';
   DateTime? startedAt;
   DateTime? updatedAt;
@@ -105,23 +109,17 @@ class AgentSessionStore extends ChangeNotifier {
   bool loaded = false;
   Timer? _persistTimer;
 
-  Future<Directory> _root() async {
-    if (overrideDirectory != null) {
-      if (!await overrideDirectory!.exists()) {
-        await overrideDirectory!.create(recursive: true);
-      }
-      return overrideDirectory!;
-    }
-    final support = await getApplicationSupportDirectory();
-    final dir = Directory('${support.path}/biconcept/cache/agent_session');
-    if (!await dir.exists()) await dir.create(recursive: true);
-    return dir;
+  void _bind() => _disk.overrideDataDir = overrideDirectory;
+
+  Future<Directory?> _root() async {
+    _bind();
+    return _disk.folder();
   }
 
-  Future<File> _sessionFile() async => File('${(await _root()).path}/session.json');
-
-  Future<Directory> _filesDir() async {
-    final dir = Directory('${(await _root()).path}/files');
+  Future<Directory?> _filesDir() async {
+    final root = await _root();
+    if (root == null) return null;
+    final dir = Directory('${root.path}/files');
     if (!await dir.exists()) await dir.create(recursive: true);
     return dir;
   }
@@ -130,13 +128,9 @@ class AgentSessionStore extends ChangeNotifier {
     if (loaded) return;
     loaded = true;
     try {
-      final file = await _sessionFile();
-      if (!await file.exists()) {
-        _newIdentity();
-        return;
-      }
-      final decoded = jsonDecode(await file.readAsString());
-      if (decoded is! Map) {
+      _bind();
+      final decoded = await _disk.readJson('session.json');
+      if (decoded == null) {
         _newIdentity();
         return;
       }
@@ -179,9 +173,9 @@ class AgentSessionStore extends ChangeNotifier {
     _newIdentity();
     try {
       final files = await _filesDir();
-      if (await files.exists()) await files.delete(recursive: true);
-      final file = await _sessionFile();
-      if (await file.exists()) await file.delete();
+      if (files != null && await files.exists()) await files.delete(recursive: true);
+      _bind();
+      await _disk.delete('session.json');
     } catch (_) {}
     notifyListeners();
     await _writeNow();
@@ -198,6 +192,7 @@ class AgentSessionStore extends ChangeNotifier {
     if (copyBytes != null && copyBytes.isNotEmpty) {
       try {
         final dir = await _filesDir();
+        if (dir == null) throw UnsupportedError('no files dir');
         final safe = attachment.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
         final file = File('${dir.path}/${attachment.id}_$safe');
         await file.writeAsBytes(copyBytes, flush: true);
@@ -322,16 +317,8 @@ class AgentSessionStore extends ChangeNotifier {
       'documents': [for (final item in documents) item.toJson()],
     };
     try {
-      final file = await _sessionFile();
-      final tmp = File('${file.path}.tmp');
-      await tmp.writeAsString(const JsonEncoder.withIndent('  ').convert(payload), flush: true);
-      if (await file.exists()) await file.delete();
-      try {
-        await tmp.rename(file.path);
-      } catch (_) {
-        await file.writeAsBytes(await tmp.readAsBytes(), flush: true);
-        if (await tmp.exists()) await tmp.delete();
-      }
+      _bind();
+      await _disk.writeJson('session.json', payload);
     } catch (_) {}
   }
 }

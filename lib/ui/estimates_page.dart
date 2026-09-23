@@ -294,7 +294,7 @@ class _SearchFilters extends StatelessWidget {
               decoration: InputDecoration(
                 isDense: true,
                 hintText: 'search client or project',
-                prefixIcon: const Icon(Icons.search_rounded, color: AppColors.muted),
+                prefixIcon: Icon(Icons.search_rounded, color: AppColors.muted),
                 filled: true,
                 fillColor: AppColors.background,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -308,7 +308,7 @@ class _SearchFilters extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide: const BorderSide(color: AppColors.up, width: 1),
+                  borderSide: BorderSide(color: AppColors.up, width: 1),
                 ),
               ),
             ),
@@ -512,7 +512,7 @@ class _StatTile extends StatelessWidget {
             children: [
               Text(
                 label.toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.muted,
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
@@ -528,7 +528,7 @@ class _StatTile extends StatelessWidget {
                       value,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.text,
                         fontSize: 28,
                         fontWeight: FontWeight.w600,
@@ -579,7 +579,7 @@ class _PipelineHealth extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'PIPELINE HEALTH',
             style: TextStyle(
               color: AppColors.muted,
@@ -595,17 +595,17 @@ class _PipelineHealth extends StatelessWidget {
               height: 8,
               child: Row(
                 children: [
-                  if (drafted > 0) Expanded(flex: _flex(drafted), child: const ColoredBox(color: AppColors.drafted)),
-                  if (completed > 0) Expanded(flex: _flex(completed), child: const ColoredBox(color: AppColors.completed)),
-                  if (finalized > 0) Expanded(flex: _flex(finalized), child: const ColoredBox(color: AppColors.primary)),
+                  if (drafted > 0) Expanded(flex: _flex(drafted), child: ColoredBox(color: AppColors.drafted)),
+                  if (completed > 0) Expanded(flex: _flex(completed), child: ColoredBox(color: AppColors.completed)),
+                  if (finalized > 0) Expanded(flex: _flex(finalized), child: ColoredBox(color: AppColors.primary)),
                   if (drafted + completed + finalized == 0)
-                    const Expanded(child: ColoredBox(color: AppColors.outline)),
+                    Expanded(child: ColoredBox(color: AppColors.outline)),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 10),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Drafted', style: TextStyle(color: AppColors.muted, fontSize: 10)),
@@ -671,13 +671,7 @@ class _EstimateCardState extends State<_EstimateCard> {
               decoration: BoxDecoration(
                 color: AppColors.card,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: _hover ? 0.32 : 0.14),
-                    blurRadius: _hover ? 22 : 10,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                boxShadow: _hover ? AppShadows.modal() : AppShadows.raised(),
               ),
               child: Stack(
                 children: [
@@ -706,7 +700,7 @@ class _EstimateCardState extends State<_EstimateCard> {
                                 children: [
                                   Text(
                                     estimateDisplayCode(draft),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.muted,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
@@ -718,7 +712,7 @@ class _EstimateCardState extends State<_EstimateCard> {
                                     draft.project.isEmpty ? draft.estimateType : draft.project,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.text,
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -729,7 +723,7 @@ class _EstimateCardState extends State<_EstimateCard> {
                                     draft.client.isEmpty ? 'Untitled client' : draft.client,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(color: AppColors.muted, fontSize: 14),
+                                    style: TextStyle(color: AppColors.muted, fontSize: 14),
                                   ),
                                 ],
                               ),
@@ -744,7 +738,7 @@ class _EstimateCardState extends State<_EstimateCard> {
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                                 iconSize: 18,
-                                icon: const Icon(Icons.more_vert, size: 18, color: AppColors.muted),
+                                icon: Icon(Icons.more_vert, size: 18, color: AppColors.muted),
                                 onSelected: widget.onMenu,
                                 itemBuilder: (context) => [
                                   const PopupMenuItem(value: 'type', child: Text('Change type')),
@@ -778,7 +772,7 @@ class _EstimateCardState extends State<_EstimateCard> {
                                 children: [
                                   Text(
                                     drafted ? 'EST. TOTAL' : 'GRAND TOTAL',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.muted,
                                       fontSize: 11,
                                       letterSpacing: 0.8,
@@ -840,7 +834,7 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg, icon) = switch (status) {
-      EstimateStatus.finalized => (AppColors.primary, const Color(0xFF191210), Icons.done_all_rounded),
+      EstimateStatus.finalized => (AppColors.primary, AppColors.onPrimary, Icons.done_all_rounded),
       EstimateStatus.completed => (AppColors.completed.withValues(alpha: 0.2), AppColors.completed, Icons.check_rounded),
       EstimateStatus.drafted => (AppColors.cardHover, AppColors.muted, Icons.edit_outlined),
     };
@@ -877,7 +871,7 @@ class _EmptyState extends StatelessWidget {
         children: [
           Icon(Icons.description_outlined, size: 72, color: AppColors.muted.withValues(alpha: 0.45)),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'no estimates found',
             style: TextStyle(color: AppColors.text, fontSize: 22, fontWeight: FontWeight.w600),
           ),
@@ -887,7 +881,7 @@ class _EmptyState extends StatelessWidget {
                 ? 'There are no estimates matching your current criteria. Create a new proposal to begin the architectural journey.'
                 : 'No estimates match this filter.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.muted, fontSize: 15, height: 1.4),
+            style: TextStyle(color: AppColors.muted, fontSize: 15, height: 1.4),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(

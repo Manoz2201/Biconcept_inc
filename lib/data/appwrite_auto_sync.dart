@@ -78,7 +78,7 @@ class AppwriteAutoSync extends ChangeNotifier {
 
   Future<void> ensureStarted() async {
     if (_started) return;
-    if (Platform.environment['FLUTTER_TEST'] == 'true') return;
+    if (!kIsWeb && Platform.environment['FLUTTER_TEST'] == 'true') return;
     _started = true;
     installHooks();
     final settings = await _store.loadAppwrite();

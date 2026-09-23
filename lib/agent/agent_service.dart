@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -74,6 +73,20 @@ class AgentException implements Exception {
   String toString() => message;
 }
 
+/// Result of a Workers AI HTTP (or Appwrite proxy) call.
+class WorkersAiResponse {
+  const WorkersAiResponse({required this.statusCode, required this.body});
+
+  final int statusCode;
+  final String body;
+}
+
+/// Sends a Workers AI run. Used on web so the browser never calls Cloudflare.
+typedef WorkersAiTransport = Future<WorkersAiResponse> Function(
+  String model,
+  Map<String, dynamic> payload,
+);
+
 /// Cloudflare Workers AI client with a JSON tool-calling loop.
 ///
 /// Calls `POST /accounts/{accountId}/ai/run/{model}` and, when the model
@@ -91,8 +104,12 @@ class AgentService {
     required this.apiToken,
     this.onAppTool,
     this.extraSystem = '',
+    this.transport,
     http.Client? httpClient,
   }) : _http = httpClient ?? http.Client();
+
+  /// When set (Flutter web), Cloudflare is reached through Appwrite.
+  final WorkersAiTransport? transport;
 
   final String accountId;
   final String apiToken;
@@ -160,8 +177,6 @@ class AgentService {
       return 'Reached the tool-call limit without a final answer. Try a simpler request.';
     } on AgentException catch (error) {
       return error.message;
-    } on SocketException catch (error) {
-      return 'Network error: ${error.message}';
     } on TimeoutException {
       return 'The request timed out. Try again.';
     } on FormatException catch (error) {
@@ -190,6 +205,9 @@ class AgentService {
     try {
       return await _postRun(kWorkersAiPrimaryModel, messages);
     } on AgentException catch (primary) {
+      if (primary.message.contains('rejected the API token')) {
+        throw primary;
+      }
       try {
         return await _postRun(kWorkersAiFallbackModel, messages);
       } on AgentException catch (fallback) {
@@ -199,46 +217,56 @@ class AgentService {
   }
 
   Future<String> _postRun(String model, List<Map<String, String>> messages) async {
-    final uri = workersAiRunUri(accountId: accountId, model: model);
+    final payload = {
+      'messages': messages,
+      'temperature': 0.2,
+      'max_tokens': 768,
+      'stream': false,
+    };
 
-    late final http.Response response;
+    late final WorkersAiResponse response;
     try {
-      response = await _http
-          .post(
-            uri,
-            headers: {
-              'Authorization': 'Bearer $apiToken',
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: jsonEncode({
-              'messages': messages,
-              'temperature': 0.2,
-              'max_tokens': 768,
-              'stream': false,
-            }),
-          )
-          .timeout(_requestTimeout);
+      final custom = transport;
+      if (custom != null) {
+        response = await custom(model, payload).timeout(_requestTimeout);
+      } else {
+        final raw = await _http
+            .post(
+              workersAiRunUri(accountId: accountId, model: model),
+              headers: {
+                'Authorization': 'Bearer $apiToken',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: jsonEncode(payload),
+            )
+            .timeout(_requestTimeout);
+        response = WorkersAiResponse(statusCode: raw.statusCode, body: raw.body);
+      }
     } on TimeoutException {
       throw AgentException('Cloudflare Workers AI timed out ($model).');
-    } on SocketException catch (error) {
-      throw AgentException('Could not reach Cloudflare: ${error.message}');
+    } on AgentException {
+      rethrow;
     } on http.ClientException catch (error) {
+      throw AgentException(
+        'Could not reach Cloudflare from this browser. Deploy the workers-ai-proxy Appwrite function, or use the Windows app. ($error)',
+      );
+    } catch (error) {
       throw AgentException('Could not reach Cloudflare: $error');
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw AgentException(
-        'Cloudflare Workers AI HTTP ${response.statusCode} ($model): ${_shortBody(response.body)}',
-      );
+      throw AgentException(_cloudflareHttpMessage(response.statusCode, model, response.body));
     }
 
     final decoded = _decodeJsonMap(response.body, source: 'Cloudflare Workers AI');
     final success = decoded['success'];
     if (success is bool && !success) {
-      throw AgentException(
-        'Cloudflare Workers AI error ($model): ${_cloudflareErrors(decoded)}',
-      );
+      final detail = _cloudflareErrors(decoded);
+      if (detail.toLowerCase().contains('authentication')) {
+        throw AgentException(_cloudflareHttpMessage(401, model, response.body));
+      }
+      throw AgentException('Cloudflare Workers AI error ($model): $detail');
     }
 
     final result = decoded['result'];
@@ -293,9 +321,9 @@ class AgentService {
       response = await _http.get(uri, headers: {'Accept': 'application/json'}).timeout(_requestTimeout);
     } on TimeoutException {
       return 'web_search timed out for "$query".';
-    } on SocketException catch (error) {
-      return 'web_search network error: ${error.message}';
     } on http.ClientException catch (error) {
+      return 'web_search network error: $error';
+    } catch (error) {
       return 'web_search network error: $error';
     }
 
@@ -381,9 +409,9 @@ class AgentService {
           .timeout(_fetchTimeout);
     } on TimeoutException {
       return 'web_fetch timed out for $url.';
-    } on SocketException catch (error) {
-      return 'web_fetch network error: ${error.message}';
     } on http.ClientException catch (error) {
+      return 'web_fetch network error: $error';
+    } catch (error) {
       return 'web_fetch network error: $error';
     }
 
@@ -478,6 +506,16 @@ class AgentService {
     } on FormatException catch (error) {
       throw AgentException('Invalid JSON from $source: ${error.message}');
     }
+  }
+
+  String _cloudflareHttpMessage(int status, String model, String body) {
+    if (status == 401 || body.contains('"code":10000') || body.contains('Authentication error')) {
+      return 'Cloudflare rejected the API token (401). Open Workers AI → Use REST API → Create a Workers AI API Token, paste the full token (not the Global API Key), and use the Account ID from that same account.';
+    }
+    if (status == 403) {
+      return 'Cloudflare refused Workers AI for this token (403). The token needs Account → Workers AI → Read and Edit.';
+    }
+    return 'Cloudflare Workers AI HTTP $status ($model): ${_shortBody(body)}';
   }
 
   String _cloudflareErrors(Map<String, dynamic> json) {

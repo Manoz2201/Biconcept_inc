@@ -2,7 +2,7 @@ const defaultCompanyBrand = 'Biconcept Architects & Interiors';
 const defaultCompanyAddress = 'D-41, Second Floor, Sector-59, Noida- 201301';
 const defaultCompanyPhone = '+91 8178869148';
 const companyDisplayName = 'BiConcept';
-const companyLogoAsset = 'assets/data/biconcept_logo.png';
+const companyLogoAsset = 'assets/data/logo.png';
 const companyMarkAsset = 'assets/data/logo.png';
 
 String resolveCompanyAddress({String? prefsAddress, String? draftAddress}) {

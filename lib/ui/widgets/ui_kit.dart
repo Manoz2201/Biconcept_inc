@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/company_profile.dart';
 import '../../models/estimate_document.dart';
 import '../../theme/app_theme.dart';
 import 'app_nav.dart';
@@ -20,13 +21,14 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     final body = Container(
       margin: margin,
       padding: padding,
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.outline.withValues(alpha: 0.7)),
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppShadows.raised(palette),
       ),
       child: child,
     );
@@ -118,14 +120,14 @@ class StatCard extends StatelessWidget {
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
                     ),
                     SizedBox(height: gap1),
                     Text(
                       value,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.text,
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
@@ -150,7 +152,7 @@ class StatCard extends StatelessWidget {
                           )
                         else
                           const Spacer(),
-                        const Icon(Icons.north_east_rounded, size: 16, color: AppColors.muted),
+                        Icon(Icons.north_east_rounded, size: 16, color: AppColors.muted),
                       ],
                     ),
                   ],
@@ -169,27 +171,34 @@ class AppSidebar extends StatelessWidget {
     super.key,
     required this.index,
     required this.onSelect,
+    this.destinations = appNavDestinations,
   });
 
   final int index;
   final ValueChanged<int> onSelect;
+  final List<AppNavDestination> destinations;
 
   @override
   Widget build(BuildContext context) {
+    final items = destinations.isEmpty ? appNavDestinations : destinations;
+    final selected = index.clamp(0, items.length - 1);
+    final scrollItems = items.length <= 1 ? items : items.sublist(0, items.length - 1);
+    final pinned = items.length <= 1 ? null : items.last;
+    final palette = AppPalette.of(context);
     return Container(
       width: 104,
-      decoration: const BoxDecoration(
-        color: AppColors.sidebar,
-        borderRadius: BorderRadius.horizontal(right: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: Color.lerp(palette.backgroundBase, palette.textPrimary, 0.04),
+        borderRadius: const BorderRadius.horizontal(right: Radius.circular(28)),
       ),
       child: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'biconcept',
               style: TextStyle(
-                color: AppColors.text,
+                color: palette.textPrimary,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
                 letterSpacing: -0.2,
@@ -200,63 +209,42 @@ class AppSidebar extends StatelessWidget {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _NavItem(
-                      svg: AppNavIcons.dashboard,
-                      label: 'dashboard',
-                      selected: index == 0,
-                      onTap: () => onSelect(0),
-                    ),
-                    _NavItem(
-                      svg: AppNavIcons.estimates,
-                      label: 'estimates',
-                      selected: index == 1,
-                      onTap: () => onSelect(1),
-                    ),
-                    _NavItem(
-                      svg: AppNavIcons.clients,
-                      label: 'clients',
-                      selected: index == 2,
-                      onTap: () => onSelect(2),
-                    ),
-                    _NavItem(
-                      svg: AppNavIcons.calendar,
-                      label: 'calendar',
-                      selected: index == 3,
-                      onTap: () => onSelect(3),
-                    ),
-                    _NavItem(
-                      svg: AppNavIcons.rates,
-                      label: 'rate card',
-                      selected: index == 4,
-                      onTap: () => onSelect(4),
-                    ),
+                    for (var i = 0; i < scrollItems.length; i++)
+                      _NavItem(
+                        svg: scrollItems[i].svg,
+                        label: scrollItems[i].railLabel,
+                        selected: selected == i,
+                        spinWhenSelected: scrollItems[i].spinWhenSelected,
+                        onTap: () => onSelect(i),
+                      ),
                   ],
                 ),
               ),
             ),
-            _NavItem(
-              svg: AppNavIcons.settings,
-              label: 'settings',
-              selected: index == 5,
-              spinWhenSelected: true,
-              onTap: () => onSelect(5),
-            ),
+            if (pinned != null)
+              _NavItem(
+                svg: pinned.svg,
+                label: pinned.railLabel,
+                selected: selected == items.length - 1,
+                spinWhenSelected: pinned.spinWhenSelected,
+                onTap: () => onSelect(items.length - 1),
+              ),
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: Column(
                 children: [
                   Image.asset(
-                    'assets/data/logo.png',
+                    companyLogoAsset,
                     width: 64,
                     height: 44,
                     fit: BoxFit.contain,
                     filterQuality: FilterQuality.high,
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'BiConcept',
                     style: TextStyle(
-                      color: AppColors.muted,
+                      color: palette.textSecondary,
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
@@ -288,6 +276,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: InkWell(
@@ -303,7 +292,7 @@ class _NavItem extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: selected ? AppColors.primary : Colors.transparent,
+                  color: selected ? palette.primaryAccent : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: AnimatedSlide(
@@ -317,7 +306,7 @@ class _NavItem extends StatelessWidget {
                     child: Center(
                       child: NavSvgIcon(
                         svg: svg,
-                        color: selected ? const Color(0xFF1A1010) : AppColors.muted,
+                        color: selected ? palette.onPrimary : palette.textSecondary,
                         size: 22,
                       ),
                     ),
@@ -328,7 +317,7 @@ class _NavItem extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: selected ? AppColors.text : AppColors.muted,
+                  color: selected ? palette.textPrimary : palette.textSecondary,
                   fontSize: 11,
                   fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                 ),
@@ -382,7 +371,7 @@ class AppHeader extends StatelessWidget {
             onChanged: onSearch,
             decoration: InputDecoration(
               isDense: true,
-              prefixIcon: const Icon(Icons.search_rounded, color: AppColors.muted),
+              prefixIcon: Icon(Icons.search_rounded, color: AppColors.muted),
               hintText: searchHint ?? 'Search',
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
             ),

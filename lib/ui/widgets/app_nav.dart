@@ -21,27 +21,60 @@ class AppNavIcons {
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/></svg>';
   static const settings =
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>';
+  static const projects =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>';
+  static const requests =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>';
+  static const messages =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>';
+  static const profile =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+  static const packages =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/><path d="m7.5 4.27 9 5.15"/></svg>';
+  static const bills =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>';
 }
 
 class AppNavDestination {
   const AppNavDestination({
     required this.svg,
     required this.label,
+    this.sidebarLabel,
     this.spinWhenSelected = false,
   });
 
   final String svg;
   final String label;
+  final String? sidebarLabel;
   final bool spinWhenSelected;
+
+  String get railLabel => sidebarLabel ?? label.toLowerCase();
 }
 
 const appNavDestinations = <AppNavDestination>[
-  AppNavDestination(svg: AppNavIcons.dashboard, label: 'Home'),
-  AppNavDestination(svg: AppNavIcons.estimates, label: 'Estimates'),
-  AppNavDestination(svg: AppNavIcons.clients, label: 'Clients'),
-  AppNavDestination(svg: AppNavIcons.calendar, label: 'Calendar'),
-  AppNavDestination(svg: AppNavIcons.rates, label: 'Rates'),
-  AppNavDestination(svg: AppNavIcons.settings, label: 'Settings', spinWhenSelected: true),
+  AppNavDestination(svg: AppNavIcons.dashboard, label: 'Home', sidebarLabel: 'dashboard'),
+  AppNavDestination(svg: AppNavIcons.estimates, label: 'Estimates', sidebarLabel: 'estimates'),
+  AppNavDestination(svg: AppNavIcons.clients, label: 'Clients', sidebarLabel: 'clients'),
+  AppNavDestination(svg: AppNavIcons.calendar, label: 'Calendar', sidebarLabel: 'calendar'),
+  AppNavDestination(svg: AppNavIcons.rates, label: 'Rates', sidebarLabel: 'rate card'),
+  AppNavDestination(svg: AppNavIcons.settings, label: 'Settings', sidebarLabel: 'settings', spinWhenSelected: true),
+];
+
+const clientNavDestinations = <AppNavDestination>[
+  AppNavDestination(svg: AppNavIcons.dashboard, label: 'Home', sidebarLabel: 'dashboard'),
+  AppNavDestination(svg: AppNavIcons.projects, label: 'Projects', sidebarLabel: 'projects'),
+  AppNavDestination(svg: AppNavIcons.requests, label: 'Requests', sidebarLabel: 'requests'),
+  AppNavDestination(svg: AppNavIcons.estimates, label: 'Quotes', sidebarLabel: 'quotes'),
+  AppNavDestination(svg: AppNavIcons.messages, label: 'Messages', sidebarLabel: 'messages'),
+  AppNavDestination(svg: AppNavIcons.profile, label: 'Profile', sidebarLabel: 'profile'),
+];
+
+const vendorNavDestinations = <AppNavDestination>[
+  AppNavDestination(svg: AppNavIcons.dashboard, label: 'Home', sidebarLabel: 'dashboard'),
+  AppNavDestination(svg: AppNavIcons.requests, label: 'RFQs', sidebarLabel: 'rfqs'),
+  AppNavDestination(svg: AppNavIcons.packages, label: 'POs', sidebarLabel: 'orders'),
+  AppNavDestination(svg: AppNavIcons.bills, label: 'Bills', sidebarLabel: 'bills'),
+  AppNavDestination(svg: AppNavIcons.profile, label: 'Profile', sidebarLabel: 'profile'),
 ];
 
 class NavSvgIcon extends StatelessWidget {
@@ -72,25 +105,28 @@ class AppBottomNav extends StatelessWidget {
     super.key,
     required this.selectedIndex,
     required this.onSelect,
+    this.destinations = appNavDestinations,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onSelect;
+  final List<AppNavDestination> destinations;
 
   @override
   Widget build(BuildContext context) {
+    final items = destinations.isEmpty ? appNavDestinations : destinations;
+    final index = selectedIndex.clamp(0, items.length - 1);
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final palette = AppPalette.of(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(12, 0, 12, 8 + (bottom > 0 ? bottom : 8)),
       child: Material(
-        color: AppColors.sidebar,
-        elevation: 12,
-        shadowColor: Colors.black.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(28),
+        color: Colors.transparent,
         child: DecoratedBox(
           decoration: BoxDecoration(
+            color: palette.surface,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: AppColors.outline.withValues(alpha: 0.8)),
+            boxShadow: AppShadows.raised(palette),
           ),
           child: SizedBox(
             height: 64,
@@ -102,19 +138,17 @@ class AppBottomNav extends StatelessWidget {
                     duration: navActiveDuration,
                     curve: navActiveCurve,
                     alignment: Alignment(
-                      appNavDestinations.length == 1
-                          ? 0
-                          : -1 + (2 * selectedIndex / (appNavDestinations.length - 1)),
+                      items.length == 1 ? 0 : -1 + (2 * index / (items.length - 1)),
                       0,
                     ),
                     child: FractionallySizedBox(
-                      widthFactor: 1 / appNavDestinations.length,
+                      widthFactor: 1 / items.length,
                       child: Center(
                         child: Container(
                           width: 48,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: AppColors.primaryDim,
+                            color: palette.primaryAccent,
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
@@ -123,11 +157,11 @@ class AppBottomNav extends StatelessWidget {
                   ),
                   Row(
                     children: [
-                      for (var i = 0; i < appNavDestinations.length; i++)
+                      for (var i = 0; i < items.length; i++)
                         Expanded(
                           child: _BottomNavItem(
-                            destination: appNavDestinations[i],
-                            selected: selectedIndex == i,
+                            destination: items[i],
+                            selected: index == i,
                             onTap: () => onSelect(i),
                           ),
                         ),
@@ -164,7 +198,8 @@ class _BottomNavItemState extends State<_BottomNavItem> {
   @override
   Widget build(BuildContext context) {
     final selected = widget.selected;
-    final color = selected ? AppColors.primarySoft : AppColors.muted;
+    final palette = AppPalette.of(context);
+    final color = selected ? palette.onPrimary : palette.textSecondary;
     return Semantics(
       button: true,
       selected: selected,
@@ -207,8 +242,8 @@ class _BottomNavItemState extends State<_BottomNavItem> {
                             widget.destination.label,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.primarySoft,
+                            style: TextStyle(
+                              color: palette.onPrimary,
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.2,

@@ -3,14 +3,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../agent/agent_service.dart';
+import '../agent/workers_ai_proxy.dart';
 import '../agent/app_tools.dart';
 import '../agent/catalog_tools.dart';
 import '../agent/document_reader.dart';
-import '../agent/estimate_agent.dart';
-import '../agent/llm_client.dart';
 import '../data/agent_session_store.dart';
 import '../data/settings_store.dart';
 import '../models/estimate_document.dart';
@@ -175,7 +175,7 @@ class _CollapsedAgentRail extends StatelessWidget {
                 const SizedBox(height: 16),
                 const _AgentAvatar(size: 32),
                 const SizedBox(height: 16),
-                const RotatedBox(
+                RotatedBox(
                   quarterTurns: 1,
                   child: Text(
                     'manoj',
@@ -354,7 +354,7 @@ class _AgentChatView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   kAgentNameLower,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -372,7 +372,7 @@ class _AgentChatView extends StatelessWidget {
                     Container(
                       width: 7,
                       height: 7,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.completed,
                         shape: BoxShape.circle,
                       ),
@@ -380,7 +380,7 @@ class _AgentChatView extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       kAgentRole.toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 10,
                         letterSpacing: 1.3,
@@ -398,7 +398,7 @@ class _AgentChatView extends StatelessWidget {
             constraints: const BoxConstraints.tightFor(width: 36, height: 36),
             padding: EdgeInsets.zero,
             onPressed: busy ? null : () => session.clear(),
-            icon: const Icon(Icons.add_comment_outlined, size: 20, color: AppColors.muted),
+            icon: Icon(Icons.add_comment_outlined, size: 20, color: AppColors.muted),
           ),
           if (onCollapse != null)
             IconButton(
@@ -407,7 +407,7 @@ class _AgentChatView extends StatelessWidget {
               constraints: const BoxConstraints.tightFor(width: 36, height: 36),
               padding: EdgeInsets.zero,
               onPressed: onCollapse,
-              icon: const Icon(Icons.chevron_right, size: 22, color: AppColors.muted),
+              icon: Icon(Icons.chevron_right, size: 22, color: AppColors.muted),
             ),
         ],
       ),
@@ -422,10 +422,10 @@ class _AgentChatView extends StatelessWidget {
           draft == null
               ? 'Ask about the app, the web, or attach a PDF, Word, or Excel file. Chat stays in this session on this device.'
               : 'This quotation is open. Attach a file, change lines, or ask about the client.',
-          style: const TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
+          style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
         ),
         const SizedBox(height: 16),
-        const Text(
+        Text(
           'TRY',
           style: TextStyle(color: AppColors.muted, fontSize: 10, letterSpacing: 1.6, fontWeight: FontWeight.w600),
         ),
@@ -535,7 +535,7 @@ class _AgentChatView extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
                 constraints: const BoxConstraints.tightFor(width: 40, height: 40),
                 padding: EdgeInsets.zero,
-                icon: const Icon(Icons.attach_file_rounded, size: 20, color: AppColors.muted),
+                icon: Icon(Icons.attach_file_rounded, size: 20, color: AppColors.muted),
               ),
               Expanded(
                 child: TextField(
@@ -547,7 +547,7 @@ class _AgentChatView extends StatelessWidget {
                   style: const TextStyle(fontSize: 13),
                   decoration: InputDecoration(
                     hintText: 'Ask $kAgentName',
-                    hintStyle: const TextStyle(color: AppColors.muted, fontSize: 13),
+                    hintStyle: TextStyle(color: AppColors.muted, fontSize: 13),
                     filled: true,
                     fillColor: AppColors.card,
                     isDense: true,
@@ -562,7 +562,7 @@ class _AgentChatView extends StatelessWidget {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(99),
-                      borderSide: const BorderSide(color: AppColors.primary, width: 1.2),
+                      borderSide: BorderSide(color: AppColors.primary, width: 1.2),
                     ),
                     disabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(99),
@@ -578,7 +578,7 @@ class _AgentChatView extends StatelessWidget {
                 tooltip: 'Send',
                 style: IconButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: const Color(0xFF1A1010),
+                  foregroundColor: AppColors.onPrimary,
                   disabledBackgroundColor: AppColors.cardHover,
                   minimumSize: const Size(44, 44),
                   maximumSize: const Size(44, 44),
@@ -604,7 +604,9 @@ class _AgentChatView extends StatelessWidget {
     for (final file in result.files) {
       try {
         final bytes = file.bytes ??
-            (file.path == null || file.path!.isEmpty ? null : await File(file.path!).readAsBytes());
+            (!kIsWeb && file.path != null && file.path!.isNotEmpty
+                ? await File(file.path!).readAsBytes()
+                : null);
         if (bytes == null) {
           throw DocumentReadException('Could not read ${file.name}.');
         }
@@ -651,34 +653,23 @@ class _AgentChatView extends StatelessWidget {
     final history = session.llmHistory();
 
     final cloudflare = await store.loadCloudflare();
-    if (cloudflare.isConfigured) {
-      final agent = AgentService(
+    final agent = AgentService(
+      accountId: cloudflare.accountId,
+      apiToken: cloudflare.apiToken,
+      transport: appwriteWorkersAiTransport(
         accountId: cloudflare.accountId,
         apiToken: cloudflare.apiToken,
-        extraSystem: AppTools.workersAiToolPrompt(),
-        onAppTool: (name, arguments) async {
-          try {
-            return await tools.execute(name, arguments);
-          } catch (error) {
-            return 'Tool $name failed: $error';
-          }
-        },
-      );
-      return agent.chat(text, extraUserContext: extra, history: history);
-    }
-
-    final settings = await store.load();
-    if (!settings.isConfigured) {
-      return 'Add your Cloudflare Account ID and API token in Settings so Manoj Singharya can run.';
-    }
-    final agent = EstimateAgent(
-      catalog: catalog,
-      draft: draft,
-      client: LlmClient(baseUrl: settings.baseUrl, apiKey: settings.apiKey, model: settings.model),
-      actions: actions,
+      ),
+      extraSystem: AppTools.workersAiToolPrompt(),
+      onAppTool: (name, arguments) async {
+        try {
+          return await tools.execute(name, arguments);
+        } catch (error) {
+          return 'Tool $name failed: $error';
+        }
+      },
     );
-    final result = await agent.chat(text, extraUserContext: extra, history: history);
-    return result.message;
+    return agent.chat(text, extraUserContext: extra, history: history);
   }
 }
 
@@ -715,13 +706,13 @@ class _FileChip extends StatelessWidget {
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppColors.primarySoft, fontSize: 11),
+              style: TextStyle(color: AppColors.primarySoft, fontSize: 11),
             ),
           ),
           if (onRemove != null)
             InkWell(
               onTap: onRemove,
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.all(4),
                 child: Icon(Icons.close, size: 14, color: AppColors.muted),
               ),
@@ -790,7 +781,7 @@ class _PromptChip extends StatelessWidget {
           ),
           child: Text(
             label,
-            style: const TextStyle(color: AppColors.primarySoft, fontSize: 11, height: 1.25),
+            style: TextStyle(color: AppColors.primarySoft, fontSize: 11, height: 1.25),
           ),
         ),
       ),
@@ -867,7 +858,7 @@ class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderState
                   child: Container(
                     width: 6,
                     height: 6,
-                    decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
                   ),
                 ),
               ],

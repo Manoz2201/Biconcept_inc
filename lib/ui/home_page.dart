@@ -98,7 +98,7 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
           return Scaffold(body: Center(child: Text('Could not load catalog: ${snapshot.error}')));
         }
         if (!snapshot.hasData) {
-          return const Scaffold(
+          return Scaffold(
             body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
           );
         }
@@ -115,6 +115,7 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
       builder: (context, constraints) {
         final compact = constraints.maxWidth < AppBreakpoints.compact;
         return Scaffold(
+          backgroundColor: AppPalette.of(context).backgroundBase,
           extendBody: compact,
           resizeToAvoidBottomInset: true,
           body: SafeArea(
@@ -156,7 +157,7 @@ class _EstimateHomePageState extends State<EstimateHomePage> with WidgetsBinding
                               color: AppColors.primary.withValues(alpha: 0.14),
                               borderRadius: BorderRadius.circular(16),
                               child: ListTile(
-                                leading: const Icon(Icons.system_update_alt, color: AppColors.primary),
+                                leading: Icon(Icons.system_update_alt, color: AppColors.primary),
                                 title: Text('BiConcept ${release.display} is ready'),
                                 subtitle: const Text('Download and install in the app — GitHub will not open'),
                                 trailing: TextButton(

@@ -229,13 +229,13 @@ class _TermsAndConditionsFormState extends State<TermsAndConditionsForm> {
           Container(
             width: 64,
             height: 64,
-            decoration: const BoxDecoration(color: AppColors.cardHover, shape: BoxShape.circle),
-            child: const Icon(Icons.gavel, color: AppColors.muted, size: 28),
+            decoration: BoxDecoration(color: AppColors.cardHover, shape: BoxShape.circle),
+            child: Icon(Icons.gavel, color: AppColors.muted, size: 28),
           ),
           const SizedBox(height: 20),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: const Text(
+            child: Text(
               'No terms yet. Pick a template above or add a custom clause below to build your contract framework.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.muted, height: 1.45),
@@ -259,7 +259,7 @@ class _TermsAndConditionsFormState extends State<TermsAndConditionsForm> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(left: 4, bottom: 8),
                   child: Text(
                     'add clause',
@@ -278,7 +278,7 @@ class _TermsAndConditionsFormState extends State<TermsAndConditionsForm> {
                     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: Color(0xFF5ADACE)),
+                      borderSide: BorderSide(color: AppColors.primary),
                     ),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
@@ -297,15 +297,15 @@ class _TermsAndConditionsFormState extends State<TermsAndConditionsForm> {
               child: InkWell(
                 onTap: _addCustom,
                 borderRadius: BorderRadius.circular(16),
-                child: const Column(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add, color: Color(0xFF1A1010)),
-                    SizedBox(height: 2),
+                    Icon(Icons.add, color: AppColors.onPrimary),
+                    const SizedBox(height: 2),
                     Text(
                       'INSERT',
                       style: TextStyle(
-                        color: Color(0xFF1A1010),
+                        color: AppColors.onPrimary,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.1,
@@ -391,7 +391,7 @@ class _ClauseCard extends StatelessWidget {
                 backgroundColor: AppColors.cardHover,
                 child: Text(
                   '${index + 1}',
-                  style: const TextStyle(color: AppColors.primarySoft, fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: AppColors.primarySoft, fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(width: 14),
@@ -408,13 +408,13 @@ class _ClauseCard extends StatelessWidget {
                     tooltip: 'Edit',
                     visualDensity: VisualDensity.compact,
                     onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined, size: 20, color: AppColors.muted),
+                    icon: Icon(Icons.edit_outlined, size: 20, color: AppColors.muted),
                   ),
                   IconButton(
                     tooltip: 'Remove',
                     visualDensity: VisualDensity.compact,
                     onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.muted),
+                    icon: Icon(Icons.delete_outline, size: 20, color: AppColors.muted),
                   ),
                 ],
               ),

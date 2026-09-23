@@ -1,0 +1,308 @@
+# Codemagic CI/CD — https://codemagic.io
+# Create variable groups in the Codemagic UI before the first tagged release:
+#   appwrite, github_credentials, android_signing  (empty groups are fine)
+# See README.md → CI/CD.
+
+workflows:
+  ci:
+    name: CI — analyze and test
+    instance_type: linux_x2
+    max_build_duration: 30
+    environment:
+      flutter: 3.47.0
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+      cancel_previous_builds: true
+    scripts:
+      - name: Versions
+        script: |
+          flutter --version
+          dart --version
+      - name: Get packages
+        script: flutter pub get
+      - name: Analyze
+        script: flutter analyze --no-fatal-infos
+      - name: Test
+        script: flutter test
+    artifacts:
+      - flutter_drive.log
+
+  android-release:
+    name: Android release APK
+    instance_type: linux_x2
+    max_build_duration: 60
+    environment:
+      flutter: 3.47.0
+      java: 17
+      groups:
+        - appwrite
+        - github_credentials
+        - android_signing
+      vars:
+        UPDATE_REPO: Manoz2201/Biconcept_inc
+        PACKAGE_NAME: com.example.biconcept
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: v*.*.*
+          include: true
+    scripts:
+      - name: Resolve version
+        script: |
+          set -euo pipefail
+          META=$(python3 -c 'import re,pathlib; t=pathlib.Path("pubspec.yaml").read_text(); m=re.search(r"^version:\s*([0-9.]+)\+([0-9]+)", t, re.M); assert m; print(m.group(1), m.group(2))')
+          PUB_VERSION="${META%% *}"
+          PUB_BUILD="${META##* }"
+          if [ -n "${CM_TAG:-}" ]; then
+            VERSION="${CM_TAG#v}"
+          else
+            VERSION="$PUB_VERSION"
+          fi
+          BUILD="$PUB_BUILD"
+          echo "VERSION=$VERSION" >> "$CM_ENV"
+          echo "BUILD=$BUILD" >> "$CM_ENV"
+          echo "TAG=v$VERSION" >> "$CM_ENV"
+          echo "Resolved $VERSION+$BUILD"
+      - name: Get packages
+        script: flutter pub get
+      - name: Analyze
+        script: flutter analyze --no-fatal-infos
+      - name: Test
+        script: flutter test
+      - name: Decode Android keystore
+        script: |
+          set -euo pipefail
+          if [ -z "${CM_KEYSTORE:-}" ]; then
+            echo "No CM_KEYSTORE — Gradle will use the debug keystore (current project default)."
+            exit 0
+          fi
+          echo "$CM_KEYSTORE" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+      - name: Build APK
+        script: |
+          set -euo pipefail
+          flutter build apk --release \
+            --build-name="$VERSION" \
+            --build-number="$BUILD" \
+            --dart-define=GIT_SHA="${CM_COMMIT:-local}" \
+            --dart-define=APP_CHANNEL=release \
+            --dart-define=UPDATE_REPO="$UPDATE_REPO" \
+            --dart-define=APPWRITE_ENDPOINT="${APPWRITE_ENDPOINT:-https://sgp.cloud.appwrite.io/v1}" \
+            --dart-define=APPWRITE_PROJECT_ID="${APPWRITE_PROJECT_ID:-6a86a3d4001d87aa9809}" \
+            --dart-define=APPWRITE_DATABASE_ID="${APPWRITE_DATABASE_ID:-6a86ad9300190bcdd0df}" \
+            --dart-define=APPWRITE_DEEP_LINK_SCHEME="${APPWRITE_DEEP_LINK_SCHEME:-biconcept}" \
+            --dart-define=RAZORPAY_KEY_ID="${RAZORPAY_KEY_ID:-}"
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk "dist/biconcept-${VERSION}-android.apk"
+      - name: Publish GitHub Release
+        script: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ]; then
+            echo "Skip GitHub Release — add GH_TOKEN to the github_credentials group."
+            exit 0
+          fi
+          export GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"
+          python3 -c 'import json,os,pathlib; pathlib.Path("dist/latest.json").write_text(json.dumps({"schema":"biconcept-release-v1","version":os.environ["VERSION"],"build":int(os.environ["BUILD"]),"tag":os.environ["TAG"],"channel":"release","gitSha":os.environ.get("CM_COMMIT",""),"notes":""}, indent=2)+"\n")'
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/biconcept-*-android.apk dist/latest.json --clobber
+          else
+            gh release create "$TAG" dist/biconcept-*-android.apk dist/latest.json \
+              --title "BiConcept $VERSION" \
+              --generate-notes \
+              --notes "BiConcept $VERSION (build $BUILD)."
+          fi
+    artifacts:
+      - dist/biconcept-*-android.apk
+      - dist/latest.json
+      - build/app/outputs/flutter-apk/*.apk
+    publishing:
+      email:
+        recipients:
+          - $CM_EMAIL
+        notify:
+          success: false
+          failure: true
+
+  windows-release:
+    name: Windows release zip
+    instance_type: windows_x2
+    max_build_duration: 60
+    environment:
+      flutter: 3.47.0
+      groups:
+        - appwrite
+        - github_credentials
+      vars:
+        UPDATE_REPO: Manoz2201/Biconcept_inc
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: v*.*.*
+          include: true
+    scripts:
+      - name: Resolve version
+        script: |
+          $meta = Select-String -Path pubspec.yaml -Pattern '^version:\s*([0-9.]+)\+([0-9]+)'
+          $pubVersion = $meta.Matches.Groups[1].Value
+          $pubBuild = $meta.Matches.Groups[2].Value
+          $version = if ($env:CM_TAG) { $env:CM_TAG.TrimStart('v') } else { $pubVersion }
+          Add-Content -Path $env:CM_ENV -Value "VERSION=$version"
+          Add-Content -Path $env:CM_ENV -Value "BUILD=$pubBuild"
+          Add-Content -Path $env:CM_ENV -Value "TAG=v$version"
+          Write-Host "Resolved $version+$pubBuild"
+      - name: Get packages
+        script: flutter pub get
+      - name: Build Windows
+        script: |
+          $endpoint = if ($env:APPWRITE_ENDPOINT) { $env:APPWRITE_ENDPOINT } else { 'https://sgp.cloud.appwrite.io/v1' }
+          $project = if ($env:APPWRITE_PROJECT_ID) { $env:APPWRITE_PROJECT_ID } else { '6a86a3d4001d87aa9809' }
+          $database = if ($env:APPWRITE_DATABASE_ID) { $env:APPWRITE_DATABASE_ID } else { '6a86ad9300190bcdd0df' }
+          flutter build windows --release `
+            --build-name="$env:VERSION" `
+            --build-number="$env:BUILD" `
+            --dart-define=GIT_SHA="$env:CM_COMMIT" `
+            --dart-define=APP_CHANNEL=release `
+            --dart-define=UPDATE_REPO="$env:UPDATE_REPO" `
+            --dart-define=APPWRITE_ENDPOINT="$endpoint" `
+            --dart-define=APPWRITE_PROJECT_ID="$project" `
+            --dart-define=APPWRITE_DATABASE_ID="$database"
+      - name: Zip runner
+        script: |
+          $exe = Get-ChildItem -Path build\windows -Recurse -Filter biconcept.exe |
+            Where-Object { $_.DirectoryName -match '\\Release$' } |
+            Select-Object -First 1
+          if (-not $exe) { throw 'biconcept.exe not found under build/windows' }
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $out = "dist\biconcept-$($env:VERSION)-windows.zip"
+          if (Test-Path $out) { Remove-Item $out }
+          Compress-Archive -Path (Join-Path $exe.Directory.FullName '*') -DestinationPath $out
+      - name: Write latest.json
+        script: |
+          $payload = @{
+            schema = 'biconcept-release-v1'
+            version = $env:VERSION
+            build = [int]$env:BUILD
+            tag = $env:TAG
+            channel = 'release'
+            gitSha = $env:CM_COMMIT
+            notes = ''
+          } | ConvertTo-Json
+          Set-Content -Path dist\latest.json -Value $payload
+      - name: Publish GitHub Release
+        script: |
+          $token = if ($env:GH_TOKEN) { $env:GH_TOKEN } else { $env:GITHUB_TOKEN }
+          if (-not $token) {
+            Write-Host 'Skip GitHub Release — add GH_TOKEN to the github_credentials group.'
+            exit 0
+          }
+          if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+            choco install gh -y --no-progress
+          }
+          $env:GH_TOKEN = $token
+          $zip = Get-Item "dist\biconcept-*-windows.zip" | Select-Object -First 1
+          gh release view $env:TAG *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:TAG $zip.FullName dist\latest.json --clobber
+          } else {
+            gh release create $env:TAG $zip.FullName dist\latest.json --title "BiConcept $($env:VERSION)" --generate-notes
+          }
+    artifacts:
+      - dist/biconcept-*-windows.zip
+      - dist/latest.json
+
+  web-release:
+    name: Web release
+    instance_type: linux_x2
+    max_build_duration: 40
+    environment:
+      flutter: 3.47.0
+      groups:
+        - appwrite
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: v*.*.*
+          include: true
+    scripts:
+      - name: Get packages
+        script: flutter pub get
+      - name: Build web
+        script: |
+          set -euo pipefail
+          flutter build web --release \
+            --dart-define=GIT_SHA="${CM_COMMIT:-local}" \
+            --dart-define=APP_CHANNEL=release \
+            --dart-define=APPWRITE_ENDPOINT="${APPWRITE_ENDPOINT:-https://sgp.cloud.appwrite.io/v1}" \
+            --dart-define=APPWRITE_PROJECT_ID="${APPWRITE_PROJECT_ID:-6a86a3d4001d87aa9809}" \
+            --dart-define=APPWRITE_DATABASE_ID="${APPWRITE_DATABASE_ID:-6a86ad9300190bcdd0df}"
+          cd build/web
+          zip -r ../web.zip .
+    artifacts:
+      - build/web.zip
+      - build/web/**
+
+  appwrite-schema:
+    name: Appwrite schema push
+    instance_type: linux_x2
+    max_build_duration: 20
+    environment:
+      groups:
+        - appwrite
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Skip when schema did not change
+        script: |
+          set -euo pipefail
+          CHANGED=$(git diff-tree --no-commit-id --name-only -r "${CM_COMMIT:-HEAD}" || true)
+          echo "$CHANGED"
+          if [ "${FORCE_APPWRITE:-}" = "1" ]; then
+            echo "FORCE_APPWRITE=1 — continue."
+            exit 0
+          fi
+          if echo "$CHANGED" | grep -Eq '^(appwrite.config.json|functions/|sites/)'; then
+            echo "Schema or functions changed — continue."
+            exit 0
+          fi
+          echo "No Appwrite schema changes in this commit. Skipping push."
+          echo "SKIP_APPWRITE=1" >> "$CM_ENV"
+      - name: Install Appwrite CLI
+        script: |
+          if [ "${SKIP_APPWRITE:-}" = "1" ]; then
+            echo "Skipped."
+            exit 0
+          fi
+          npm install -g appwrite-cli
+      - name: Push tables
+        script: |
+          set -euo pipefail
+          if [ "${SKIP_APPWRITE:-}" = "1" ]; then
+            echo "Skipped."
+            exit 0
+          fi
+          if [ -z "${APPWRITE_API_KEY:-}" ]; then
+            echo "Skip — add APPWRITE_API_KEY to the appwrite variable group."
+            exit 0
+          fi
+          # Key only — project/endpoint already live in appwrite.config.json.
+          appwrite client --key "$APPWRITE_API_KEY"
+          appwrite push tables --all --force

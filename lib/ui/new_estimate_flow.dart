@@ -138,7 +138,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
               ),
               Text(
                 'STEP ${_step + 1} OF 5',
-                style: const TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 1.4),
+                style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 1.4),
               ),
             ],
           ),
@@ -206,7 +206,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
                     ),
                     TextButton(
                       onPressed: _saveDraft,
-                      child: const Text('SAVE', style: TextStyle(letterSpacing: 1.2, color: AppColors.completed)),
+                      child: Text('SAVE', style: TextStyle(letterSpacing: 1.2, color: AppColors.completed)),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -250,7 +250,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
                     const Spacer(),
                     TextButton(
                       onPressed: _saveDraft,
-                      child: const Text('SAVE DRAFT', style: TextStyle(letterSpacing: 1.3, color: AppColors.completed)),
+                      child: Text('SAVE DRAFT', style: TextStyle(letterSpacing: 1.3, color: AppColors.completed)),
                     ),
                     const SizedBox(width: 8),
                     FilledButton(
@@ -301,7 +301,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
           const SizedBox(height: 6),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
-            child: Text(body, style: const TextStyle(color: AppColors.muted, height: 1.4)),
+            child: Text(body, style: TextStyle(color: AppColors.muted, height: 1.4)),
           ),
         ],
       ),
@@ -320,7 +320,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFF5ADACE)),
+        borderSide: BorderSide(color: AppColors.primary),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );
@@ -332,7 +332,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 8, bottom: 8),
-          child: Text(label.toUpperCase(), style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3)),
+          child: Text(label.toUpperCase(), style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3)),
         ),
         child,
       ],
@@ -366,7 +366,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('ESTIMATE TYPE', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3)),
+              Text('ESTIMATE TYPE', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3)),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -395,7 +395,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
                 subtitle: Text(
                   '${_date.day.toString().padLeft(2, '0')}/${_date.month.toString().padLeft(2, '0')}/${_date.year}',
                 ),
-                trailing: const Icon(Icons.calendar_today, color: AppColors.muted),
+                trailing: Icon(Icons.calendar_today, color: AppColors.muted),
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
@@ -444,7 +444,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
                 ),
               ),
               const SizedBox(height: 18),
-              const Text('SUGGESTIONS', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3)),
+              Text('SUGGESTIONS', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3)),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -468,7 +468,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
               ),
               if (_selectedAreas.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                Text('${_selectedAreas.length} selected', style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+                Text('${_selectedAreas.length} selected', style: TextStyle(color: AppColors.muted, fontSize: 12)),
               ],
             ],
           ),
@@ -507,7 +507,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
           child: InkWell(
             onTap: _addWorkType,
             borderRadius: BorderRadius.circular(24),
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(20),
               child: Row(
                 children: [
@@ -593,14 +593,14 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
           const Text('running estimate', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
           const SizedBox(height: 18),
           if (rows.isEmpty)
-            const Text('Select work types and scopes to see a live total.', style: TextStyle(color: AppColors.muted))
+            Text('Select work types and scopes to see a live total.', style: TextStyle(color: AppColors.muted))
           else
             for (final row in rows) ...[
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
                   children: [
-                    Expanded(child: Text(row.$1, style: const TextStyle(color: AppColors.muted))),
+                    Expanded(child: Text(row.$1, style: TextStyle(color: AppColors.muted))),
                     Text(inr(row.$2), style: const TextStyle(fontWeight: FontWeight.w600)),
                   ],
                 ),
@@ -608,16 +608,16 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
               Divider(height: 1, color: AppColors.outline.withValues(alpha: 0.4)),
               const SizedBox(height: 12),
             ],
-          const Text('SUBTOTAL', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.4)),
+          Text('SUBTOTAL', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.4)),
           const SizedBox(height: 6),
-          Text(inrCompact(total), style: const TextStyle(color: AppColors.primary, fontSize: 36, fontWeight: FontWeight.w700, height: 1.1)),
+          Text(inrCompact(total), style: TextStyle(color: AppColors.primary, fontSize: 36, fontWeight: FontWeight.w700, height: 1.1)),
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
-            child: const LinearProgressIndicator(value: 0.28, minHeight: 4, backgroundColor: AppColors.card, color: AppColors.completed),
+            child: LinearProgressIndicator(value: 0.28, minHeight: 4, backgroundColor: AppColors.card, color: AppColors.completed),
           ),
           const SizedBox(height: 8),
-          const Align(
+          Align(
             alignment: Alignment.centerRight,
             child: Text('Excludes GST', style: TextStyle(color: AppColors.muted, fontSize: 12)),
           ),
@@ -686,11 +686,11 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
           title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
           subtitle: Text(
             '$selectedCount items selected',
-            style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2),
+            style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.2),
           ),
           children: [
             if (scopes.isEmpty)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Align(
                   alignment: Alignment.centerLeft,
@@ -701,7 +701,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
               _scopeRow(type, scope, area: area, typical: typical.contains(scope)),
             ListTile(
               dense: true,
-              leading: const Icon(Icons.add, color: AppColors.primary),
+              leading: Icon(Icons.add, color: AppColors.primary),
               title: const Text('Add scope'),
               onTap: () => _addScope(type, area: area),
             ),
@@ -757,7 +757,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
                   children: [
                     Text(scope.name, maxLines: 1, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 2),
-                    Text(rateLabel, style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1)),
+                    Text(rateLabel, style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1)),
                   ],
                 ),
               ),
@@ -790,7 +790,7 @@ class _NewEstimateFlowState extends State<NewEstimateFlow> {
                   unit.toUpperCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 0.8),
+                  style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 0.8),
                 ),
               ),
             ],
@@ -1071,7 +1071,7 @@ class _TypePickCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '${type.serialNo.toString().padLeft(2, '0')}  ·  ${type.scopeCount} scopes${type.userAdded ? ' · added' : ''}',
-                      style: const TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.4),
+                      style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.4),
                     ),
                   ],
                 ),

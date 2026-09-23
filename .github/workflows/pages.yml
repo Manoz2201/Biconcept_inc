@@ -1,0 +1,56 @@
+name: GitHub Pages
+
+# Builds Flutter web and deploys to https://manoz2201.github.io/Biconcept_inc/
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build and deploy
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.47.0"
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Build web
+        run: |
+          set -euo pipefail
+          flutter build web --release \
+            --base-href /Biconcept_inc/ \
+            --dart-define=GIT_SHA="${GITHUB_SHA}" \
+            --dart-define=APP_CHANNEL=pages \
+            --dart-define=APPWRITE_ENDPOINT=https://sgp.cloud.appwrite.io/v1 \
+            --dart-define=APPWRITE_PROJECT_ID=6a86a3d4001d87aa9809 \
+            --dart-define=APPWRITE_DATABASE_ID=6a86ad9300190bcdd0df
+          cp build/web/index.html build/web/404.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

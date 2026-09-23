@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../data/client_store.dart';
+import '../data/crm_lead_sync.dart';
 import '../data/draft_store.dart';
 import '../data/schedule.dart';
 import '../export/quotation_layout.dart';
@@ -146,6 +147,10 @@ class ClientsPageState extends State<ClientsPage> {
     if (importFromEstimates) {
       await _store.syncFromEstimates(widget.drafts);
     }
+    try {
+      final remote = await CrmLeadSync().pullStaffLeads();
+      await _store.mergeRemoteLeads(remote);
+    } catch (_) {}
     final clients = await _store.list();
     if (!mounted) return;
     setState(() {
@@ -377,7 +382,7 @@ class ClientsPageState extends State<ClientsPage> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
     final items = _filtered;
     final pad = widget.compact ? 16.0 : 24.0;
@@ -455,7 +460,7 @@ class _ClientsHero extends StatelessWidget {
     return Text.rich(
       TextSpan(
         text: 'clients',
-        children: const [
+        children: [
           TextSpan(text: '.', style: TextStyle(color: AppColors.primary)),
         ],
       ),
@@ -518,7 +523,7 @@ class _StageFilterChip extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: selected ? const Color(0xFF1A1010) : AppColors.muted,
+              color: selected ? AppColors.onPrimary : AppColors.muted,
               fontSize: 12,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.6,
@@ -545,7 +550,7 @@ class _ClientsEmpty extends StatelessWidget {
         children: [
           Icon(Icons.people_outline, size: 72, color: AppColors.muted.withValues(alpha: 0.45)),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'no clients found',
             style: TextStyle(color: AppColors.text, fontSize: 22, fontWeight: FontWeight.w600),
           ),
@@ -555,7 +560,7 @@ class _ClientsEmpty extends StatelessWidget {
                 ? 'Add a client or create an estimate to start the CRM pipeline.'
                 : 'No clients match this filter.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.muted, fontSize: 15, height: 1.4),
+            style: TextStyle(color: AppColors.muted, fontSize: 15, height: 1.4),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
@@ -648,7 +653,7 @@ class _ClientCardState extends State<_ClientCard> {
                             backgroundColor: AppColors.cardHover,
                             child: Text(
                               _clientInitials(client.name),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.text,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -667,7 +672,7 @@ class _ClientCardState extends State<_ClientCard> {
                                   client.name.isEmpty ? 'untitled' : client.name.toLowerCase(),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.text,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -769,7 +774,7 @@ class _MetaRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.4),
+          style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.4),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -803,7 +808,7 @@ class _NextRow extends StatelessWidget {
     final visit = latestKind.toLowerCase() == 'visit';
     Widget trailing;
     if (lost) {
-      trailing = const Text('Archived', style: TextStyle(color: AppColors.muted, fontSize: 15));
+      trailing = Text('Archived', style: TextStyle(color: AppColors.muted, fontSize: 15));
     } else if (next != null) {
       trailing = Row(
         mainAxisSize: MainAxisSize.min,
@@ -816,19 +821,19 @@ class _NextRow extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             _shortMonthDay(next),
-            style: const TextStyle(color: AppColors.primary, fontSize: 15),
+            style: TextStyle(color: AppColors.primary, fontSize: 15),
           ),
         ],
       );
     } else if (latestKind.isNotEmpty) {
-      trailing = Text(latestKind, style: const TextStyle(color: AppColors.text, fontSize: 15));
+      trailing = Text(latestKind, style: TextStyle(color: AppColors.text, fontSize: 15));
     } else {
-      trailing = const Text('—', style: TextStyle(color: AppColors.muted, fontSize: 15));
+      trailing = Text('—', style: TextStyle(color: AppColors.muted, fontSize: 15));
     }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        const Text(
+        Text(
           'next',
           style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.4),
         ),
@@ -878,8 +883,8 @@ class _CrmStageBadge extends StatelessWidget {
         CrmStage.won => (AppColors.completed.withValues(alpha: 0.2), AppColors.completed),
         CrmStage.lost => (AppColors.down.withValues(alpha: 0.12), AppColors.down),
         CrmStage.quotation || CrmStage.negotiation => (
-            const Color(0xFF01A89D).withValues(alpha: 0.2),
-            const Color(0xFF5ADACE),
+            AppColors.primary.withValues(alpha: 0.2),
+            AppColors.primary,
           ),
         _ => (AppColors.cardHover, AppColors.muted),
       };
@@ -1035,7 +1040,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
               child: Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
               ),
             ),
           ],
@@ -1055,12 +1060,12 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
                   Container(
                     width: 6,
                     height: 6,
-                    decoration: const BoxDecoration(color: Color(0xFF5ADACE), shape: BoxShape.circle),
+                    decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     (client.company.isNotEmpty ? client.company : client.stage.label).toUpperCase(),
-                    style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1),
+                    style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1),
                   ),
                 ],
               ),
@@ -1068,7 +1073,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
             Text('|', style: TextStyle(color: AppColors.muted.withValues(alpha: 0.45))),
             Text(
               'ACQUIRED: Q$quarter ${client.createdAt.year}',
-              style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1),
+              style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1),
             ),
           ],
         ),
@@ -1102,7 +1107,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
                   child: InkWell(
                     onTap: _edit,
                     borderRadius: BorderRadius.circular(12),
-                    child: const SizedBox(
+                    child: SizedBox(
                       width: 48,
                       height: 48,
                       child: Icon(Icons.edit_outlined, color: AppColors.text),
@@ -1114,7 +1119,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
                   onPressed: canCall ? () => _refreshAfter(widget.onCall) : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    foregroundColor: const Color(0xFF1A1010),
+                    foregroundColor: AppColors.onPrimary,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -1136,7 +1141,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.bolt_rounded, size: 16, color: AppColors.muted),
               SizedBox(width: 8),
@@ -1157,7 +1162,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
                 _ViewerAction(
                   icon: Icons.request_quote_outlined,
                   label: 'new estimate',
-                  color: const Color(0xFF5ADACE),
+                  color: AppColors.primary,
                   onTap: () => _refreshAfter(widget.onCreateEstimate),
                 ),
                 _ViewerAction(
@@ -1203,7 +1208,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.fingerprint, size: 16, color: AppColors.muted),
               SizedBox(width: 8),
@@ -1281,7 +1286,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'CURRENT PIPELINE STAGE',
           style: TextStyle(color: AppColors.muted, fontSize: 10, letterSpacing: 1.2),
         ),
@@ -1340,17 +1345,17 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.location_on_outlined, color: AppColors.primarySoft),
+                Icon(Icons.location_on_outlined, color: AppColors.primarySoft),
                 const Spacer(),
                 Text(
                   location.isEmpty ? 'No site address on file' : location,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.w600),
                 ),
                 if (client.source.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Text('Source · ${client.source}', style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+                  Text('Source · ${client.source}', style: TextStyle(color: AppColors.muted, fontSize: 12)),
                 ],
               ],
             ),
@@ -1364,10 +1369,10 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
               child: InkWell(
                 customBorder: const CircleBorder(),
                 onTap: location.isEmpty ? null : () => _copy(location),
-                child: const SizedBox(
+                child: SizedBox(
                   width: 36,
                   height: 36,
-                  child: Icon(Icons.navigation_rounded, size: 18, color: Color(0xFF1A1010)),
+                  child: Icon(Icons.navigation_rounded, size: 18, color: AppColors.onPrimary),
                 ),
               ),
             ),
@@ -1390,9 +1395,9 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.architecture_outlined, size: 16, color: Color(0xFF5ADACE)),
+              Icon(Icons.architecture_outlined, size: 16, color: AppColors.primary),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'ACTIVE ESTIMATES',
                   style: TextStyle(color: AppColors.text, fontSize: 12, letterSpacing: 1.4),
@@ -1409,7 +1414,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
           ),
           const SizedBox(height: 16),
           if (drafts.isEmpty)
-            const Text('No estimates for this lead yet.', style: TextStyle(color: AppColors.muted))
+            Text('No estimates for this lead yet.', style: TextStyle(color: AppColors.muted))
           else
             for (final draft in drafts) ...[
               _viewerEstimateTile(draft),
@@ -1470,7 +1475,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
                         children: [
                           Text(
                             '#${_estimateCode(draft)}',
-                            style: const TextStyle(color: AppColors.muted, fontSize: 12, fontFamily: 'Consolas'),
+                            style: TextStyle(color: AppColors.muted, fontSize: 12, fontFamily: 'Consolas'),
                           ),
                           const Spacer(),
                           Text(
@@ -1510,7 +1515,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.timeline, size: 16, color: AppColors.muted),
               SizedBox(width: 8),
@@ -1519,7 +1524,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
           ),
           const SizedBox(height: 18),
           if (items.isEmpty)
-            const Text('No follow-ups yet.', style: TextStyle(color: AppColors.muted))
+            Text('No follow-ups yet.', style: TextStyle(color: AppColors.muted))
           else
             Padding(
               padding: const EdgeInsets.only(left: 8),
@@ -1580,7 +1585,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
               const SizedBox(height: 4),
               Text(
                 item.kind.isEmpty ? 'Follow-up' : item.kind,
-                style: const TextStyle(color: AppColors.text, fontSize: 15),
+                style: TextStyle(color: AppColors.text, fontSize: 15),
               ),
               if (item.note.isNotEmpty) ...[
                 const SizedBox(height: 4),
@@ -1588,7 +1593,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
                   item.note,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12, fontStyle: FontStyle.italic),
+                  style: TextStyle(color: AppColors.muted, fontSize: 12, fontStyle: FontStyle.italic),
                 ),
               ],
             ],
@@ -1638,7 +1643,7 @@ class _ClientViewerPageState extends State<ClientViewerPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 88, child: Text(label, style: const TextStyle(color: AppColors.muted))),
+          SizedBox(width: 88, child: Text(label, style: TextStyle(color: AppColors.muted))),
           Expanded(child: Text(value.isEmpty ? '—' : value, style: const TextStyle(fontWeight: FontWeight.w600))),
         ],
       ),
@@ -1735,7 +1740,7 @@ class _IntelField extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
-          style: const TextStyle(color: AppColors.muted, fontSize: 10, letterSpacing: 1.2),
+          style: TextStyle(color: AppColors.muted, fontSize: 10, letterSpacing: 1.2),
         ),
         const SizedBox(height: 6),
         Row(
@@ -1757,7 +1762,7 @@ class _IntelField extends StatelessWidget {
                 onPressed: onCopy,
                 tooltip: 'Copy',
                 visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.content_copy, size: 18, color: AppColors.muted),
+                icon: Icon(Icons.content_copy, size: 18, color: AppColors.muted),
               ),
           ],
         ),
@@ -2004,7 +2009,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
                   IconButton(
                     tooltip: 'Delete',
                     onPressed: _confirmDelete,
-                    icon: const Icon(Icons.delete_outline, color: AppColors.down),
+                    icon: Icon(Icons.delete_outline, color: AppColors.down),
                   ),
                   TextButton(
                     onPressed: _discard,
@@ -2021,7 +2026,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
                 child: IconButton(
                   tooltip: 'Delete',
                   onPressed: _confirmDelete,
-                  icon: const Icon(Icons.delete_outline, color: AppColors.down),
+                  icon: Icon(Icons.delete_outline, color: AppColors.down),
                 ),
               ),
           ],
@@ -2035,7 +2040,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
       onPressed: _persist,
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.primary,
-        foregroundColor: const Color(0xFF1A1010),
+        foregroundColor: AppColors.onPrimary,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
@@ -2118,14 +2123,14 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
               decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(6)),
               child: Text(
                 'CLIENT ID: ${_clientCode()}',
-                style: const TextStyle(color: AppColors.muted, fontSize: 10, letterSpacing: 1.4),
+                style: TextStyle(color: AppColors.muted, fontSize: 10, letterSpacing: 1.4),
               ),
             ),
             Container(width: 1, height: 14, color: AppColors.outline),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: (lost ? AppColors.down : const Color(0xFF5ADACE)).withValues(alpha: 0.12),
+                color: (lost ? AppColors.down : AppColors.primary).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
@@ -2135,7 +2140,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: lost ? AppColors.down : const Color(0xFF5ADACE),
+                      color: lost ? AppColors.down : AppColors.primary,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -2143,7 +2148,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
                   Text(
                     lost ? 'LOST' : (client.stage == CrmStage.won ? 'WON' : 'ACTIVE'),
                     style: TextStyle(
-                      color: lost ? AppColors.down : const Color(0xFF5ADACE),
+                      color: lost ? AppColors.down : AppColors.primary,
                       fontSize: 10,
                       letterSpacing: 1.4,
                     ),
@@ -2159,7 +2164,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
           style: TextStyle(color: AppColors.text, fontSize: compact ? 24 : 28, fontWeight: FontWeight.w600, height: 1.1),
         ),
         const SizedBox(height: 6),
-        Text(role, style: const TextStyle(color: AppColors.muted, fontSize: 16)),
+        Text(role, style: TextStyle(color: AppColors.muted, fontSize: 16)),
       ],
     );
     return _WsCard(
@@ -2240,16 +2245,16 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label.toUpperCase(), style: const TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 1.2)),
+          Text(label.toUpperCase(), style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 1.2)),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(color: AppColors.text, fontSize: 28, fontWeight: FontWeight.w600)),
+          Text(value, style: TextStyle(color: AppColors.text, fontSize: 28, fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           Row(
             children: [
               Icon(footerIcon, size: 16, color: AppColors.muted),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(footer, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+                child: Text(footer, style: TextStyle(color: AppColors.muted, fontSize: 12)),
               ),
             ],
           ),
@@ -2283,13 +2288,13 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Spacer(),
-                const Text('SITE LOCATION', style: TextStyle(color: AppColors.primary, fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w700)),
+                Text('SITE LOCATION', style: TextStyle(color: AppColors.primary, fontSize: 11, letterSpacing: 1.4, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
                 Text(
                   location.isEmpty ? 'No address on file' : location,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.text, fontSize: 16),
+                  style: TextStyle(color: AppColors.text, fontSize: 16),
                 ),
               ],
             ),
@@ -2309,7 +2314,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
                         if (!mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied')));
                       },
-                child: const SizedBox(width: 32, height: 32, child: Icon(Icons.open_in_new, size: 16, color: AppColors.text)),
+                child: SizedBox(width: 32, height: 32, child: Icon(Icons.open_in_new, size: 16, color: AppColors.text)),
               ),
             ),
           ),
@@ -2323,7 +2328,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('CLASSIFICATION TAGS', style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 1.2)),
+          Text('CLASSIFICATION TAGS', style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 1.2)),
           const SizedBox(height: 14),
           Wrap(
             spacing: 8,
@@ -2369,7 +2374,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
         ),
         const SizedBox(height: 16),
         if (client.followUps.isEmpty)
-          const _WsCard(
+          _WsCard(
             child: Text('No follow-ups yet. Log a call, visit or WhatsApp.', style: TextStyle(color: AppColors.muted)),
           )
         else
@@ -2382,16 +2387,16 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
                     children: [
                       Text(item.kind, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                       const Spacer(),
-                      Text(quotationDate(item.date), style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+                      Text(quotationDate(item.date), style: TextStyle(color: AppColors.muted, fontSize: 12)),
                     ],
                   ),
                   if (item.nextFollow != null) ...[
                     const SizedBox(height: 6),
-                    Text('Next: ${quotationDate(item.nextFollow!)}', style: const TextStyle(color: AppColors.primarySoft, fontSize: 12)),
+                    Text('Next: ${quotationDate(item.nextFollow!)}', style: TextStyle(color: AppColors.primarySoft, fontSize: 12)),
                   ],
                   if (item.note.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    Text(item.note, style: const TextStyle(color: AppColors.muted)),
+                    Text(item.note, style: TextStyle(color: AppColors.muted)),
                   ],
                 ],
               ),
@@ -2427,7 +2432,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
                   },
                   selectedColor: AppColors.primary,
                   labelStyle: TextStyle(
-                    color: client.stage == stage ? const Color(0xFF1A1010) : AppColors.text,
+                    color: client.stage == stage ? AppColors.onPrimary : AppColors.text,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -2461,7 +2466,7 @@ class _ClientWorkspacePageState extends State<ClientWorkspacePage> {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          SizedBox(width: 120, child: Text(label, style: const TextStyle(color: AppColors.muted))),
+          SizedBox(width: 120, child: Text(label, style: TextStyle(color: AppColors.muted))),
           Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600))),
         ],
       ),
@@ -2598,7 +2603,7 @@ class _WsField extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
-          style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3),
+          style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -2607,7 +2612,7 @@ class _WsField extends StatelessWidget {
           maxLines: lines,
           keyboardType: keyboard,
           inputFormatters: keyboard == TextInputType.phone ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9+ ]'))] : null,
-          style: const TextStyle(color: AppColors.text, fontSize: 16),
+          style: TextStyle(color: AppColors.text, fontSize: 16),
           decoration: InputDecoration(
             filled: true,
             fillColor: AppColors.background,
@@ -2616,7 +2621,7 @@ class _WsField extends StatelessWidget {
             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF5ADACE)),
+              borderSide: BorderSide(color: AppColors.primary),
             ),
             contentPadding: EdgeInsets.fromLTRB(icon == null ? 16 : 12, 16, 16, 16),
           ),

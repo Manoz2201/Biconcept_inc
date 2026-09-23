@@ -31,7 +31,11 @@ class CatalogRepository extends ChangeNotifier {
     await _mergeCache(catalog);
     _indexSamples(catalog);
     _cache = catalog;
-    lastCachePath = await LocalCache.instance.catalogPath();
+    try {
+      lastCachePath = await LocalCache.instance.catalogPath();
+    } catch (_) {
+      lastCachePath = null;
+    }
     return catalog;
   }
 
@@ -70,7 +74,9 @@ class CatalogRepository extends ChangeNotifier {
     if (catalog == null) return;
     await LocalCache.instance.saveCatalogOverlay(catalog.overlayJson());
     lastCatalogSave = DateTime.now();
-    lastCachePath = await LocalCache.instance.catalogPath();
+    try {
+      lastCachePath = await LocalCache.instance.catalogPath();
+    } catch (_) {}
   }
 
   void _indexSamples(EstimateCatalog catalog) {

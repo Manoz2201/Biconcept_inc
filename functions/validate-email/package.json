@@ -1,0 +1,9 @@
+{
+  "name": "validate-email",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/main.js",
+  "dependencies": {
+    "@emailcheck/email-validator-js": "^3.0.0"
+  }
+}

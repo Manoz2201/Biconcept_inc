@@ -101,7 +101,7 @@ class _DashboardHero extends StatelessWidget {
         ),
         if (!compact) ...[
           const SizedBox(width: 16),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
@@ -266,14 +266,7 @@ class _KpiCardState extends State<_KpiCard> {
               decoration: BoxDecoration(
                 color: AppColors.card,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.outline.withValues(alpha: 0.55)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: _hover ? 0.28 : 0.16),
-                    blurRadius: _hover ? 22 : 12,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                boxShadow: _hover ? AppShadows.modal() : AppShadows.raised(),
               ),
               child: Stack(
                 children: [
@@ -312,11 +305,11 @@ class _KpiCardState extends State<_KpiCard> {
                                   widget.label.toUpperCase(),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.muted,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
-                                    letterSpacing: 1.1,
+                                    letterSpacing: 0.4,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -324,7 +317,7 @@ class _KpiCardState extends State<_KpiCard> {
                                   widget.value,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.text,
                                     fontSize: 32,
                                     fontWeight: FontWeight.w700,
@@ -387,7 +380,7 @@ class _KpiCardState extends State<_KpiCard> {
                               widget.caption,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                              style: TextStyle(color: AppColors.muted, fontSize: 12),
                             ),
                           ),
                         ],
@@ -419,9 +412,7 @@ class _Panel extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.card,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.outline.withValues(alpha: dashed ? 0.45 : 0.55),
-        ),
+        boxShadow: AppShadows.raised(),
       ),
       child: child,
     );
@@ -534,14 +525,14 @@ class _MonthlyChart extends StatelessWidget {
             const Expanded(child: _SectionTitle('estimate value over time')),
             Text(
               'YTD ${DateTime.now().year}',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.primary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.1,
               ),
             ),
-            const Icon(Icons.expand_more_rounded, color: AppColors.primary, size: 18),
+            Icon(Icons.expand_more_rounded, color: AppColors.primary, size: 18),
           ],
         ),
         const SizedBox(height: 20),
@@ -557,7 +548,7 @@ class _MonthlyChart extends StatelessWidget {
                     for (final spot in spots)
                       LineTooltipItem(
                         inrCompact(spot.y),
-                        const TextStyle(color: AppColors.text, fontSize: 12),
+                        TextStyle(color: AppColors.text, fontSize: 12),
                       ),
                   ],
                 ),
@@ -576,7 +567,7 @@ class _MonthlyChart extends StatelessWidget {
                       if (i < 0 || i >= points.length || i.isOdd) return const SizedBox.shrink();
                       return Text(
                         points[i].label.toUpperCase(),
-                        style: const TextStyle(color: AppColors.muted, fontSize: 10, letterSpacing: 0.6),
+                        style: TextStyle(color: AppColors.muted, fontSize: 10, letterSpacing: 0.6),
                       );
                     },
                   ),
@@ -645,7 +636,7 @@ class _StatusChart extends StatelessWidget {
         const SizedBox(height: 12),
         Expanded(
           child: analytics.total == 0
-              ? const Center(child: Text('No estimates yet', style: TextStyle(color: AppColors.muted)))
+              ? Center(child: Text('No estimates yet', style: TextStyle(color: AppColors.muted)))
               : Column(
                   children: [
                     Expanded(
@@ -674,7 +665,7 @@ class _StatusChart extends StatelessWidget {
                             children: [
                               Text(
                                 '${analytics.total}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.text,
                                   fontSize: 32,
                                   fontWeight: FontWeight.w700,
@@ -682,7 +673,7 @@ class _StatusChart extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              const Text(
+                              Text(
                                 'TOTAL',
                                 style: TextStyle(
                                   color: AppColors.muted,
@@ -756,7 +747,7 @@ class _WorkTypeBars extends StatelessWidget {
         const _SectionTitle('value by work type'),
         const SizedBox(height: 28),
         if (top.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 32),
             child: Center(child: Text('No line items yet', style: TextStyle(color: AppColors.muted))),
           )
@@ -770,7 +761,7 @@ class _WorkTypeBars extends StatelessWidget {
                     top[i].name.toUpperCase(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.text,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -780,7 +771,7 @@ class _WorkTypeBars extends StatelessWidget {
                 ),
                 Text(
                   inrCompact(top[i].amount),
-                  style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -791,7 +782,7 @@ class _WorkTypeBars extends StatelessWidget {
                 height: 12,
                 child: Stack(
                   children: [
-                    const ColoredBox(color: AppColors.background, child: SizedBox.expand()),
+                    ColoredBox(color: AppColors.background, child: SizedBox.expand()),
                     FractionallySizedBox(
                       widthFactor: peak <= 0 ? 0 : (top[i].amount / peak).clamp(0.08, 1),
                       child: DecoratedBox(
@@ -851,7 +842,7 @@ class _ConversionCard extends StatelessWidget {
               Center(
                 child: Text(
                   '${rate.toStringAsFixed(0)}%',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.text,
                     fontSize: 48,
                     fontWeight: FontWeight.w700,
@@ -860,7 +851,7 @@ class _ConversionCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Center(
+              Center(
                 child: Text(
                   'Completed + finalized vs pipeline',
                   textAlign: TextAlign.center,
@@ -876,18 +867,18 @@ class _ConversionCard extends StatelessWidget {
                     color: AppColors.cardHover,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.analytics_outlined, color: AppColors.muted, size: 32),
+                  child: Icon(Icons.analytics_outlined, color: AppColors.muted, size: 32),
                 ),
               ),
               const SizedBox(height: 16),
-              const Center(
+              Center(
                 child: Text(
                   'Insufficient Data',
                   style: TextStyle(color: AppColors.muted, fontSize: 18, fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(height: 8),
-              const Center(
+              Center(
                 child: Text(
                   'More completed estimates required to generate conversion trends.',
                   textAlign: TextAlign.center,

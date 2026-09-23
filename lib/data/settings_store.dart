@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'appwrite_backend.dart';
@@ -29,6 +30,26 @@ class CloudflareAiSettings {
   final String apiToken;
 
   bool get isConfigured => accountId.trim().isNotEmpty && apiToken.trim().isNotEmpty;
+
+  CloudflareAiSettings sanitized() => CloudflareAiSettings(
+        accountId: sanitizeCloudflareAccountId(accountId),
+        apiToken: sanitizeCloudflareApiToken(apiToken),
+      );
+}
+
+String sanitizeCloudflareAccountId(String raw) {
+  return raw.trim().replaceAll(RegExp(r'[^a-fA-F0-9]'), '');
+}
+
+String sanitizeCloudflareApiToken(String raw) {
+  var token = raw.trim();
+  if (token.toLowerCase().startsWith('bearer ')) {
+    token = token.substring(7).trim();
+  }
+  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+    token = token.substring(1, token.length - 1).trim();
+  }
+  return token.replaceAll(RegExp(r'\s'), '');
 }
 
 class SettingsStore {
@@ -75,7 +96,7 @@ class SettingsStore {
       return CloudflareAiSettings(
         accountId: prefs.cfAccountId.trim(),
         apiToken: prefs.cfApiToken.trim(),
-      );
+      ).sanitized();
     }
     final accountId = (await _storage.read(key: _cfAccountKey))?.trim() ?? '';
     final token = (await _storage.read(key: _cfTokenKey))?.trim() ?? '';
@@ -88,12 +109,13 @@ class SettingsStore {
   }
 
   Future<void> saveCloudflare(CloudflareAiSettings settings, {bool syncToCloud = true}) async {
-    await _storage.write(key: _cfAccountKey, value: settings.accountId.trim());
-    await _storage.write(key: _cfTokenKey, value: settings.apiToken.trim());
+    final clean = settings.sanitized();
+    await _storage.write(key: _cfAccountKey, value: clean.accountId);
+    await _storage.write(key: _cfTokenKey, value: clean.apiToken);
     if (!syncToCloud) return;
     await LocalCache.instance.updatePrefs((prefs) {
-      prefs.cfAccountId = settings.accountId.trim();
-      prefs.cfApiToken = settings.apiToken.trim();
+      prefs.cfAccountId = clean.accountId;
+      prefs.cfApiToken = clean.apiToken;
     });
   }
 
@@ -185,7 +207,7 @@ class SettingsStore {
   }
 
   Future<String> _cliApiKeyFor(String endpoint) async {
-    if (Platform.environment['FLUTTER_TEST'] == 'true') return '';
+    if (kIsWeb || Platform.environment['FLUTTER_TEST'] == 'true') return '';
     try {
       final home = Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'];
       if (home == null || home.isEmpty) return '';

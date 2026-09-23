@@ -127,7 +127,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   child: Text(
                     '${_monthName(_month.month).toLowerCase()} ${_month.year}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppColors.text, fontSize: 28, fontWeight: FontWeight.w600, letterSpacing: -0.4),
+                    style: TextStyle(color: AppColors.text, fontSize: 28, fontWeight: FontWeight.w600, letterSpacing: -0.4),
                   ),
                 ),
                 _RoundIconButton(
@@ -136,11 +136,11 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
                 if (!widget.compact) ...[
                   const SizedBox(width: 16),
-                  const _LegendDot(color: AppColors.primary, label: 'bid deadline'),
+                  _LegendDot(color: AppColors.primary, label: 'bid deadline'),
                   const SizedBox(width: 12),
-                  const _LegendDot(color: AppColors.completed, label: 'client meeting'),
+                  _LegendDot(color: AppColors.completed, label: 'client meeting'),
                   const SizedBox(width: 12),
-                  const _LegendDot(color: Color(0xFF5ADACE), label: 'payment due'),
+                  _LegendDot(color: AppColors.primary, label: 'payment due'),
                 ],
               ],
             ),
@@ -168,7 +168,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.8),
+                  style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.8),
                 ),
               ),
           ],
@@ -269,17 +269,17 @@ class _CalendarPageState extends State<CalendarPage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.event_note_outlined, size: 20, color: AppColors.primary),
+              Icon(Icons.event_note_outlined, size: 20, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(
                 '${_monthName(_selected.month).toLowerCase()} ${_selected.day}',
-                style: const TextStyle(color: AppColors.primary, fontSize: 18, fontWeight: FontWeight.w600),
+                style: TextStyle(color: AppColors.primary, fontSize: 18, fontWeight: FontWeight.w600),
               ),
             ],
           ),
           const SizedBox(height: 20),
           if (events.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(bottom: 12),
               child: Text('nothing scheduled this day.', style: TextStyle(color: AppColors.muted)),
             )
@@ -325,7 +325,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   ),
                   Container(width: 1, height: 28, color: AppColors.outline.withValues(alpha: 0.5)),
                   const SizedBox(width: 14),
-                  const Text('add event', style: TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text('add event', style: TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
@@ -365,7 +365,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       children: [
                         Text(
                           '${hour.toString().padLeft(2, '0')}:$minute',
-                          style: const TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.6),
+                          style: TextStyle(color: AppColors.muted, fontSize: 12, letterSpacing: 0.6),
                         ),
                         Text(ampm, style: TextStyle(color: AppColors.muted.withValues(alpha: 0.55), fontSize: 11)),
                       ],
@@ -379,7 +379,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       children: [
                         Text(
                           event.title.toLowerCase(),
-                          style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 4),
                         Row(
@@ -400,7 +400,7 @@ class _CalendarPageState extends State<CalendarPage> {
                     ),
                   ),
                   if (!event.done)
-                    const Icon(Icons.check_circle_outline, size: 18, color: AppColors.muted),
+                    Icon(Icons.check_circle_outline, size: 18, color: AppColors.muted),
                 ],
               ),
             ),
@@ -487,7 +487,7 @@ class _CalendarPageState extends State<CalendarPage> {
         ),
         const SizedBox(height: 16),
         if (accounts.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(vertical: 32),
             child: Text(
               'No project accounts yet. Create a payment schedule from an estimate.',
@@ -565,7 +565,7 @@ class _CalendarPageState extends State<CalendarPage> {
                     backgroundColor: AppColors.cardHover,
                     child: Text(
                       _initials(account.client),
-                      style: const TextStyle(color: AppColors.text, fontWeight: FontWeight.w600),
+                      style: TextStyle(color: AppColors.text, fontWeight: FontWeight.w600),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -577,7 +577,7 @@ class _CalendarPageState extends State<CalendarPage> {
                           account.client.isEmpty ? 'untitled client' : account.client.toLowerCase(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                         Text(
                           account.installments.isEmpty
@@ -585,7 +585,7 @@ class _CalendarPageState extends State<CalendarPage> {
                               : '${account.installments.length} installment${account.installments.length == 1 ? '' : 's'}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                          style: TextStyle(color: AppColors.muted, fontSize: 12),
                         ),
                       ],
                     ),
@@ -602,13 +602,13 @@ class _CalendarPageState extends State<CalendarPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('PROJECT', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 0.8)),
+                        Text('PROJECT', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 0.8)),
                         const SizedBox(height: 4),
                         Text(
                           account.project.isEmpty ? 'no project name' : account.project.toLowerCase(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppColors.text, fontSize: 15),
+                          style: TextStyle(color: AppColors.text, fontSize: 15),
                         ),
                       ],
                     ),
@@ -633,7 +633,7 @@ class _CalendarPageState extends State<CalendarPage> {
   Color _kindColor(CalendarKind kind) => switch (kind) {
         CalendarKind.meeting => AppColors.completed,
         CalendarKind.followUp => AppColors.primary,
-        CalendarKind.collect => const Color(0xFF5ADACE),
+        CalendarKind.collect => AppColors.primary,
         CalendarKind.pay => AppColors.down,
       };
 
@@ -856,7 +856,7 @@ class _PanelToggle extends StatelessWidget {
           child: Text(
             label.toUpperCase(),
             style: TextStyle(
-              color: selected ? const Color(0xFF1A1010) : AppColors.text,
+              color: selected ? AppColors.onPrimary : AppColors.text,
               fontSize: 12,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.4,
@@ -901,7 +901,7 @@ class _LegendDot extends StatelessWidget {
       children: [
         Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+        Text(label, style: TextStyle(color: AppColors.muted, fontSize: 12)),
       ],
     );
   }
@@ -929,7 +929,7 @@ class _SmallAction extends StatelessWidget {
             children: [
               Icon(icon, size: 16, color: AppColors.muted),
               const SizedBox(width: 6),
-              Text(label.toUpperCase(), style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 0.8)),
+              Text(label.toUpperCase(), style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 0.8)),
             ],
           ),
         ),
@@ -957,7 +957,7 @@ class _StatCard extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: const TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3, fontWeight: FontWeight.w500),
+            style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.3, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
           Row(
@@ -968,7 +968,7 @@ class _StatCard extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.text, fontSize: 32, fontWeight: FontWeight.w600, letterSpacing: -0.6),
+                  style: TextStyle(color: AppColors.text, fontSize: 32, fontWeight: FontWeight.w600, letterSpacing: -0.6),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1006,7 +1006,7 @@ class _GenerateCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(24),
-        child: const Padding(
+        child: Padding(
           padding: EdgeInsets.all(22),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
