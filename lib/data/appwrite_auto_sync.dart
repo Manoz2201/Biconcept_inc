@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import '../core/appwrite/appwrite_client.dart';
 import 'appwrite_sync.dart';
 import 'client_store.dart';
 import 'cloud_hooks.dart';
@@ -135,7 +136,14 @@ class AppwriteAutoSync extends ChangeNotifier {
 
   Future<AppwriteCloudSettings?> _configured() async {
     final settings = await _store.loadAppwrite();
-    return settings.isConfigured ? settings : null;
+    if (!settings.isConfigured) return null;
+    if (settings.hasApiKey) return settings;
+    try {
+      await AppwriteService.account.get();
+      return settings;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<T> _enqueue<T>(Future<T> Function() job) {

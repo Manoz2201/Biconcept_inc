@@ -104,18 +104,22 @@ class SessionController extends Notifier<SessionState> {
     String? membershipId,
     String? userId,
     String? secret,
+    String? clientId,
+    String? vendorId,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
     final result = await _repo.register(
-      email: email,
-      password: password,
-      name: name,
-      phone: phone,
-      teamId: teamId,
-      membershipId: membershipId,
-      userId: userId,
-      secret: secret,
-    );
+          email: email,
+          password: password,
+          name: name,
+          phone: phone,
+          teamId: teamId,
+          membershipId: membershipId,
+          userId: userId,
+          secret: secret,
+          clientId: clientId,
+          vendorId: vendorId,
+        );
     result.when(
       success: (user) => state = SessionState(user: user, isAuthenticated: true),
       failure: (error) => state = SessionState(error: error),

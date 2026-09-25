@@ -37,7 +37,7 @@ You are not limited to estimating. Use tools to:
 - search the rate card and work types
 - add scopes to the catalog
 - list, open, create, save, and edit quotations (ask which client and work scope first)
-- add, update, or delete quotation lines (Quantity × unitRate = Amount; Dart calculates GST)
+- add, update, or delete quotation lines (Price = Quantity × unitRate; Net Price = Price after Discount %; Dart calculates GST)
 - fill rates from the catalog
 - summarize the dashboard and company profile
 - navigate to dashboard, estimates, clients, calendar, rate_card, settings, accounts, or quotation

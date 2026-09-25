@@ -105,7 +105,7 @@ flutter run --dart-define=APPWRITE_ENDPOINT=https://sgp.cloud.appwrite.io/v1 ^
   --dart-define=APPWRITE_DATABASE_ID=6a86ad9300190bcdd0df
 ```
 
-Deep links use the `biconcept://` scheme (`verify`, `invite`, `reset-password`). Add that scheme (and your web hostname) under Appwrite Console → **Platforms** so verification and invite redirects are allowed.
+Invite, verify, and reset emails use `https://manoz2201.github.io/Biconcept_inc/…` (hostname already registered in Appwrite → **Platforms**). Custom `biconcept://` links are not allowed as Appwrite redirect URLs.
 
 ### Appwrite resources (already created on this project)
 
@@ -140,7 +140,7 @@ The Flutter app only does a local syntax check (`email_validator`). MX / disposa
 3. In table `users`, insert a row: `accountId` = Auth user id, `role` = `super_admin`, `emailVerified` = true, `isActive` = true.
 4. Sign in from the app. Settings → **Team members** to invite architects, accountants, vendors, and clients.
 
-Invites use `teams.createMembership`. Appwrite sends the email. The invitee opens `biconcept://invite?userId&secret&membershipId&teamId` and finishes **Register**.
+Invites use `teams.createMembership`. Appwrite sends the email. The invitee opens `https://manoz2201.github.io/Biconcept_inc/register?userId&secret&membershipId&teamId` and finishes **Register**.
 
 Client-side RBAC (`UserRole` + `PermissionGate`) is UX only. Table permissions and team memberships enforce access on the server.
 

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Compile-time Appwrite + deep-link settings.
 ///
 /// Override with `--dart-define=APPWRITE_ENDPOINT=…` (see `.env.example`).
@@ -22,6 +24,13 @@ class Env {
   static const deepLinkScheme = String.fromEnvironment(
     'APPWRITE_DEEP_LINK_SCHEME',
     defaultValue: 'biconcept',
+  );
+
+  /// HTTPS origin registered in Appwrite → Platforms. Invite/verify emails
+  /// cannot use `biconcept://…` — Appwrite rejects that as hostname "invite".
+  static const publicWebOrigin = String.fromEnvironment(
+    'APPWRITE_PUBLIC_WEB_ORIGIN',
+    defaultValue: 'https://manoz2201.github.io/Biconcept_inc',
   );
 
   static const teamStaff = 'firm_staff';
@@ -101,7 +110,18 @@ class Env {
     defaultValue: 'portfolio_images',
   );
 
-  static String get verifyUrl => '$deepLinkScheme://verify';
-  static String get resetUrl => '$deepLinkScheme://reset-password';
-  static String get inviteUrl => '$deepLinkScheme://invite';
+  static String get authRedirectOrigin {
+    if (kIsWeb) {
+      final uri = Uri.base;
+      if ((uri.scheme == 'http' || uri.scheme == 'https') && uri.host.isNotEmpty) {
+        final prefix = uri.path.startsWith('/Biconcept_inc') ? '/Biconcept_inc' : '';
+        return '${uri.origin}$prefix';
+      }
+    }
+    return publicWebOrigin.replaceAll(RegExp(r'/+$'), '');
+  }
+
+  static String get verifyUrl => '$authRedirectOrigin/verify-email';
+  static String get resetUrl => '$authRedirectOrigin/reset-password';
+  static String get inviteUrl => '$authRedirectOrigin/register';
 }

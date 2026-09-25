@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../agent/catalog_tools.dart';
 import '../agent/estimate_agent.dart';
+import '../core/config/env.dart';
 import '../data/catalog_repository.dart';
 import '../data/draft_store.dart';
 import '../data/local_cache.dart';
@@ -13,12 +15,14 @@ import '../data/schedule.dart';
 import '../export/excel_exporter.dart';
 import '../export/quotation_layout.dart';
 import '../export/quotation_pdf.dart';
+import '../features/catalog/data/storage_repository.dart';
+import '../features/catalog/domain/storage_repository.dart';
 import '../models/company_profile.dart';
 import '../models/estimate_document.dart';
 import '../models/estimate_models.dart';
 import '../theme/app_theme.dart';
 import '../util/format.dart';
-import '../util/open_export.dart';
+import '../util/save_export.dart';
 import 'agent_panel.dart';
 import 'estimate_type_picker.dart';
 import 'terms_editor.dart';
@@ -39,6 +43,8 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
   final _excel = ExcelExporter();
   late final EstimateAgent _offlineAgent;
   final _editors = <String, _LineEditors>{};
+  final _storage = StorageRepositoryImpl();
+  final _uploadingPictures = <String>{};
   bool _saving = false;
   bool _showAgent = true;
   String _companyAddress = '';
@@ -274,7 +280,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     final pad = compact ? 16.0 : 24.0;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final tableWidth = compact ? constraints.maxWidth - pad * 2 : math.max(constraints.maxWidth - pad * 2, 800.0);
+        final tableWidth = compact ? constraints.maxWidth - pad * 2 : math.max(constraints.maxWidth - pad * 2, 1180.0);
         return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(pad, 8, pad, 24),
           child: DecoratedBox(
@@ -342,15 +348,19 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     final brand = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Image.asset(companyLogoAsset, height: 32, fit: BoxFit.contain, filterQuality: FilterQuality.high),
-            const SizedBox(width: 10),
-            Text(
-              'biconcept hq',
-              style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -0.2),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ColoredBox(
+            color: Colors.white,
+            child: Image.asset(
+              estimateCompanyLogoAsset,
+              height: compact ? 56 : 72,
+              width: compact ? 200 : 280,
+              fit: BoxFit.contain,
+              alignment: Alignment.centerLeft,
+              filterQuality: FilterQuality.high,
             ),
-          ],
+          ),
         ),
         const SizedBox(height: 10),
         Text(
@@ -723,10 +733,13 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
         children: [
           Text('S.NO', style: style),
           Text('SCOPE / DESCRIPTION', style: style),
+          Text('PICTURE', style: style, textAlign: TextAlign.center),
           Text('UNIT', style: style, textAlign: TextAlign.center),
           Text('UNIT RATE', style: style, textAlign: TextAlign.right),
           Text('QTY', style: style, textAlign: TextAlign.center),
-          Text('AMOUNT', style: style, textAlign: TextAlign.right),
+          Text('PRICE', style: style, textAlign: TextAlign.right),
+          Text('DISCOUNT %', style: style, textAlign: TextAlign.right),
+          Text('NET PRICE', style: style, textAlign: TextAlign.right),
           const SizedBox.shrink(),
         ],
       ),
@@ -778,6 +791,7 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
               ),
             ],
           ),
+          _linePicture(line),
           _unitDropdown(line),
           _cellField(
             controller: editor.unitRate,
@@ -790,23 +804,24 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                 item.unitRate = parseNumber(value);
                 item.source = LineSource.user;
               });
-              editor.syncAmount(line);
             },
           ),
           _qtyField(line, editor, pending),
+          _computedMoney(line.price, pending: pending, empty: line.unitRate == null),
           _cellField(
-            controller: editor.amount,
-            focusNode: editor.amountFocus,
+            controller: editor.discount,
+            focusNode: editor.discountFocus,
             textAlign: TextAlign.right,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: TextStyle(
-              color: pending ? AppColors.down : AppColors.text,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              fontFamily: 'Consolas',
-            ),
-            onChanged: (value) => _onAmountEdited(line, editor, value),
+            hintText: '0',
+            style: TextStyle(color: AppColors.muted, fontSize: 14, fontFamily: 'Consolas'),
+            onChanged: (value) {
+              _patch(line.id, (item) {
+                item.discountPercent = (parseNumber(value) ?? 0).clamp(0, 100).toDouble();
+              });
+            },
           ),
+          _computedMoney(line.netPrice, pending: pending, empty: line.unitRate == null),
           IconButton(
             tooltip: 'Delete scope',
             visualDensity: VisualDensity.compact,
@@ -869,15 +884,24 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
               ),
             ],
           ),
-          _cellField(
-            controller: editor.details,
-            focusNode: editor.detailsFocus,
-            hintText: 'Description',
-            maxLines: 2,
-            style: TextStyle(color: AppColors.muted, fontSize: 13),
-            onChanged: (value) => _patch(line.id, (item) {
-              item.description = value;
-            }),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _cellField(
+                  controller: editor.details,
+                  focusNode: editor.detailsFocus,
+                  hintText: 'Description',
+                  maxLines: 2,
+                  style: TextStyle(color: AppColors.muted, fontSize: 13),
+                  onChanged: (value) => _patch(line.id, (item) {
+                    item.description = value;
+                  }),
+                ),
+              ),
+              const SizedBox(width: 8),
+              _linePicture(line),
+            ],
           ),
           const SizedBox(height: 8),
           Row(
@@ -897,7 +921,6 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
                       item.unitRate = parseNumber(value);
                       item.source = LineSource.user;
                     });
-                    editor.syncAmount(line);
                   },
                 ),
               ),
@@ -905,25 +928,31 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
               SizedBox(width: 84, child: _qtyField(line, editor, pending)),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Text('AMOUNT', style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1)),
-              const SizedBox(width: 12),
+              Expanded(
+                child: _labeledValue('PRICE', line.unitRate == null ? '—' : inr(line.price), pending: pending),
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: _cellField(
-                  controller: editor.amount,
-                  focusNode: editor.amountFocus,
+                  controller: editor.discount,
+                  focusNode: editor.discountFocus,
                   textAlign: TextAlign.right,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  style: TextStyle(
-                    color: pending ? AppColors.down : AppColors.text,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Consolas',
-                  ),
-                  onChanged: (value) => _onAmountEdited(line, editor, value),
+                  hintText: 'Discount %',
+                  style: TextStyle(color: AppColors.muted, fontSize: 14, fontFamily: 'Consolas'),
+                  onChanged: (value) {
+                    _patch(line.id, (item) {
+                      item.discountPercent = (parseNumber(value) ?? 0).clamp(0, 100).toDouble();
+                    });
+                  },
                 ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _labeledValue('NET PRICE', line.unitRate == null ? '—' : inr(line.netPrice), pending: pending),
               ),
             ],
           ),
@@ -971,7 +1000,6 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
               item.quantityConfirmed = item.quantity != null;
               item.source = LineSource.user;
             });
-            editor.syncAmount(line);
           },
         ),
         if (pending)
@@ -1000,15 +1028,95 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
         const SizedBox(width: 12),
         Expanded(child: children[1]),
         const SizedBox(width: 8),
-        SizedBox(width: 80, child: children[2]),
+        SizedBox(width: 56, child: children[2]),
         const SizedBox(width: 8),
-        SizedBox(width: 110, child: children[3]),
+        SizedBox(width: 72, child: children[3]),
         const SizedBox(width: 8),
-        SizedBox(width: 92, child: children[4]),
+        SizedBox(width: 88, child: children[4]),
         const SizedBox(width: 8),
-        SizedBox(width: 130, child: children[5]),
-        SizedBox(width: 40, child: children[6]),
+        SizedBox(width: 72, child: children[5]),
+        const SizedBox(width: 8),
+        SizedBox(width: 100, child: children[6]),
+        const SizedBox(width: 8),
+        SizedBox(width: 72, child: children[7]),
+        const SizedBox(width: 8),
+        SizedBox(width: 110, child: children[8]),
+        SizedBox(width: 40, child: children[9]),
       ],
+    );
+  }
+
+  Widget _computedMoney(double value, {required bool pending, required bool empty}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+      child: Text(
+        empty ? '—' : inr(value),
+        textAlign: TextAlign.right,
+        style: TextStyle(
+          color: pending ? AppColors.down : AppColors.text,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'Consolas',
+        ),
+      ),
+    );
+  }
+
+  Widget _labeledValue(String label, String value, {required bool pending}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(label, style: TextStyle(color: AppColors.muted, fontSize: 11, letterSpacing: 1.1)),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          textAlign: TextAlign.right,
+          style: TextStyle(
+            color: pending ? AppColors.down : AppColors.text,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Consolas',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _linePicture(EstimateLine line) {
+    final fileId = line.imageFileId?.trim();
+    final uploading = _uploadingPictures.contains(line.id);
+    final url = fileId == null || fileId.isEmpty
+        ? null
+        : _storage.getFilePreviewUrl(Env.portfolioImagesBucket, fileId, width: 96, height: 96);
+    return Tooltip(
+      message: url == null ? 'Add picture' : 'Change picture. Long-press to remove.',
+      child: InkWell(
+        onTap: uploading ? null : () => _pickLinePicture(line),
+        onLongPress: uploading || url == null ? null : () => _clearLinePicture(line),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.outline.withValues(alpha: 0.55)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: uploading
+              ? const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : url == null
+                  ? Icon(Icons.add_photo_alternate_outlined, size: 20, color: AppColors.muted)
+                  : Image.network(
+                      url,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Icon(Icons.broken_image_outlined, size: 20, color: AppColors.muted),
+                    ),
+        ),
+      ),
     );
   }
 
@@ -1129,24 +1237,29 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
     });
   }
 
-  void _onAmountEdited(EstimateLine line, _LineEditors editor, String value) {
-    final amount = parseNumber(value);
-    _patch(line.id, (item) {
-      if (amount == null) {
-        item.unitRate = null;
-        return;
-      }
-      var qty = item.effectiveQuantity;
-      if (qty == null || qty == 0) {
-        qty = 1;
-        item.quantity = 1;
-        item.quantityConfirmed = true;
-        editor.setQuantityIfUnfocused(formatQty(1));
-      }
-      item.unitRate = amount / qty;
-      item.source = LineSource.user;
-    });
-    editor.setUnitRateIfUnfocused(formatQty(line.unitRate));
+  Future<void> _pickLinePicture(EstimateLine line) async {
+    final picked = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+    final file = picked?.files.single;
+    final bytes = file?.bytes;
+    if (file == null || bytes == null || !mounted) return;
+    setState(() => _uploadingPictures.add(line.id));
+    final uploaded = await _storage.uploadPortfolioImage(
+      UploadBytes(bytes: bytes, filename: file.name),
+    );
+    if (!mounted) return;
+    setState(() => _uploadingPictures.remove(line.id));
+    uploaded.when(
+      success: (id) => _patch(line.id, (item) => item.imageFileId = id),
+      failure: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.userMessage)),
+        );
+      },
+    );
+  }
+
+  void _clearLinePicture(EstimateLine line) {
+    _patch(line.id, (item) => item.imageFileId = null);
   }
 
   Future<void> _deleteScope(EstimateLine line) async {
@@ -1208,6 +1321,8 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
         suggestedQuantity: result.quantity,
         quantityConfirmed: true,
         unitRate: result.rate ?? scope.suggestedRate,
+        discountPercent: result.discountPercent,
+        imageFileId: result.imageFileId,
         source: LineSource.user,
         custom: scope.userAdded,
       ),
@@ -1292,11 +1407,14 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
 
   Future<void> _exportPdf() async {
     try {
-      final file = await _pdf.export(draft);
-      await openExportedFile(file);
+      final saved = await saveAndOpenExport(
+        bytes: await _pdf.buildBytes(draft),
+        filename: QuotationPdf.fileName(draft),
+        mime: 'application/pdf',
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(!kIsWeb && defaultTargetPlatform == TargetPlatform.windows ? 'Exported ${file.path}' : 'PDF ready to share or save')),
+        SnackBar(content: Text(kIsWeb ? 'PDF downloaded' : 'Exported $saved')),
       );
     } catch (error) {
       if (!mounted) return;
@@ -1306,11 +1424,14 @@ class _QuotationEditorPageState extends State<QuotationEditorPage> {
 
   Future<void> _exportExcel() async {
     try {
-      final file = await _excel.export(draft);
-      await openExportedFile(file);
+      final saved = await saveAndOpenExport(
+        bytes: await _excel.buildBytes(draft),
+        filename: ExcelExporter.fileName(draft),
+        mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(!kIsWeb && defaultTargetPlatform == TargetPlatform.windows ? 'Exported ${file.path}' : 'Excel ready to share or save')),
+        SnackBar(content: Text(kIsWeb ? 'Excel downloaded' : 'Exported $saved')),
       );
     } catch (error) {
       if (!mounted) return;
@@ -1420,6 +1541,8 @@ class _AddScopeDraft {
     required this.unit,
     required this.quantity,
     required this.rate,
+    this.discountPercent = 0,
+    this.imageFileId,
   });
 
   final String typeId;
@@ -1429,6 +1552,8 @@ class _AddScopeDraft {
   final String unit;
   final double quantity;
   final double? rate;
+  final double discountPercent;
+  final String? imageFileId;
 }
 
 class _AddScopeDialog extends StatefulWidget {
@@ -1448,8 +1573,11 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
   late final TextEditingController _details;
   late final TextEditingController _unitRate;
   late final TextEditingController _quantity;
+  late final TextEditingController _discount;
   late String _typeId;
   late String _unit;
+  String? _imageFileId;
+  bool _uploadingPicture = false;
 
   @override
   void initState() {
@@ -1461,6 +1589,7 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
     _details = TextEditingController();
     _unitRate = TextEditingController();
     _quantity = TextEditingController(text: '1');
+    _discount = TextEditingController(text: '0');
   }
 
   @override
@@ -1470,6 +1599,7 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
     _details.dispose();
     _unitRate.dispose();
     _quantity.dispose();
+    _discount.dispose();
     super.dispose();
   }
 
@@ -1485,6 +1615,8 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
         unit: _unit,
         quantity: parseNumber(_quantity.text) ?? 1,
         rate: parseNumber(_unitRate.text),
+        discountPercent: (parseNumber(_discount.text) ?? 0).clamp(0, 100).toDouble(),
+        imageFileId: _imageFileId,
       ),
     );
   }
@@ -1550,6 +1682,17 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
                   ),
                 ),
                 const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: _uploadingPicture ? null : _pickPicture,
+                    icon: _uploadingPicture
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Icon(_imageFileId == null ? Icons.add_photo_alternate_outlined : Icons.check_circle_outline),
+                    label: Text(_imageFileId == null ? 'Add picture' : 'Picture added'),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
@@ -1596,23 +1739,50 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: ListenableBuilder(
-                        listenable: Listenable.merge([_unitRate, _quantity]),
-                        builder: (context, _) {
-                          final qty = parseNumber(_quantity.text) ?? 0;
-                          final rate = parseNumber(_unitRate.text);
-                          final amount = rate == null ? null : qty * rate;
-                          return InputDecorator(
-                            decoration: const InputDecoration(
-                              labelText: 'Amount',
-                              border: OutlineInputBorder(),
-                            ),
-                            child: Text(amount == null ? '—' : inr(amount)),
-                          );
-                        },
+                      child: TextFormField(
+                        controller: _discount,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Discount %',
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                ListenableBuilder(
+                  listenable: Listenable.merge([_unitRate, _quantity, _discount]),
+                  builder: (context, _) {
+                    final qty = parseNumber(_quantity.text) ?? 0;
+                    final rate = parseNumber(_unitRate.text);
+                    final price = rate == null ? null : qty * rate;
+                    final disc = (parseNumber(_discount.text) ?? 0).clamp(0, 100);
+                    final net = price == null ? null : price * (1 - disc / 100);
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: InputDecorator(
+                            decoration: const InputDecoration(
+                              labelText: 'Price',
+                              border: OutlineInputBorder(),
+                            ),
+                            child: Text(price == null ? '—' : inr(price)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InputDecorator(
+                            decoration: const InputDecoration(
+                              labelText: 'Net Price',
+                              border: OutlineInputBorder(),
+                            ),
+                            child: Text(net == null ? '—' : inr(net)),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -1625,6 +1795,27 @@ class _AddScopeDialogState extends State<_AddScopeDialog> {
       ],
     );
   }
+
+  Future<void> _pickPicture() async {
+    final picked = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+    final file = picked?.files.single;
+    final bytes = file?.bytes;
+    if (file == null || bytes == null || !mounted) return;
+    setState(() => _uploadingPicture = true);
+    final uploaded = await StorageRepositoryImpl().uploadPortfolioImage(
+      UploadBytes(bytes: bytes, filename: file.name),
+    );
+    if (!mounted) return;
+    setState(() => _uploadingPicture = false);
+    uploaded.when(
+      success: (id) => setState(() => _imageFileId = id),
+      failure: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.userMessage)),
+        );
+      },
+    );
+  }
 }
 
 class _LineEditors {
@@ -1634,21 +1825,21 @@ class _LineEditors {
         details = TextEditingController(text: scopeDetails(line)),
         unitRate = TextEditingController(text: formatQty(line.unitRate)),
         quantity = TextEditingController(text: formatQty(line.effectiveQuantity)),
-        amount = TextEditingController(text: formatQty(line.amount == 0 && line.unitRate == null ? null : line.amount));
+        discount = TextEditingController(text: formatQty(line.discountPercent == 0 ? null : line.discountPercent));
 
   final snoFocus = FocusNode();
   final nameFocus = FocusNode();
   final detailsFocus = FocusNode();
   final unitRateFocus = FocusNode();
   final quantityFocus = FocusNode();
-  final amountFocus = FocusNode();
+  final discountFocus = FocusNode();
 
   final TextEditingController sno;
   final TextEditingController name;
   final TextEditingController details;
   final TextEditingController unitRate;
   final TextEditingController quantity;
-  final TextEditingController amount;
+  final TextEditingController discount;
 
   void syncFrom(EstimateLine line) {
     _setIfUnfocused(sno, snoFocus, line.workScopeCode ?? '');
@@ -1656,12 +1847,7 @@ class _LineEditors {
     _setIfUnfocused(details, detailsFocus, scopeDetails(line));
     _setIfUnfocused(unitRate, unitRateFocus, formatQty(line.unitRate));
     _setIfUnfocused(quantity, quantityFocus, formatQty(line.effectiveQuantity));
-    syncAmount(line);
-  }
-
-  void syncAmount(EstimateLine line) {
-    final text = formatQty(line.amount == 0 && line.unitRate == null ? null : line.amount);
-    _setIfUnfocused(amount, amountFocus, text);
+    _setIfUnfocused(discount, discountFocus, formatQty(line.discountPercent == 0 ? null : line.discountPercent));
   }
 
   void setQuantityIfUnfocused(String value) => _setIfUnfocused(quantity, quantityFocus, value);
@@ -1680,12 +1866,12 @@ class _LineEditors {
     detailsFocus.dispose();
     unitRateFocus.dispose();
     quantityFocus.dispose();
-    amountFocus.dispose();
+    discountFocus.dispose();
     sno.dispose();
     name.dispose();
     details.dispose();
     unitRate.dispose();
     quantity.dispose();
-    amount.dispose();
+    discount.dispose();
   }
 }

@@ -116,8 +116,14 @@ class UserRepositoryImpl implements UserRepository {
   }) {
     return AppwriteService.guard(() async {
       final teamId = teamIdForRole(role);
-      final url =
-          '${Env.inviteUrl}?teamId=$teamId&role=${Uri.encodeQueryComponent(role.value)}';
+      final url = Uri.parse(Env.inviteUrl).replace(
+        queryParameters: {
+          'teamId': teamId,
+          'role': role.value,
+          if (clientId != null && clientId.trim().isNotEmpty) 'clientId': clientId.trim(),
+          if (vendorId != null && vendorId.trim().isNotEmpty) 'vendorId': vendorId.trim(),
+        },
+      ).toString();
       await _teams.createMembership(
         teamId: teamId,
         roles: teamRolesFor(role),

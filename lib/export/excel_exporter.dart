@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
@@ -6,10 +7,24 @@ import 'package:path_provider/path_provider.dart';
 import '../models/company_profile.dart';
 import '../models/estimate_document.dart';
 import '../data/local_cache.dart';
+import '../util/save_export.dart';
 import 'quotation_layout.dart';
 
 class ExcelExporter {
+  static String fileName(EstimateDraft draft) =>
+      '${estimateExportStem(draft.client, draft.id, quotationDate(draft.date))}.xlsx';
+
   Future<File> export(EstimateDraft draft) async {
+    final bytes = await buildBytes(draft);
+    final dir = await getApplicationDocumentsDirectory();
+    final outDir = Directory('${dir.path}/biconcept/exports');
+    if (!await outDir.exists()) await outDir.create(recursive: true);
+    final file = File('${outDir.path}/${fileName(draft)}');
+    await file.writeAsBytes(bytes, flush: true);
+    return file;
+  }
+
+  Future<Uint8List> buildBytes(EstimateDraft draft) async {
     final excel = Excel.createExcel();
     final sheet = excel['Estimate'];
     excel.delete('Sheet1');
@@ -57,10 +72,13 @@ class ExcelExporter {
     write(0, 'S.NO.');
     write(1, 'WORK TYPE');
     write(2, 'DESCRIPTION');
-    write(3, 'UNIT');
-    write(4, 'QUANTITY');
-    write(5, 'UNIT RATE');
-    write(6, 'AMOUNT');
+    write(3, 'PICTURE');
+    write(4, 'UNIT');
+    write(5, 'QUANTITY');
+    write(6, 'UNIT RATE');
+    write(7, 'PRICE');
+    write(8, 'DISCOUNT %');
+    write(9, 'NET PRICE');
     row += 1;
 
     final sections = groupQuotation(draft);
@@ -79,36 +97,39 @@ class ExcelExporter {
           write(0, line.workScopeCode ?? '');
           write(1, scopeTitle(line));
           write(2, scopeDetails(line));
-          write(3, unitLabel(line.unit));
-          write(4, line.effectiveQuantity);
-          write(5, line.unitRate);
-          write(6, line.amount == 0 ? null : line.amount);
+          write(3, (line.imageFileId == null || line.imageFileId!.trim().isEmpty) ? '' : 'Yes');
+          write(4, unitLabel(line.unit));
+          write(5, line.effectiveQuantity);
+          write(6, line.unitRate);
+          write(7, line.price == 0 ? null : line.price);
+          write(8, line.discountPercent == 0 ? null : line.discountPercent);
+          write(9, line.netPrice == 0 ? null : line.netPrice);
           row += 1;
         }
       }
       write(1, 'TOTAL (${section.serialNo})');
-      write(6, section.total);
+      write(9, section.total);
       row += 1;
     }
 
     final totals = draft.totals;
     row += 1;
     write(0, 'GRAND TOTAL');
-    write(6, totals.subtotal);
+    write(9, totals.subtotal);
     row += 1;
     write(0, 'GST ${draft.gstPercent.toStringAsFixed(0)}%');
-    write(6, totals.gst18);
+    write(9, totals.gst18);
     if (totals.hvacTaxable > 0) {
       row += 1;
       write(0, 'GST ${draft.hvacGstPercent.toStringAsFixed(0)}% ON HVAC / AHU');
-      write(6, totals.gst28);
+      write(9, totals.gst28);
     }
     row += 1;
     write(0, 'TOTAL PROJECT COST WITH GST');
-    write(6, totals.grandTotal);
+    write(9, totals.grandTotal);
     row += 1;
     write(0, 'TOTAL (1 TO ${sections.length})');
-    write(6, totals.grandTotal);
+    write(9, totals.grandTotal);
     row += 2;
     write(0, 'OTHER TERMS AND CONDITIONS-');
     row += 1;
@@ -121,13 +142,6 @@ class ExcelExporter {
 
     final bytes = excel.encode();
     if (bytes == null) throw StateError('Excel encode failed');
-    final dir = await getApplicationDocumentsDirectory();
-    final outDir = Directory('${dir.path}/biconcept/exports');
-    if (!await outDir.exists()) await outDir.create(recursive: true);
-    final safeClient = draft.client.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
-    final name = 'estimate_${safeClient.isEmpty ? draft.id : safeClient}_${quotationDate(draft.date).replaceAll('/', '-')}.xlsx';
-    final file = File('${outDir.path}/$name');
-    await file.writeAsBytes(bytes, flush: true);
-    return file;
+    return Uint8List.fromList(bytes);
   }
 }

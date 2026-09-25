@@ -36,6 +36,8 @@ class _NoSessionAuth implements AuthRepository {
     String? membershipId,
     String? userId,
     String? secret,
+    String? clientId,
+    String? vendorId,
   }) async =>
       const Failure(AppError(message: 'unused'));
 

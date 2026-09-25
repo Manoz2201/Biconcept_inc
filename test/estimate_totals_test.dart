@@ -40,6 +40,7 @@ void main() {
       ],
     );
 
+    expect(draft.lines.first.price, 15000);
     expect(draft.lines.first.amount, 15000);
     expect(draft.totals.otherTaxable, 15000);
     expect(draft.totals.hvacTaxable, 3250);
@@ -118,6 +119,30 @@ void main() {
     expect(legacy.effectiveTerms.first, startsWith('Payment needed to be done in phases'));
     expect(legacy.effectiveTerms.last, contains('TV'));
     expect(legacy.effectiveTerms, isNot(equals(standardInteriorTerms)));
+  });
+
+  test('net price applies discount to unit rate times qty', () {
+    final line = EstimateLine(
+      id: 'd',
+      workTypeId: 'wt_flooring',
+      workType: 'Flooring',
+      serialNo: 3,
+      scopeId: 'ws_tile',
+      name: 'Tiles',
+      description: 'vitrified',
+      unit: 'sqft',
+      quantity: 10,
+      quantityConfirmed: true,
+      unitRate: 200,
+      discountPercent: 10,
+    );
+    expect(line.price, 2000);
+    expect(line.netPrice, 1800);
+    expect(line.amount, 1800);
+
+    final restored = EstimateLine.fromJson(line.toJson());
+    expect(restored.discountPercent, 10);
+    expect(restored.netPrice, 1800);
   });
 
   test('company address falls back to the office on Excel quotations', () {

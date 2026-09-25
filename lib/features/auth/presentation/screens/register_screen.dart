@@ -140,6 +140,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           membershipId: uri.queryParameters['membershipId'],
           userId: uri.queryParameters['userId'],
           secret: uri.queryParameters['secret'],
+          clientId: uri.queryParameters['clientId'],
+          vendorId: uri.queryParameters['vendorId'],
         );
     if (!mounted) return;
     result.when(

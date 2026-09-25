@@ -4,6 +4,7 @@ const defaultCompanyPhone = '+91 8178869148';
 const companyDisplayName = 'BiConcept';
 const companyLogoAsset = 'assets/data/logo.png';
 const companyMarkAsset = 'assets/data/logo.png';
+const estimateCompanyLogoAsset = 'assets/data/biconcept_logo.png';
 
 String resolveCompanyAddress({String? prefsAddress, String? draftAddress}) {
   for (final value in [prefsAddress, draftAddress]) {

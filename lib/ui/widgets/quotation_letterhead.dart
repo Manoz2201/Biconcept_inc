@@ -44,8 +44,9 @@ class QuotationLetterhead extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Image.asset(
-                    companyLogoAsset,
+                    estimateCompanyLogoAsset,
                     height: _logoHeight,
+                    width: 280,
                     fit: BoxFit.contain,
                     alignment: Alignment.centerLeft,
                     filterQuality: FilterQuality.high,

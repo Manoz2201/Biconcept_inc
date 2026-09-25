@@ -1,14 +1,18 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../core/config/env.dart';
 import '../data/local_cache.dart';
+import '../features/catalog/data/storage_repository.dart';
 import '../models/company_profile.dart';
 import '../models/estimate_document.dart';
 import '../util/format.dart';
+import '../util/save_export.dart';
 import 'quotation_layout.dart';
 
 class QuotationPdf {
@@ -22,15 +26,15 @@ class QuotationPdf {
   static const _letterheadHeight = 88.0;
   static const _sidebarWidth = 176.0;
 
+  static String fileName(EstimateDraft draft) =>
+      '${estimateExportStem(draft.client, draft.id, quotationDate(draft.date))}.pdf';
+
   Future<File> export(EstimateDraft draft) async {
     final bytes = await buildBytes(draft);
     final dir = await getApplicationDocumentsDirectory();
     final outDir = Directory('${dir.path}/biconcept/exports');
     if (!await outDir.exists()) await outDir.create(recursive: true);
-    final safeClient = draft.client.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
-    final name =
-        'estimate_${safeClient.isEmpty ? draft.id : safeClient}_${quotationDate(draft.date).replaceAll('/', '-')}.pdf';
-    final file = File('${outDir.path}/$name');
+    final file = File('${outDir.path}/${fileName(draft)}');
     await file.writeAsBytes(bytes, flush: true);
     return file;
   }
@@ -39,6 +43,7 @@ class QuotationPdf {
     final logo = await _logo();
     final address = await _companyAddress(draft);
     final phone = await _companyPhone(draft);
+    final lineImages = await _lineImages(draft);
     final sections = groupQuotation(draft);
     final totals = draft.totals;
     final doc = pw.Document(title: 'Estimate - ${draft.client}', author: draft.brand);
@@ -85,7 +90,7 @@ class QuotationPdf {
           ),
         ),
         build: (context) => [
-          _table(sections),
+          _table(sections, lineImages),
           ..._termsBelowTable(draft),
         ],
       ),
@@ -110,13 +115,12 @@ class QuotationPdf {
   }
 
   Future<pw.ImageProvider?> _logo() async {
-    for (final path in [companyLogoAsset, companyMarkAsset]) {
-      try {
-        final data = await rootBundle.load(path);
-        return pw.MemoryImage(data.buffer.asUint8List());
-      } catch (_) {}
+    try {
+      final data = await rootBundle.load(estimateCompanyLogoAsset);
+      return pw.MemoryImage(data.buffer.asUint8List());
+    } catch (_) {
+      return null;
     }
-    return null;
   }
 
   pw.Widget _letterhead(EstimateDraft draft, pw.ImageProvider? logo, String address, String phone) {
@@ -136,11 +140,15 @@ class QuotationPdf {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 if (logo != null)
-                  pw.Image(
-                    logo,
+                  pw.Container(
+                    width: 220,
                     height: _letterheadHeight * 0.85,
-                    fit: pw.BoxFit.contain,
                     alignment: pw.Alignment.centerLeft,
+                    child: pw.Image(
+                      logo,
+                      fit: pw.BoxFit.contain,
+                      alignment: pw.Alignment.centerLeft,
+                    ),
                   )
                 else
                   pw.SizedBox(height: _letterheadHeight * 0.85),
@@ -313,7 +321,24 @@ class QuotationPdf {
     ];
   }
 
-  pw.Widget _table(List<QuotationSection> sections) {
+  Future<Map<String, pw.MemoryImage>> _lineImages(EstimateDraft draft) async {
+    final storage = StorageRepositoryImpl();
+    final images = <String, pw.MemoryImage>{};
+    for (final line in draft.lines) {
+      final fileId = line.imageFileId?.trim();
+      if (fileId == null || fileId.isEmpty) continue;
+      try {
+        final url = storage.getFileViewUrl(Env.portfolioImagesBucket, fileId);
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+          images[line.id] = pw.MemoryImage(response.bodyBytes);
+        }
+      } catch (_) {}
+    }
+    return images;
+  }
+
+  pw.Widget _table(List<QuotationSection> sections, Map<String, pw.MemoryImage> lineImages) {
     final rows = <pw.TableRow>[
       _headerRow(),
     ];
@@ -327,7 +352,7 @@ class QuotationPdf {
           rows.add(_spanRow(block.areaCode ?? '', block.area!.toUpperCase(), fill: const PdfColor.fromInt(0xFFEEEEEE), bold: true));
         }
         for (final line in block.lines) {
-          rows.add(_lineRow(line, stripe: stripe));
+          rows.add(_lineRow(line, stripe: stripe, image: lineImages[line.id]));
           stripe = !stripe;
         }
       }
@@ -336,25 +361,39 @@ class QuotationPdf {
     return pw.Table(
       border: pw.TableBorder.all(color: const PdfColor.fromInt(0xFFCCCCCC), width: 0.4),
       columnWidths: const {
-        0: pw.FixedColumnWidth(34),
-        1: pw.FlexColumnWidth(2.0),
-        2: pw.FlexColumnWidth(3.2),
-        3: pw.FixedColumnWidth(46),
-        4: pw.FixedColumnWidth(42),
-        5: pw.FixedColumnWidth(58),
-        6: pw.FixedColumnWidth(64),
+        0: pw.FixedColumnWidth(30),
+        1: pw.FlexColumnWidth(1.6),
+        2: pw.FlexColumnWidth(2.4),
+        3: pw.FixedColumnWidth(36),
+        4: pw.FixedColumnWidth(36),
+        5: pw.FixedColumnWidth(34),
+        6: pw.FixedColumnWidth(50),
+        7: pw.FixedColumnWidth(50),
+        8: pw.FixedColumnWidth(36),
+        9: pw.FixedColumnWidth(56),
       },
       children: rows,
     );
   }
 
   pw.TableRow _headerRow() {
-    const labels = ['S.NO.', 'WORK TYPE', 'DESCRIPTION', 'UNIT', 'QTY', 'UNIT RATE', 'AMOUNT'];
+    const labels = [
+      'S.NO.',
+      'WORK TYPE',
+      'DESCRIPTION',
+      'PICTURE',
+      'UNIT',
+      'QTY',
+      'UNIT RATE',
+      'PRICE',
+      'DISC %',
+      'NET PRICE',
+    ];
     return pw.TableRow(
       decoration: const pw.BoxDecoration(color: _head),
       children: [
         for (var i = 0; i < labels.length; i++)
-          _cell(labels[i], header: true, align: i >= 3 ? pw.TextAlign.right : pw.TextAlign.left),
+          _cell(labels[i], header: true, align: i >= 4 ? pw.TextAlign.right : pw.TextAlign.left),
       ],
     );
   }
@@ -370,11 +409,14 @@ class QuotationPdf {
         _cell(''),
         _cell(''),
         _cell(''),
+        _cell(''),
+        _cell(''),
+        _cell(''),
       ],
     );
   }
 
-  pw.TableRow _lineRow(EstimateLine line, {required bool stripe}) {
+  pw.TableRow _lineRow(EstimateLine line, {required bool stripe, pw.MemoryImage? image}) {
     final lumpsum = line.unit.toLowerCase().contains('sum');
     return pw.TableRow(
       decoration: pw.BoxDecoration(color: stripe ? _row : PdfColors.white),
@@ -382,11 +424,28 @@ class QuotationPdf {
         _cell((line.workScopeCode ?? '').toUpperCase()),
         _cell(scopeTitle(line)),
         _cell(scopeDetails(line)),
+        _pictureCell(image),
         _cell(unitLabel(line.unit), align: pw.TextAlign.right),
         _cell(lumpsum && (line.effectiveQuantity == null || line.effectiveQuantity == 1) ? 'lumsum' : formatQty(line.effectiveQuantity), align: pw.TextAlign.right),
         _cell(line.unitRate == null ? '' : indianGrouped(line.unitRate), align: pw.TextAlign.right),
-        _cell(line.amount == 0 ? '' : indianGrouped(line.amount), align: pw.TextAlign.right, bold: true),
+        _cell(line.price == 0 ? '' : indianGrouped(line.price), align: pw.TextAlign.right),
+        _cell(line.discountPercent == 0 ? '' : formatQty(line.discountPercent), align: pw.TextAlign.right),
+        _cell(line.netPrice == 0 ? '' : indianGrouped(line.netPrice), align: pw.TextAlign.right, bold: true),
       ],
+    );
+  }
+
+  pw.Widget _pictureCell(pw.MemoryImage? image) {
+    if (image == null) {
+      return _cell('');
+    }
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(2),
+      child: pw.Container(
+        height: 28,
+        alignment: pw.Alignment.center,
+        child: pw.Image(image, fit: pw.BoxFit.cover),
+      ),
     );
   }
 
@@ -396,6 +455,9 @@ class QuotationPdf {
       children: [
         _cell(''),
         _cell(label, header: true, bold: true),
+        _cell(''),
+        _cell(''),
+        _cell(''),
         _cell(''),
         _cell(''),
         _cell(''),

@@ -5,6 +5,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as models;
 import 'package:http/http.dart' as http;
 
+import '../core/appwrite/appwrite_client.dart';
 import '../models/client_record.dart';
 import '../models/company_profile.dart';
 import '../models/estimate_document.dart';
@@ -37,11 +38,14 @@ class AppwriteCloudSettings {
   final String apiKey;
   final DateTime? lastSyncedAt;
 
+  bool get hasApiKey => apiKey.trim().isNotEmpty;
+
+  /// Project coordinates are enough. An API key is optional; logged-in users
+  /// sync through the session client instead.
   bool get isConfigured =>
       normalizeAppwriteEndpoint(endpoint).isNotEmpty &&
       projectId.trim().isNotEmpty &&
-      databaseId.trim().isNotEmpty &&
-      apiKey.trim().isNotEmpty;
+      databaseId.trim().isNotEmpty;
 
   AppwriteCloudSettings copyWith({
     String? endpoint,
@@ -423,7 +427,7 @@ class AppwriteSync {
   }
 
   Future<void> ensureSchema(AppwriteCloudSettings settings) async {
-    _assertConfigured(settings);
+    _assertApiKey(settings);
     final databaseId = settings.databaseId.trim();
     final database = await _getJson(settings, '/tablesdb/$databaseId');
     if (database == null) {
@@ -491,14 +495,17 @@ class AppwriteSync {
   }
 
   Client _client(AppwriteCloudSettings settings) {
-    _assertConfigured(settings);
+    _assertApiKey(settings);
     return Client()
         .setEndpoint(normalizeAppwriteEndpoint(settings.endpoint))
         .setProject(settings.projectId.trim())
         .addHeader('X-Appwrite-Key', settings.apiKey.trim());
   }
 
-  TablesDB _tables(AppwriteCloudSettings settings) => TablesDB(_client(settings));
+  TablesDB _tables(AppwriteCloudSettings settings) {
+    if (settings.hasApiKey) return TablesDB(_client(settings));
+    return AppwriteService.tables;
+  }
 
   Future<void> _pushSnapshot(AppwriteCloudSettings settings, CloudSnapshot snapshot) async {
     for (final client in snapshot.clients) {
@@ -765,9 +772,9 @@ class AppwriteSync {
         if (json) 'content-type': 'application/json',
       };
 
-  void _assertConfigured(AppwriteCloudSettings settings) {
-    if (!settings.isConfigured) {
-      throw const FormatException('Cloud sync is not configured on this device');
+  void _assertApiKey(AppwriteCloudSettings settings) {
+    if (!settings.isConfigured || !settings.hasApiKey) {
+      throw const FormatException('Cloud schema setup needs an Appwrite API key');
     }
   }
 
@@ -777,7 +784,7 @@ class AppwriteSync {
 
   String _httpHint(int status, String body, String action) {
     final hint = switch (status) {
-      401 => 'API key was rejected. Create a key with databases/tables read and write.',
+      401 => 'Appwrite rejected this save. Sign in, or use an API key with tables read and write.',
       403 => 'Appwrite blocked this request. The API key needs tables/rows read and write. Table create can stay off because the database already exists.',
       404 => 'Database or table not found. Use database ID biconcept, or tap Sync now to create tables.',
       409 => 'A table or column already exists with that name.',

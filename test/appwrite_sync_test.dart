@@ -76,12 +76,14 @@ void main() {
     expect(restored.status, EstimateStatus.completed);
   });
 
-  test('AppwriteCloudSettings is configured only with endpoint, project and key', () {
-    expect(const AppwriteCloudSettings().isConfigured, isFalse);
+  test('AppwriteCloudSettings is configured with project coordinates', () {
+    expect(const AppwriteCloudSettings().isConfigured, isTrue);
+    expect(const AppwriteCloudSettings().hasApiKey, isFalse);
     expect(
-      const AppwriteCloudSettings(apiKey: 'key').isConfigured,
-      isTrue,
+      const AppwriteCloudSettings(endpoint: '', projectId: '', databaseId: '').isConfigured,
+      isFalse,
     );
+    expect(const AppwriteCloudSettings(apiKey: 'key').hasApiKey, isTrue);
   });
 
   test('Appwrite backend pins the project database without Settings fields', () {

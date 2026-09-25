@@ -91,6 +91,8 @@ class AuthRepositoryImpl implements AuthRepository {
     String? membershipId,
     String? userId,
     String? secret,
+    String? clientId,
+    String? vendorId,
   }) {
     return AppwriteService.guard(() async {
       final created = await _account.create(
@@ -117,6 +119,8 @@ class AuthRepositoryImpl implements AuthRepository {
           'email': email.trim(),
           'phone': ?mobile,
           'role': UserRole.client.value,
+          'clientId': ?clientId?.trim(),
+          'vendorId': ?vendorId?.trim(),
           'emailVerified': false,
           'isActive': true,
           'createdAt': now,
@@ -124,6 +128,7 @@ class AuthRepositoryImpl implements AuthRepository {
         },
       );
 
+      var role = UserRole.client;
       if (teamId != null &&
           membershipId != null &&
           userId != null &&
@@ -137,6 +142,31 @@ class AuthRepositoryImpl implements AuthRepository {
           membershipId: membershipId,
           userId: userId,
           secret: secret,
+        );
+        try {
+          final membership = await _teams.getMembership(
+            teamId: teamId,
+            membershipId: membershipId,
+          );
+          role = roleFromTeamRoles(membership.roles);
+        } catch (_) {
+          role = switch (teamId) {
+            Env.teamStaff => UserRole.architect,
+            Env.teamVendors => UserRole.vendor,
+            _ => UserRole.client,
+          };
+        }
+      }
+
+      if (role != UserRole.client) {
+        await _tables.updateRow(
+          databaseId: _databaseId,
+          tableId: AppwriteService.usersCol,
+          rowId: row.$id,
+          data: {
+            'role': role.value,
+            'updatedAt': now,
+          },
         );
       }
 
@@ -154,7 +184,8 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         await _account.createEmailVerification(url: Env.verifyUrl);
       } catch (_) {}
-      return userFromRow(row.$id, row.data);
+      final data = Map<String, dynamic>.from(row.data)..['role'] = role.value;
+      return userFromRow(row.$id, data);
     });
   }
 

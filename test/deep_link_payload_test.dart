@@ -13,6 +13,23 @@ void main() {
     expect(missing?.isValid, isFalse);
   });
 
+  test('parses GitHub Pages HTTPS invite and verify paths', () {
+    expect(
+      DeepLinkPayload.tryParse(
+        Uri.parse(
+          'https://manoz2201.github.io/Biconcept_inc/register?userId=u&secret=s&membershipId=m&teamId=firm_staff',
+        ),
+      )?.kind,
+      DeepLinkKind.invite,
+    );
+    expect(
+      DeepLinkPayload.tryParse(
+        Uri.parse('https://manoz2201.github.io/Biconcept_inc/verify-email?userId=u&secret=s'),
+      )?.kind,
+      DeepLinkKind.verify,
+    );
+  });
+
   test('parses invite and reset-password hosts', () {
     expect(
       DeepLinkPayload.tryParse(

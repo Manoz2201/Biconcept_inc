@@ -44,11 +44,14 @@ enum DeepLinkKind {
 
   static DeepLinkKind? fromUri(Uri uri) {
     final host = uri.host.toLowerCase();
-    final path = uri.path.toLowerCase().replaceAll('/', '');
-    final token = host.isNotEmpty ? host : path;
+    final last = uri.pathSegments.isEmpty ? '' : uri.pathSegments.last.toLowerCase();
+    final token = switch (host) {
+      'verify' || 'invite' || 'reset-password' || 'resetpassword' => host,
+      _ => last.isNotEmpty ? last : host,
+    };
     return switch (token) {
-      'verify' => DeepLinkKind.verify,
-      'invite' => DeepLinkKind.invite,
+      'verify' || 'verify-email' => DeepLinkKind.verify,
+      'invite' || 'register' => DeepLinkKind.invite,
       'reset-password' || 'resetpassword' => DeepLinkKind.resetPassword,
       _ => null,
     };

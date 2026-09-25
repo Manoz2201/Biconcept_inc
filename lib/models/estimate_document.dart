@@ -78,6 +78,8 @@ class EstimateLine {
     this.suggestedQuantity,
     this.quantityConfirmed = false,
     this.unitRate,
+    this.discountPercent = 0,
+    this.imageFileId,
     this.source = LineSource.catalog,
     this.custom = false,
     this.agentReason,
@@ -98,18 +100,29 @@ class EstimateLine {
   double? suggestedQuantity;
   bool quantityConfirmed;
   double? unitRate;
+  double discountPercent;
+  String? imageFileId;
   LineSource source;
   bool custom;
   String? agentReason;
 
   double? get effectiveQuantity => quantityConfirmed ? quantity : (quantity ?? suggestedQuantity);
 
-  double get amount {
+  /// Unit rate × qty, before discount.
+  double get price {
     final qty = effectiveQuantity;
     final rate = unitRate;
     if (qty == null || rate == null) return 0;
     return qty * rate;
   }
+
+  /// Final line value after discount. Totals and GST use this.
+  double get netPrice {
+    final disc = discountPercent.isNaN ? 0.0 : discountPercent.clamp(0, 100);
+    return price * (1 - disc / 100);
+  }
+
+  double get amount => netPrice;
 
   bool get isHvac => workType.toLowerCase() == 'hvac' || name.toLowerCase().contains('ahu');
 
@@ -129,6 +142,8 @@ class EstimateLine {
         'suggestedQuantity': suggestedQuantity,
         'quantityConfirmed': quantityConfirmed,
         'unitRate': unitRate,
+        'discountPercent': discountPercent,
+        'imageFileId': imageFileId,
         'source': source.name,
         'custom': custom,
         'agentReason': agentReason,
@@ -151,6 +166,8 @@ class EstimateLine {
       suggestedQuantity: (json['suggestedQuantity'] as num?)?.toDouble(),
       quantityConfirmed: json['quantityConfirmed'] == true,
       unitRate: (json['unitRate'] as num?)?.toDouble(),
+      discountPercent: (json['discountPercent'] as num?)?.toDouble() ?? 0,
+      imageFileId: json['imageFileId']?.toString(),
       source: LineSource.values.firstWhere(
         (value) => value.name == json['source'],
         orElse: () => LineSource.catalog,

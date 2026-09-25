@@ -39,6 +39,8 @@ class _FakeAuthRepository implements AuthRepository {
     String? membershipId,
     String? userId,
     String? secret,
+    String? clientId,
+    String? vendorId,
   }) async =>
       Failure(const AppError(message: 'unused'));
 

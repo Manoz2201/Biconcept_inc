@@ -15,6 +15,8 @@ abstract class AuthRepository {
     String? membershipId,
     String? userId,
     String? secret,
+    String? clientId,
+    String? vendorId,
   });
 
   Future<AppResult<void>> sendPasswordReset(String email);

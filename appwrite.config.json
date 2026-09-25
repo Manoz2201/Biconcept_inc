@@ -55,7 +55,12 @@
     "tables": [
         {
             "$id": "clients",
-            "$permissions": [],
+            "$permissions": [
+                "read(\"team:firm_staff\")",
+                "create(\"team:firm_staff\")",
+                "update(\"team:firm_staff\")",
+                "delete(\"team:firm_staff/admin\")"
+            ],
             "databaseId": "6a86ad9300190bcdd0df",
             "name": "Clients",
             "enabled": true,
@@ -127,7 +132,12 @@
         },
         {
             "$id": "estimates",
-            "$permissions": [],
+            "$permissions": [
+                "read(\"team:firm_staff\")",
+                "create(\"team:firm_staff\")",
+                "update(\"team:firm_staff\")",
+                "delete(\"team:firm_staff/admin\")"
+            ],
             "databaseId": "6a86ad9300190bcdd0df",
             "name": "Estimates",
             "enabled": true,
@@ -181,7 +191,12 @@
         },
         {
             "$id": "company",
-            "$permissions": [],
+            "$permissions": [
+                "read(\"team:firm_staff\")",
+                "create(\"team:firm_staff\")",
+                "update(\"team:firm_staff\")",
+                "delete(\"team:firm_staff/admin\")"
+            ],
             "databaseId": "6a86ad9300190bcdd0df",
             "name": "Company",
             "enabled": true,
@@ -226,7 +241,12 @@
         },
         {
             "$id": "catalog",
-            "$permissions": [],
+            "$permissions": [
+                "read(\"team:firm_staff\")",
+                "create(\"team:firm_staff\")",
+                "update(\"team:firm_staff\")",
+                "delete(\"team:firm_staff/admin\")"
+            ],
             "databaseId": "6a86ad9300190bcdd0df",
             "name": "Catalog",
             "enabled": true,
